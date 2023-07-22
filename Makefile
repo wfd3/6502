@@ -14,7 +14,7 @@
 
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
-GTEST_DIR=../googletest/googletest-1.13.0
+GTEST_DIR=../googletest/googletest-1.13.0/googletest
 
 # Where to find user code.
 USER_DIR=.
@@ -29,7 +29,7 @@ CXXFLAGS += -g -Wall -Wextra -pthread
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = test_6502
+TESTS = 6502_tests
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -40,13 +40,16 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 all: 6502
 
-6502: 6502.cc
+6502.o: 6502.cc 6502.h
+	g++ -c 6502.cc
+
+6502: 6502.o
 	g++ -o 6502 6502.cc
 
 tests : $(TESTS)
 
 clean :
-	rm -f $(TESTS) gtest.a gtest_main.a *.o
+	rm -f $(TESTS) gtest.a gtest_main.a *.o *~
 
 # Builds gtest.a and gtest_main.a.
 
@@ -76,8 +79,8 @@ gtest_main.a : gtest-all.o gtest_main.o
 # gtest_main.a, depending on whether it defines its own main()
 # function.
 
-test_6502.o : $(USER_DIR)/test_6502.cpp $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/test_6502.cc
+6502_tests.o : $(USER_DIR)/6502_tests.cc $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/6502_tests.cc
 
-test_mihai : test_6502.o gtest_main.a
+6502_tests : 6502.o 6502_tests.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@

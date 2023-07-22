@@ -55,11 +55,13 @@ while (<>) {
 	$i{$op}{"ins"} = $ins;
 	$i{$op}{"amode"} = $amode;
 	$i{$op}{"cycles"} = $cycles;
+	$cycle_flags = "NONE" if ($cycle_flags eq "");
 	$i{$op}{"cycle_flags"} = $cycle_flags;
 	printf("  -- opcode 0x%x amode $amode cycles $cycles flags $cycle_flags\n", $op) if ($DEBUG);
     }
 }
 
+# INS_XXX_MMM definitions
 printf("// --------------------------------------------------------------\n");
 foreach my $opcode (sort keys(%i)) {
     $ins   = $i{$opcode}{"ins"};
@@ -69,6 +71,7 @@ foreach my $opcode (sort keys(%i)) {
     printf("const Byte %s = 0x%x;\n", $const, $opcode);
 }	
 
+# Prototypes
 printf("// --------------------------------------------------------------\n");
 foreach my $opcode (sort keys(%i)) {
     $ins   = $i{$opcode}{"ins"};
@@ -78,14 +81,20 @@ foreach my $opcode (sort keys(%i)) {
     printf("void %s(Byte addrmode) {}\n", $fn);
 }
 
+# i[INS_XXX] = makeIns(...);
 printf("// --------------------------------------------------------------\n");
 foreach my $opcode (sort keys(%i)) {
-    $ins   = $i{$opcode}{"ins"};
-    $amode = $i{$opcode}{"amode"};
-    $fn    = "ins_" . lc($ins) . "()";         # ins_xxx() 
-    $const = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM 
-    printf("i[%s] = \n\t makeIns(\"%s\", ADDR_MODE_%s, %s);\n",
-	   $const, $ins, $amode, $fn);
+    $ins    = "CPU::" . $i{$opcode}{"ins"};
+    $amode  = $i{$opcode}{"amode"};
+    $fn     = "ins_" . lc($ins);		# ins_xxx -- note no '()' 
+    $const  = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM
+    $cycles = $i{$opcode}{"cycles"};
+    $flags  = "CYCLE_" . $i{$opcode}{"cycle_flags"};
+    
+			  
+    printf("instructions[%s] = \n\t"
+	   "makeIns(\"%s\", ADDR_MODE_%s, %d, %s, %s);\n",
+	   $const, $ins, $amode, $cycles, $flags, $fn);
 }
 
 
