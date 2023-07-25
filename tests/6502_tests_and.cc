@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "6502.h"
+#include "../6502.h"
 
-MEMORY mem;
-CPU cpu;
+extern	mos6502::MEMORY mem;
+extern	mos6502::CPU cpu;
 
-class MOS6502AddTests : public testing::Test {
+class MOS6502ANDTests : public testing::Test {
 public:
 
 	virtual void SetUp() {
@@ -14,12 +14,12 @@ public:
 	}
 };
 
-TEST_F(MOS6502AddTests, AndImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_IMM;
+TEST_F(MOS6502ANDTests, AndImmediate) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -27,7 +27,8 @@ TEST_F(MOS6502AddTests, AndImmediate) {
 	cpu.A = 0xFF;
 
 	//When:
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x0F);
@@ -36,14 +37,14 @@ TEST_F(MOS6502AddTests, AndImmediate) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, AndImmediateSetsZeroFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_IMM;
+TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_IMM;
 
-	Cycles_t c = cpu.Cycles;
+	mos6502::Cycles_t c = cpu.Cycles;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -51,7 +52,8 @@ TEST_F(MOS6502AddTests, AndImmediateSetsZeroFlag) {
 	cpu.A = 0xFF;
 
 	//When:
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x00);
@@ -61,12 +63,12 @@ TEST_F(MOS6502AddTests, AndImmediateSetsZeroFlag) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, and_zp) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ZP;
+TEST_F(MOS6502ANDTests, and_zp) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ZP;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -75,7 +77,8 @@ TEST_F(MOS6502AddTests, and_zp) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -84,12 +87,12 @@ TEST_F(MOS6502AddTests, and_zp) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, and_zpx) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ZPX;
+TEST_F(MOS6502ANDTests, and_zpx) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ZPX;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -99,7 +102,8 @@ TEST_F(MOS6502AddTests, and_zpx) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -108,12 +112,12 @@ TEST_F(MOS6502AddTests, and_zpx) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, and_abs) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ABS;
+TEST_F(MOS6502ANDTests, and_abs) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ABS;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -123,7 +127,8 @@ TEST_F(MOS6502AddTests, and_abs) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -132,12 +137,12 @@ TEST_F(MOS6502AddTests, and_abs) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, and_abx) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ABX;
+TEST_F(MOS6502ANDTests, and_abx) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ABX;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -148,7 +153,8 @@ TEST_F(MOS6502AddTests, and_abx) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -157,12 +163,12 @@ TEST_F(MOS6502AddTests, and_abx) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, and_abx_crosses_page) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ABX;
+TEST_F(MOS6502ANDTests, and_abx_crosses_page) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ABX;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -173,7 +179,8 @@ TEST_F(MOS6502AddTests, and_abx_crosses_page) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -182,12 +189,12 @@ TEST_F(MOS6502AddTests, and_abx_crosses_page) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles);
 }
 
-TEST_F(MOS6502AddTests, and_aby) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ABY;
+TEST_F(MOS6502ANDTests, and_aby) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ABY;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -198,7 +205,8 @@ TEST_F(MOS6502AddTests, and_aby) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -207,12 +215,12 @@ TEST_F(MOS6502AddTests, and_aby) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502AddTests, and_aby_crosses_page) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_ABY;
+TEST_F(MOS6502ANDTests, and_aby_crosses_page) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_ABY;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -223,7 +231,8 @@ TEST_F(MOS6502AddTests, and_aby_crosses_page) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -232,12 +241,12 @@ TEST_F(MOS6502AddTests, and_aby_crosses_page) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles);
 }
 
-TEST_F(MOS6502AddTests, and_idx) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_IDX;
+TEST_F(MOS6502ANDTests, and_idx) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_IDX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -247,7 +256,8 @@ TEST_F(MOS6502AddTests, and_idx) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);
@@ -256,12 +266,12 @@ TEST_F(MOS6502AddTests, and_idx) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles);
 }
 
-TEST_F(MOS6502AddTests, and_idy) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_AND_IDY;
+TEST_F(MOS6502ANDTests, and_idy) {
+	mos6502::Cycles_t UsedCycles, ExpectedCycles;
+	mos6502::Byte ins = mos6502::CPU::INS_AND_IDY;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(mos6502::CPU::INITIAL_PC);
 	mem.Init();
 	
 	mem[0xFFFC] = ins;
@@ -273,7 +283,8 @@ TEST_F(MOS6502AddTests, and_idy) {
 	cpu.A = 0xFF;
 
 	// When: 
-	tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();	
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();	
 
 	// Then
 	EXPECT_EQ(cpu.A, 0x0f);

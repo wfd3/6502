@@ -38,7 +38,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # House-keeping build targets.
 
-all: 6502
+all: runtests
 
 6502.o: 6502.cc 6502.h
 	g++ -c 6502.cc
@@ -50,6 +50,7 @@ tests : $(TESTS)
 
 clean :
 	rm -f $(TESTS) gtest.a gtest_main.a *.o *~
+	rm -f $(TESTS_DIR)/*.o $(TESTS_DIR)/*~
 
 # Builds gtest.a and gtest_main.a.
 
@@ -75,12 +76,23 @@ gtest.a : gtest-all.o
 gtest_main.a : gtest-all.o gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
-# Builds a sample test.  A test should link with either gtest.a or
-# gtest_main.a, depending on whether it defines its own main()
-# function.
+# Build the tests
 
-6502_tests.o : $(USER_DIR)/6502_tests.cc $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/6502_tests.cc
+TESTS_DIR = ./tests
+TESTS_FILES = 6502.cc \
+	$(TESTS_DIR)/6502_tests_setup.cc \
+	$(TESTS_DIR)/6502_tests_and.cc \
+	$(TESTS_DIR)/6502_tests_ora.cc
+TESTS_OBJS = 6502.o \
+	$(TESTS_DIR)/6502_tests_setup.o \
+	$(TESTS_DIR)/6502_tests_and.o \
+	$(TESTS_DIR)/6502_tests_ora.o
 
-6502_tests : 6502.o 6502_tests.o gtest_main.a
+%.o: %.cc 6502.h  $(TESTS_FILES) $(GTEST_HEADERS) 
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
+
+6502_tests : $(TESTS_OBJS) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+runtests: 6502_tests
+	./6502_tests
