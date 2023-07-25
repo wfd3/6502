@@ -82,11 +82,15 @@ TESTS_DIR = ./tests
 TESTS_FILES = 6502.cc \
 	$(TESTS_DIR)/6502_tests_setup.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
-	$(TESTS_DIR)/6502_tests_ora.cc
+	$(TESTS_DIR)/6502_tests_ora.cc \
+	$(TESTS_DIR)/6502_tests_eor.cc \
+	$(TESTS_DIR)/6502_tests_nop.cc
 TESTS_OBJS = 6502.o \
 	$(TESTS_DIR)/6502_tests_setup.o \
 	$(TESTS_DIR)/6502_tests_and.o \
-	$(TESTS_DIR)/6502_tests_ora.o
+	$(TESTS_DIR)/6502_tests_ora.o \
+	$(TESTS_DIR)/6502_tests_eor.o \
+	$(TESTS_DIR)/6502_tests_nop.o
 
 %.o: %.cc 6502.h  $(TESTS_FILES) $(GTEST_HEADERS) 
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<

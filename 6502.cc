@@ -84,7 +84,13 @@ static void ins_dex(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_dey(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_eor(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Byte data;
+
+	data = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->A ^= data;
+	cpu->SetFlagsForRegister(cpu->A);
+}
 static void ins_inc(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_inx(mos6502::CPU *cpu, unsigned long addrmode,
@@ -104,7 +110,9 @@ static void ins_ldy(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_lsr(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_nop(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Cycles++;
+}
 
 static void ins_ora(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
