@@ -84,6 +84,7 @@ struct mos6502::CPU {
 	mos6502::Cycles_t Cycles;
 
 	constexpr static mos6502::Byte INITIAL_SP = 0xFF;
+	constexpr static mos6502::Word STACK_FRAME = 0x0100;
 	constexpr static mos6502::Word INITIAL_PC = 0xFFFC;
 
 	void Reset(mos6502::Word);
@@ -249,6 +250,7 @@ struct mos6502::CPU {
 	constexpr static mos6502::Byte INS_LSR_ABX = 0x5e;
 	constexpr static mos6502::Byte INS_RTS_IMP = 0x60;
 	constexpr static mos6502::Byte INS_ADC_IDX = 0x61;
+	constexpr static mos6502::Byte INS_PLA_IMP = 0x68;
 
 
 	// Todo -- move to private section?

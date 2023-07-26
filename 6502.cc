@@ -64,13 +64,25 @@ static void ins_bvc(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_bvs(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_clc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.C = 0;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_cld(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.D = 0;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_cli(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.I = 0;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_clv(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.V = 0;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_cmp(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_cpx(mos6502::CPU *cpu, unsigned long addrmode,
@@ -102,15 +114,26 @@ static void ins_jmp(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_jsr(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_lda(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->A = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->SetFlagsForRegister(cpu->A);
+}
 static void ins_ldx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->X = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->SetFlagsForRegister(cpu->X);
+}
 static void ins_ldy(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Y = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->SetFlagsForRegister(cpu->Y);
+}
 static void ins_lsr(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_nop(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
+	// NOP, like all single byte instructions, takes
+	// two cycles.
 	cpu->Cycles++;
 }
 
@@ -124,11 +147,27 @@ static void ins_ora(mos6502::CPU *cpu, unsigned long addrmode,
 }
 
 static void ins_pha(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Push(cpu->A);
+	cpu->Cycles++;		// Single byte instruction
+}
+
+static void ins_pla(mos6502::CPU *cpu, unsigned long addrmode,
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->A = cpu->Pop();
+	cpu->Cycles += 2;      
+}
+
 static void ins_php(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Push(cpu->PS);
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_plp(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->PS = cpu->Pop();
+	cpu->Cycles += 2;
+}
 static void ins_rol(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_ror(mos6502::CPU *cpu, unsigned long addrmode,
@@ -140,11 +179,20 @@ static void ins_rts(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_sbc(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_sec(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.C = 1;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_sed(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.D = 1;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_sei(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Flags.I = 1;
+	cpu->Cycles++;		// Single byte instruction
+}
 static void ins_sta(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_stx(mos6502::CPU *cpu, unsigned long addrmode,
@@ -439,6 +487,8 @@ void setupInstructionMap() {
 		makeIns("LSR", ADDR_MODE_ZP, 5, ins_lsr);
 	cpu.instructions[mos6502::CPU::INS_PHA_IMP] = 
 		makeIns("PHA", ADDR_MODE_IMP, 3, ins_pha);
+	cpu.instructions[mos6502::CPU::INS_PLA_IMP] = 
+		makeIns("PLA", ADDR_MODE_IMP, 4, ins_pla);
 	cpu.instructions[mos6502::CPU::INS_EOR_IMM] = 
 		makeIns("EOR", ADDR_MODE_IMM, 2, ins_eor);
 	cpu.instructions[mos6502::CPU::INS_LSR_ACC] = 
@@ -538,24 +588,23 @@ mos6502::Word mos6502::CPU::PopWord() {
 }
 
 void mos6502::CPU::Push(mos6502::Byte value) {
-	mos6502::Word SPAddress = (0x01 << 8) | SP;
-	WriteByte(SP, value);
+	mos6502::Word SPAddress = mos6502::CPU::STACK_FRAME + SP;
+	WriteByte(SPAddress, value);
 	SP--;
 }
 
 mos6502::Byte mos6502::CPU::Pop() {
 	mos6502::Word SPAddress;
 	SP++;
-	SPAddress = (0x01 << 8) | SP;
-	
-	return ReadByte(SP);
+	SPAddress = STACK_FRAME + SP;
+	return ReadByte(SPAddress);
 }
 
 mos6502::Byte mos6502::CPU::getData(unsigned long mode, mos6502::Byte &expectedCycles) {
 	mos6502::Byte data;
 	mos6502::Word address, addrmode, flags;
 	
-	addrmode = mode & 0b00111111111111;
+	addrmode = mode &  0b00111111111111;
 	flags    = mode & ~0b00111111111111;
 	
 	switch (addrmode) {
