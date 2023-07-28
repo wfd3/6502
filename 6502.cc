@@ -49,8 +49,18 @@ static void ins_bcs(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_beq(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
+
 static void ins_bit(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Byte data;
+
+	data = cpu->getData(addrmode, expectedCyclesToUse);
+	data &= cpu->A;
+	cpu->Flags.Z = (data == 0);
+	cpu->Flags.V = (data & (1 << 6)) == (1 << 6);
+	cpu->Flags.N = (data & (1 << 7)) == (1 << 7);
+}
+
 static void ins_bmi(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_bne(mos6502::CPU *cpu, unsigned long addrmode,
@@ -155,6 +165,7 @@ static void ins_pha(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_pla(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->A = cpu->Pop();
+	cpu->SetFlagsForRegister(cpu->A);
 	cpu->Cycles += 2;      
 }
 

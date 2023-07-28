@@ -56,6 +56,8 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	// Then:
 	EXPECT_EQ(cpu.A, 0x52);
 	EXPECT_EQ(cpu.SP, mos6502::CPU::INITIAL_SP);
+	EXPECT_FALSE(cpu.Flags.Z);
+	EXPECT_FALSE(cpu.Flags.N);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
