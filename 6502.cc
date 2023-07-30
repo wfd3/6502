@@ -204,12 +204,28 @@ static void ins_sei(mos6502::CPU *cpu, unsigned long addrmode,
 	cpu->Flags.I = 1;
 	cpu->Cycles++;		// Single byte instruction
 }
+
 static void ins_sta(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Word address =
+		cpu->getAddress(addrmode, expectedCyclesToUse);
+	cpu->WriteByte(address, cpu->A);
+}
+
 static void ins_stx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Word address =
+		cpu->getAddress(addrmode, expectedCyclesToUse);
+	cpu->WriteByte(address, cpu->X);
+}
+
 static void ins_sty(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Word address =
+		cpu->getAddress(addrmode, expectedCyclesToUse);
+	cpu->WriteByte(address, cpu->Y);
+}
+
 static void ins_tax(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_tay(mos6502::CPU *cpu, unsigned long addrmode,
@@ -611,99 +627,89 @@ mos6502::Byte mos6502::CPU::Pop() {
 	return ReadByte(SPAddress);
 }
 
-mos6502::Byte mos6502::CPU::getData(unsigned long mode, mos6502::Byte &expectedCycles) {
-	mos6502::Byte data;
+mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
+				       mos6502::Byte &expectedCycles) {
 	mos6502::Word address, addrmode, flags;
+	mos6502::Byte rel;
 	
 	addrmode = mode &  0b00111111111111;
 	flags    = mode & ~0b00111111111111;
 	
 	switch (addrmode) {
-	case ADDR_MODE_IMP:
-		return 0;
-		
-	case ADDR_MODE_ACC:
-		return 0;
-
-	// Immediate mode (tested)
-	case ADDR_MODE_IMM:
-		data = FetchIns();
-		break;
-
 	// ZeroPage mode (tested)
 	case ADDR_MODE_ZP:
 		address = FetchIns();
-		data = ReadByte(address);
 		break;
 
 	// ZeroPage,X (tested)
 	case ADDR_MODE_ZPX:
 		address = FetchIns();
-		address += X; Cycles++;
-		data = ReadByte(address);
+		address += X;
+		Cycles++;
 		break;
 
         // ZeroPage,Y (tested)
 	case ADDR_MODE_ZPY:
-		data = FetchIns();
-		data += Y;
-		Cycles += 2;
+		address = FetchIns();
+		address += Y;
+		Cycles++;
 		break;
-
+		
 	case ADDR_MODE_REL:
-		data = FetchIns();
-		data += PC;
+		rel = SByte(FetchIns());
+		address = PC + rel;
 		break;
 
 	// Absolute (tested)
 	case ADDR_MODE_ABS:
 		address = ReadWord(PC);
 		PC += 2;
-		data = ReadByte(address);
 		break;
 
 	// Absolute,X (tested)
 	case ADDR_MODE_ABX:
 		address = ReadWord(PC);
 		PC += 2;
-		// Check access across page boundry, add a cycle if we do.
+		// Check access across page boundry, add a cycle if we
+		// do.
 		if (flags & CYCLE_CROSS_PAGE &&
 		    ((address + X) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
-		data = ReadByte(address + X);
+		address += X;
 		break;
 
 	// Absolute,Y (tested)
 	case ADDR_MODE_ABY:
 		address = ReadWord(PC);
 		PC += 2;
-		// Check access across page boundry, add a cycle if we do.
+		// Check access across page boundry, add a cycle if we
+		// do.
 		if (flags & CYCLE_CROSS_PAGE &&
 		    ((address + Y) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
-		data = ReadByte(address + Y);
+		address += Y;
 		break;
 
 	case ADDR_MODE_IND:
-		return 0;	// Only used by JMP
+		break;
 
         // (Indirect,X) or Indexed Indirect (tested)
 	case ADDR_MODE_IDX:	
 		address = FetchIns() + X;
-		data = ReadByte(address);
+		if (address > 0xFF)
+			address -= 0xFF;
 		Cycles += 3;	// HACK
 		break;
 
-	// (Indirect),Y or Indirect Indexed
+	// (Indirect),Y or Indirect Indexed (tested)
 	case ADDR_MODE_IDY:
 		address = FetchIns();
 		address = ReadWord(address);
 		address += Y;
-		data = ReadByte(address);
 		break;
 
 	default:
@@ -712,6 +718,32 @@ mos6502::Byte mos6502::CPU::getData(unsigned long mode, mos6502::Byte &expectedC
 		break;
 	}
 	
+	return address;
+}
+
+mos6502::Byte mos6502::CPU::getData(unsigned long mode, mos6502::Byte &expectedCycles) {
+	mos6502::Byte data;
+	mos6502::Word address;
+	mos6502::Word addrmode;
+
+	addrmode = mode & 0b00111111111111;
+	
+	switch (addrmode) {
+	case ADDR_MODE_IMP:
+	case ADDR_MODE_ACC:
+		return 0;
+
+	// Immediate mode (tested)
+	case ADDR_MODE_IMM:
+		data = FetchIns();
+		break;
+
+	default:
+		address = getAddress(mode, expectedCycles);
+		data = ReadByte(address);
+		break;
+	}
+
 	return data;
 }
 

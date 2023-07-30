@@ -8,6 +8,7 @@
 
 namespace mos6502 {
 	using Byte = unsigned char;
+	using SByte = signed char;
 	using Word = unsigned short;
 	using Cycles_t = unsigned long;
 
@@ -97,6 +98,7 @@ struct mos6502::CPU {
 	void PushWord(mos6502::Word);
 	mos6502::Word PopWord();
 	std::tuple<mos6502::Cycles_t, mos6502::Cycles_t> ExecuteOneInstruction();
+	mos6502::Word getAddress(unsigned long, mos6502::Byte &);
 	mos6502::Byte getData(unsigned long, mos6502::Byte &);
 
 	// Opcodes
@@ -262,10 +264,10 @@ struct mos6502::CPU {
 		opfn_t opfn;
 	};
 	std::map<mos6502::Byte, instruction> instructions;
+	void WriteByte(mos6502::Word, mos6502::Byte);
 
 private:
 	mos6502::Byte ReadByte(mos6502::Word);
-	void WriteByte(mos6502::Word, mos6502::Byte);
 	mos6502::Word ReadWord(mos6502::Word);
 };
 
