@@ -25,6 +25,9 @@ constexpr static unsigned long ADDR_MODE_ACC    = 1 << 12; // Accumulator
 // instructions fetch data across page boundries.
 constexpr static unsigned long CYCLE_BRANCH     = 1 << 13;
 constexpr static unsigned long CYCLE_CROSS_PAGE = 1 << 14;
+
+//
+constexpr static mos6502::Byte NegativeBit = 1 << 7;
 	
 /////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +61,7 @@ static void ins_bit(mos6502::CPU *cpu, unsigned long addrmode,
 	data &= cpu->A;
 	cpu->Flags.Z = (data == 0);
 	cpu->Flags.V = (data & (1 << 6)) == (1 << 6);
-	cpu->Flags.N = (data & (1 << 7)) == (1 << 7);
+	cpu->Flags.N = (data & NegativeBit) == NegativeBit;
 }
 
 static void ins_bmi(mos6502::CPU *cpu, unsigned long addrmode,
@@ -93,8 +96,18 @@ static void ins_clv(mos6502::CPU *cpu, unsigned long addrmode,
 	cpu->Flags.V = 0;
 	cpu->Cycles++;		// Single byte instruction
 }
+
+// HERE
 static void ins_cmp(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Byte data;
+
+	data = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->Flags.C = cpu->A  > data;
+	cpu->Flags.Z = cpu->A == data;
+	cpu->Flags.N = cpu->A  < data;
+}
+
 static void ins_cpx(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_cpy(mos6502::CPU *cpu, unsigned long addrmode,
@@ -571,13 +584,13 @@ void mos6502::CPU::Exception() {
 
 void mos6502::CPU::SetFlagsForRegister(mos6502::Byte b) {
 	Flags.Z = (b == 0);
-	Flags.N = (b & 0b10000000) >> 7;
+	Flags.N = (b & NegativeBit) >> 7;
 }
 
 void mos6502::CPU::SetFlagsForCompare(mos6502::Byte b, mos6502::Byte v) {
 	Flags.C = (b >= v);
 	Flags.Z = b == v;
-	Flags.N = (b & 0b10000000) >> 7;
+	Flags.N = (b & NegativeBit) >> 7;
 }
 
 mos6502::Byte mos6502::CPU::ReadByte(mos6502::Word address) {
