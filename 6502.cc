@@ -189,16 +189,19 @@ static void ins_rts(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_sbc(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
+
 static void ins_sec(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.C = 1;
 	cpu->Cycles++;		// Single byte instruction
 }
+
 static void ins_sed(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.D = 1;
 	cpu->Cycles++;		// Single byte instruction
 }
+
 static void ins_sei(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.I = 1;
@@ -670,10 +673,8 @@ mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
 	case ADDR_MODE_ABX:
 		address = ReadWord(PC);
 		PC += 2;
-		// Check access across page boundry, add a cycle if we
-		// do.
-		if (flags & CYCLE_CROSS_PAGE &&
-		    ((address + X) >> 8) != (address >> 8)) {
+		// Add a cycle if a page boundry is crossed
+		if ((flags & CYCLE_CROSS_PAGE) && ((address + X) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
@@ -684,10 +685,8 @@ mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
 	case ADDR_MODE_ABY:
 		address = ReadWord(PC);
 		PC += 2;
-		// Check access across page boundry, add a cycle if we
-		// do.
-		if (flags & CYCLE_CROSS_PAGE &&
-		    ((address + Y) >> 8) != (address >> 8)) {
+		// Add a cycle if a page boundry is crossed
+		if ((flags & CYCLE_CROSS_PAGE) && ((address + Y) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
@@ -702,7 +701,8 @@ mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
 		address = FetchIns() + X;
 		if (address > 0xFF)
 			address -= 0xFF;
-		Cycles += 3;	// HACK
+		address = ReadWord(address);
+		Cycles++;
 		break;
 
 	// (Indirect),Y or Indirect Indexed (tested)

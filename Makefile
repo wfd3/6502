@@ -100,7 +100,7 @@ TESTS_OBJS = 6502.o \
 	$(TESTS_DIR)/6502_tests_flags.o \
 	$(TESTS_DIR)/6502_tests_bit.o
 
-%.o: %.cc 6502.h  $(TESTS_FILES) $(GTEST_HEADERS) 
+%.o: %.cc 6502.h  $(GTEST_HEADERS) 
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
 
 6502_tests : $(TESTS_OBJS) gtest_main.a

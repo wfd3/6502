@@ -63,7 +63,7 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ANDTests, and_zp) {
+TEST_F(MOS6502ANDTests, AndZeroPage) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ZP;
 	
@@ -87,7 +87,7 @@ TEST_F(MOS6502ANDTests, and_zp) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ANDTests, and_zpx) {
+TEST_F(MOS6502ANDTests, AndZeroPageX) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ZPX;
 	
@@ -112,7 +112,7 @@ TEST_F(MOS6502ANDTests, and_zpx) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ANDTests, and_abs) {
+TEST_F(MOS6502ANDTests, AndAbsolute) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ABS;
 	
@@ -137,7 +137,7 @@ TEST_F(MOS6502ANDTests, and_abs) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ANDTests, and_abx) {
+TEST_F(MOS6502ANDTests, AndAbsoluteX) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ABX;
 	
@@ -163,7 +163,7 @@ TEST_F(MOS6502ANDTests, and_abx) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ANDTests, and_abx_crosses_page) {
+TEST_F(MOS6502ANDTests, AndAbsoluteXCrossesPage) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ABX;
 	
@@ -189,7 +189,7 @@ TEST_F(MOS6502ANDTests, and_abx_crosses_page) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles);
 }
 
-TEST_F(MOS6502ANDTests, and_aby) {
+TEST_F(MOS6502ANDTests, AndAbsoluteY) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ABY;
 	
@@ -215,7 +215,7 @@ TEST_F(MOS6502ANDTests, and_aby) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ANDTests, and_aby_crosses_page) {
+TEST_F(MOS6502ANDTests, AndAbsoluteYCrossesPage) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_ABY;
 	
@@ -241,7 +241,7 @@ TEST_F(MOS6502ANDTests, and_aby_crosses_page) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles);
 }
 
-TEST_F(MOS6502ANDTests, and_idx) {
+TEST_F(MOS6502ANDTests, AndIndirectX) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_IDX;
 
@@ -252,7 +252,9 @@ TEST_F(MOS6502ANDTests, and_idx) {
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
 	cpu.X = 0x10;
-	mem[0x00 + 0x10 + 0x10] = 0x0F;
+	mem[0x0020] = 0x00;
+	mem[0x0021] = 0x20;
+	mem[0x2000] = 0x0F;
 	cpu.A = 0xFF;
 
 	// When: 
@@ -266,7 +268,7 @@ TEST_F(MOS6502ANDTests, and_idx) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles);
 }
 
-TEST_F(MOS6502ANDTests, and_idy) {
+TEST_F(MOS6502ANDTests, AndIndirectY) {
 	mos6502::Cycles_t UsedCycles, ExpectedCycles;
 	mos6502::Byte ins = mos6502::CPU::INS_AND_IDY;
 
