@@ -266,9 +266,11 @@ struct mos6502::CPU {
 	std::map<mos6502::Byte, instruction> instructions;
 	void WriteByte(mos6502::Word, mos6502::Byte);
 
-private:
 	mos6502::Byte ReadByte(mos6502::Word);
 	mos6502::Word ReadWord(mos6502::Word);
+
+private:
+
 };
 
 #endif
