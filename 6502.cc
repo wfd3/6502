@@ -109,9 +109,25 @@ static void ins_cmp(mos6502::CPU *cpu, unsigned long addrmode,
 }
 
 static void ins_cpx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Byte data;
+
+	data = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->Flags.C = cpu->X  > data;
+	cpu->Flags.Z = cpu->X == data;
+	cpu->Flags.N = cpu->X  < data;
+}
+
 static void ins_cpy(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Byte data;
+
+	data = cpu->getData(addrmode, expectedCyclesToUse);
+	cpu->Flags.C = cpu->Y  > data;
+	cpu->Flags.Z = cpu->Y == data;
+	cpu->Flags.N = cpu->Y  < data;
+
+}
 static void ins_dec(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_dex(mos6502::CPU *cpu, unsigned long addrmode,
