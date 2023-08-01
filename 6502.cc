@@ -285,9 +285,92 @@ static void ins_plp(mos6502::CPU *cpu, unsigned long addrmode,
 	cpu->Cycles += 2;
 }
 static void ins_rol(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+
+	mos6502::Word address;
+	mos6502::Byte data;
+
+	if (addrmode & ADDR_MODE_ACC) {
+		data = cpu->A;
+		cpu->A = (cpu->A << 1) | cpu->Flags.C;
+	} else {
+		address = cpu->getAddress(addrmode, expectedCyclesToUse);
+		data = cpu->ReadByte(address);
+		cpu->WriteByte(address, (data << 1) | cpu->Flags.C);
+	}
+
+	cpu->Flags.C = (data & (1 << 7)) > 0;
+	cpu->Flags.Z = (data == 0);
+	cpu->Flags.N = ((data << 1) & NegativeBit) > 0;
+
+	cpu->Cycles++;
+	if (addrmode & ADDR_MODE_ABX)
+		cpu->Cycles++;
+}
+
 static void ins_ror(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	mos6502::Word address;
+	mos6502::Byte data, carry;
+
+	carry = cpu->Flags.C;
+
+	if (addrmode & ADDR_MODE_ACC) 
+		data = cpu->A;
+	else {
+		address = cpu->getAddress(addrmode, expectedCyclesToUse);
+		data = cpu->ReadByte(address);
+	}
+
+	cpu->Flags.C = (data & 1) > 0;
+
+	data = (data >> 1) | (carry << 7);
+
+	if (addrmode & ADDR_MODE_ACC)
+		cpu->A = data;
+	else 
+		cpu->WriteByte(address, data);
+
+	cpu->Flags.N = (data & NegativeBit) > 0;
+	cpu->Flags.Z = (data == 0);
+
+	cpu->Cycles++;
+	if (addrmode & ADDR_MODE_ABX)
+		cpu->Cycles++;
+
+}
+#if 0
+		
+		cpu->Flags.C = (cpu->A & 1) > 0;
+
+		cpu->A = (cpu->A >> 1) | (cpu->Flags.C << 7);
+
+		cpu->Flags.N = (data & NegativeBit) > 0;
+		cpu->Flags.Z = (data == 0);
+
+	} else {
+		mos6502::Word address;
+		mos6502::Byte data;
+
+		address = cpu->getAddress(addrmode, expectedCyclesToUse);
+		data = cpu->ReadByte(address);
+
+		cpu->Flags.C = (data & 1) > 0;
+
+		data = (data >> 1) | (cpu->Flags.C << 7);
+		cpu->WriteByte(address, data);
+
+		cpu->Flags.N = (data & NegativeBit) > 0;
+		cpu->Flags.Z = (data == 0);
+
+	}
+
+	cpu->Cycles++;
+	if (addrmode & ADDR_MODE_ABX)
+		cpu->Cycles++;
+}
+#endif
+
 static void ins_rti(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_rts(mos6502::CPU *cpu, unsigned long addrmode,
