@@ -92,6 +92,10 @@ struct mos6502::CPU {
 	void Exception();
 	void SetFlagsForRegister(mos6502::Byte b);
 	void SetFlagsForCompare(mos6502::Byte b, mos6502::Byte v);
+	void SetFlagZ(mos6502::Byte);
+	void SetFlagN(mos6502::Byte);
+//
+	
 	mos6502::Byte FetchIns();
 	void Push(mos6502::Byte);
 	mos6502::Byte Pop();

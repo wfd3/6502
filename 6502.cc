@@ -59,9 +59,9 @@ static void ins_bit(mos6502::CPU *cpu, unsigned long addrmode,
 
 	data = cpu->getData(addrmode, expectedCyclesToUse);
 	data &= cpu->A;
-	cpu->Flags.Z = (data == 0);
+	cpu->SetFlagZ(data);
+	cpu->SetFlagN(data);
 	cpu->Flags.V = (data & (1 << 6)) == (1 << 6);
-	cpu->Flags.N = (data & NegativeBit) == NegativeBit;
 }
 
 static void ins_bmi(mos6502::CPU *cpu, unsigned long addrmode,
@@ -76,21 +76,25 @@ static void ins_bvc(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_bvs(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
+
 static void ins_clc(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.C = 0;
 	cpu->Cycles++;		// Single byte instruction
 }
+
 static void ins_cld(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.D = 0;
 	cpu->Cycles++;		// Single byte instruction
 }
+
 static void ins_cli(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.I = 0;
 	cpu->Cycles++;		// Single byte instruction
 }
+
 static void ins_clv(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Flags.V = 0;
@@ -138,8 +142,8 @@ static void ins_dec(mos6502::CPU *cpu, unsigned long addrmode,
 	data = cpu->ReadByte(address);
 	data--;
 	cpu->WriteByte(address, data);
-	cpu->Flags.Z = data == 0;
-	cpu->Flags.N = (data & NegativeBit) > 0;
+	cpu->SetFlagZ(data);
+	cpu->SetFlagN(data);
 	cpu->Cycles++;
 	if (addrmode & ADDR_MODE_ABX)
 		cpu->Cycles++;
@@ -148,16 +152,16 @@ static void ins_dec(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_dex(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->X--;
-	cpu->Flags.N = (cpu->X & NegativeBit) > 0;
-	cpu->Flags.Z = cpu->X == 0;
+	cpu->SetFlagN(cpu->X);
+	cpu->SetFlagZ(cpu->X);
 	cpu->Cycles++;
 }
 
 static void ins_dey(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Y--;
-	cpu->Flags.N = (cpu->Y & NegativeBit) > 0;
-	cpu->Flags.Z = cpu->Y == 0;
+	cpu->SetFlagN(cpu->Y);
+	cpu->SetFlagZ(cpu->Y);
 	cpu->Cycles++;
 }
 
@@ -189,16 +193,16 @@ static void ins_inc(mos6502::CPU *cpu, unsigned long addrmode,
 static void ins_inx(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->X++;
-	cpu->Flags.N = (cpu->X & NegativeBit) > 0;
-	cpu->Flags.Z = cpu->X == 0;
+	cpu->SetFlagZ(cpu->X);
+	cpu->SetFlagN(cpu->X);
 	cpu->Cycles++;
 }
 
 static void ins_iny(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Y++;
-	cpu->Flags.N = (cpu->Y & NegativeBit) > 0;
-	cpu->Flags.Z = cpu->Y == 0;
+	cpu->SetFlagZ(cpu->Y);
+	cpu->SetFlagN(cpu->Y);
 	cpu->Cycles++;
 }
 
@@ -206,16 +210,19 @@ static void ins_jmp(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
 static void ins_jsr(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
+
 static void ins_lda(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->A = cpu->getData(addrmode, expectedCyclesToUse);
 	cpu->SetFlagsForRegister(cpu->A);
 }
+
 static void ins_ldx(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->X = cpu->getData(addrmode, expectedCyclesToUse);
 	cpu->SetFlagsForRegister(cpu->X);
 }
+
 static void ins_ldy(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	cpu->Y = cpu->getData(addrmode, expectedCyclesToUse);
@@ -300,8 +307,8 @@ static void ins_rol(mos6502::CPU *cpu, unsigned long addrmode,
 	}
 
 	cpu->Flags.C = (data & (1 << 7)) > 0;
-	cpu->Flags.Z = (data == 0);
-	cpu->Flags.N = ((data << 1) & NegativeBit) > 0;
+	cpu->SetFlagZ(data);
+	cpu->SetFlagN(data << 1);
 
 	cpu->Cycles++;
 	if (addrmode & ADDR_MODE_ABX)
@@ -331,45 +338,13 @@ static void ins_ror(mos6502::CPU *cpu, unsigned long addrmode,
 	else 
 		cpu->WriteByte(address, data);
 
-	cpu->Flags.N = (data & NegativeBit) > 0;
-	cpu->Flags.Z = (data == 0);
-
-	cpu->Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
-		cpu->Cycles++;
-
-}
-#if 0
-		
-		cpu->Flags.C = (cpu->A & 1) > 0;
-
-		cpu->A = (cpu->A >> 1) | (cpu->Flags.C << 7);
-
-		cpu->Flags.N = (data & NegativeBit) > 0;
-		cpu->Flags.Z = (data == 0);
-
-	} else {
-		mos6502::Word address;
-		mos6502::Byte data;
-
-		address = cpu->getAddress(addrmode, expectedCyclesToUse);
-		data = cpu->ReadByte(address);
-
-		cpu->Flags.C = (data & 1) > 0;
-
-		data = (data >> 1) | (cpu->Flags.C << 7);
-		cpu->WriteByte(address, data);
-
-		cpu->Flags.N = (data & NegativeBit) > 0;
-		cpu->Flags.Z = (data == 0);
-
-	}
+	cpu->SetFlagN(data);
+	cpu->SetFlagZ(data);
 
 	cpu->Cycles++;
 	if (addrmode & ADDR_MODE_ABX)
 		cpu->Cycles++;
 }
-#endif
 
 static void ins_rti(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){}
@@ -418,17 +393,50 @@ static void ins_sty(mos6502::CPU *cpu, unsigned long addrmode,
 }
 
 static void ins_tax(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->X = cpu->A;
+	cpu->SetFlagZ(cpu->X);
+	cpu->SetFlagN(cpu->X);
+	cpu->Cycles++;
+}
+
 static void ins_tay(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->Y = cpu->A;
+	cpu->SetFlagZ(cpu->Y);
+	cpu->SetFlagN(cpu->Y);
+	cpu->Cycles++;
+}
+
 static void ins_tsx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->X = cpu->SP;
+	cpu->SetFlagZ(cpu->X);
+	cpu->SetFlagN(cpu->X);
+	cpu->Cycles++;
+}
+
 static void ins_txa(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->A = cpu->X;
+	cpu->SetFlagZ(cpu->A);
+	cpu->SetFlagN(cpu->A);
+	cpu->Cycles++;
+}
+
 static void ins_txs(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->SP = cpu->X;
+	cpu->Cycles++;
+}
+
 static void ins_tya(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+	cpu->A = cpu->Y;
+	cpu->SetFlagZ(cpu->A);
+	cpu->SetFlagN(cpu->A);
+	cpu->Cycles++;
+}
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -757,15 +765,24 @@ void mos6502::CPU::Exception() {
 	throw -1;
 }
 
+void mos6502::CPU::SetFlagZ(mos6502::Byte val) {
+	Flags.Z = (val == 0);
+}
+
+void mos6502::CPU::SetFlagN(mos6502::Byte val) {
+	Flags.N = (val & NegativeBit) >> 7;
+}
+
 void mos6502::CPU::SetFlagsForRegister(mos6502::Byte b) {
-	Flags.Z = (b == 0);
-	Flags.N = (b & NegativeBit) >> 7;
+	SetFlagZ(b);
+	SetFlagN(b);
+
 }
 
 void mos6502::CPU::SetFlagsForCompare(mos6502::Byte b, mos6502::Byte v) {
 	Flags.C = (b >= v);
-	Flags.Z = b == v;
-	Flags.N = (b & NegativeBit) >> 7;
+	SetFlagZ(b);
+	SetFlagN(b);
 }
 
 mos6502::Byte mos6502::CPU::ReadByte(mos6502::Word address) {

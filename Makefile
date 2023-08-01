@@ -93,8 +93,8 @@ TESTS_FILES = 6502.cc \
 	$(TESTS_DIR)/6502_tests_dec_dex_dey.cc \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.cc \
 	$(TESTS_DIR)/6502_tests_lsr.cc \
-	$(TESTS_DIR)/6502_tests_rol_ror.cc
-
+	$(TESTS_DIR)/6502_tests_rol_ror.cc \
+	$(TESTS_DIR)/6502_tests_tx_ty.cc
 
 TESTS_OBJS = 6502.o \
 	$(TESTS_DIR)/6502_tests_setup.o \
@@ -110,7 +110,8 @@ TESTS_OBJS = 6502.o \
 	$(TESTS_DIR)/6502_tests_dec_dex_dey.o \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.o \
 	$(TESTS_DIR)/6502_tests_lsr.o \
-	$(TESTS_DIR)/6502_tests_rol_ror.o
+	$(TESTS_DIR)/6502_tests_rol_ror.o \
+	$(TESTS_DIR)/6502_tests_tx_ty.o
 
 %.o: %.cc 6502.h  $(GTEST_HEADERS) 
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
