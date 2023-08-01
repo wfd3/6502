@@ -221,8 +221,30 @@ static void ins_ldy(mos6502::CPU *cpu, unsigned long addrmode,
 	cpu->Y = cpu->getData(addrmode, expectedCyclesToUse);
 	cpu->SetFlagsForRegister(cpu->Y);
 }
+
 static void ins_lsr(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+		    mos6502::Byte &expectedCyclesToUse){
+
+
+	mos6502::Word address;
+	mos6502::Byte data;
+
+	if (addrmode & ADDR_MODE_ACC) {
+		cpu->Flags.C = cpu->A & 1;
+		cpu->A = cpu->A >> 1;
+	} else {
+		address = cpu->getAddress(addrmode, expectedCyclesToUse);
+		data = cpu->ReadByte(address);
+		cpu->Flags.C = data & 1;
+		data = data >> 1;
+		cpu->WriteByte(address, data);
+	}
+	cpu->Flags.N = 0;
+	cpu->Cycles++;
+	if (addrmode & ADDR_MODE_ABX)
+		cpu->Cycles++;	
+}
+
 static void ins_nop(mos6502::CPU *cpu, unsigned long addrmode,
 		    mos6502::Byte &expectedCyclesToUse){
 	// NOP, like all single byte instructions, takes
