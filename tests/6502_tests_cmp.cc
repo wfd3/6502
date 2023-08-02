@@ -77,7 +77,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
 		cpu.ExecuteOneInstruction();
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_TRUE(cpu.Flags.Z);
 	EXPECT_FALSE(cpu.Flags.N);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
@@ -429,7 +429,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
 		cpu.ExecuteOneInstruction();
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_TRUE(cpu.Flags.Z);
 	EXPECT_FALSE(cpu.Flags.N);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
@@ -571,7 +571,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
 		cpu.ExecuteOneInstruction();
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_TRUE(cpu.Flags.Z);
 	EXPECT_FALSE(cpu.Flags.N);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
