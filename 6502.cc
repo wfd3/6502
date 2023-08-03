@@ -1,7 +1,4 @@
-#include <stdio.h>
 #include <map>
-#include <bitset>
-#include <functional>
 #include "6502.h"
 
 /////////////////////////////////////////////////////////////////////////
@@ -9,12 +6,10 @@ CPU::CPU(Memory *m) {
 	mem = m;
 }
 
-void CPU::ins_adc(unsigned long addrmode,
-		    Byte &expectedCyclesToUse) {
+void CPU::ins_adc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 }
 
-void CPU::ins_and(unsigned long addrmode,
-		    Byte &expectedCyclesToUse) {
+void CPU::ins_and(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -22,17 +17,33 @@ void CPU::ins_and(unsigned long addrmode,
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_asl(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_bcc(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_bcs(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_beq(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
+void CPU::ins_asl(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address;
+	Byte data;
 
-void CPU::ins_bit(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+	if (addrmode & ADDR_MODE_ACC) {
+		Flags.C = (A & (1 << 7)) > 1;
+		A = A << 1;
+		data = A;
+	} else {
+		address = getAddress(addrmode, expectedCyclesToUse);
+		data = ReadByte(address);
+		Flags.C = data & (1 << 7);
+		data = data << 1;
+		WriteByte(address, data);
+	}
+	SetFlagN(data);
+	SetFlagZ(data);
+	Cycles++;
+	if (addrmode & ADDR_MODE_ABX)
+		Cycles++;	
+}
+
+void CPU::ins_bcc(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bcs(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_beq(unsigned long addrmode, Byte &expectedCyclesToUse){}
+
+void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -42,45 +53,34 @@ void CPU::ins_bit(unsigned long addrmode,
 	Flags.V = (data & (1 << 6)) == (1 << 6);
 }
 
-void CPU::ins_bmi(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_bne(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_bpl(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_brk(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_bvc(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_bvs(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
+void CPU::ins_bmi(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bne(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bvc(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bvs(unsigned long addrmode, Byte &expectedCyclesToUse){}
 
-void CPU::ins_clc(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_clc(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.C = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_cld(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_cld(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.D = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_cli(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_cli(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.I = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_clv(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_clv(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.V = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_cmp(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_cmp(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -89,8 +89,7 @@ void CPU::ins_cmp(unsigned long addrmode,
 	Flags.N = A  < data;
 }
 
-void CPU::ins_cpx(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_cpx(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -99,8 +98,7 @@ void CPU::ins_cpx(unsigned long addrmode,
 	Flags.N = X  < data;
 }
 
-void CPU::ins_cpy(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_cpy(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -110,8 +108,7 @@ void CPU::ins_cpy(unsigned long addrmode,
 
 }
 
-void CPU::ins_dec(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_dec(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address;
 	Byte data;
 
@@ -126,24 +123,21 @@ void CPU::ins_dec(unsigned long addrmode,
 		Cycles++;
 }
 
-void CPU::ins_dex(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_dex(unsigned long addrmode, Byte &expectedCyclesToUse){
 	X--;
 	SetFlagN(X);
 	SetFlagZ(X);
 	Cycles++;
 }
 
-void CPU::ins_dey(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_dey(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Y--;
 	SetFlagN(Y);
 	SetFlagZ(Y);
 	Cycles++;
 }
 
-void CPU::ins_eor(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_eor(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -151,8 +145,7 @@ void CPU::ins_eor(unsigned long addrmode,
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_inc(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_inc(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address;
 	Byte data;
 
@@ -167,49 +160,39 @@ void CPU::ins_inc(unsigned long addrmode,
 		Cycles++;
 }
 
-void CPU::ins_inx(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_inx(unsigned long addrmode, Byte &expectedCyclesToUse){
 	X++;
 	SetFlagZ(X);
 	SetFlagN(X);
 	Cycles++;
 }
 
-void CPU::ins_iny(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_iny(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Y++;
 	SetFlagZ(Y);
 	SetFlagN(Y);
 	Cycles++;
 }
 
-void CPU::ins_jmp(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_jsr(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
+void CPU::ins_jmp(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_jsr(unsigned long addrmode, Byte &expectedCyclesToUse){}
 
-void CPU::ins_lda(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_lda(unsigned long addrmode, Byte &expectedCyclesToUse){
 	A = getData(addrmode, expectedCyclesToUse);
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_ldx(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_ldx(unsigned long addrmode, Byte &expectedCyclesToUse){
 	X = getData(addrmode, expectedCyclesToUse);
 	SetFlagsForRegister(X);
 }
 
-void CPU::ins_ldy(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_ldy(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Y = getData(addrmode, expectedCyclesToUse);
 	SetFlagsForRegister(Y);
 }
 
-void CPU::ins_lsr(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
-
-
+void CPU::ins_lsr(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address;
 	Byte data;
 
@@ -229,15 +212,13 @@ void CPU::ins_lsr(unsigned long addrmode,
 		Cycles++;	
 }
 
-void CPU::ins_nop(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_nop(unsigned long addrmode, Byte &expectedCyclesToUse){
 	// NOP, like all single byte instructions, takes
 	// two cycles.
 	Cycles++;
 }
 
-void CPU::ins_ora(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_ora(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
 
 	data = getData(addrmode, expectedCyclesToUse);
@@ -245,31 +226,26 @@ void CPU::ins_ora(unsigned long addrmode,
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_pha(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_pha(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Push(A);
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_pla(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_pla(unsigned long addrmode, Byte &expectedCyclesToUse){
 	A = Pop();
 	SetFlagsForRegister(A);
 	Cycles += 2;      
 }
 
-void CPU::ins_php(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_php(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Push(PS);
 	Cycles++;		// Single byte instruction
 }
-void CPU::ins_plp(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_plp(unsigned long addrmode, Byte &expectedCyclesToUse){
 	PS = Pop();
 	Cycles += 2;
 }
-void CPU::ins_rol(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_rol(unsigned long addrmode, Byte &expectedCyclesToUse){
 
 	Word address;
 	Byte data;
@@ -292,8 +268,7 @@ void CPU::ins_rol(unsigned long addrmode,
 		Cycles++;
 }
 
-void CPU::ins_ror(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_ror(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address;
 	Byte data, carry;
 
@@ -323,92 +298,77 @@ void CPU::ins_ror(unsigned long addrmode,
 		Cycles++;
 }
 
-void CPU::ins_rti(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_rts(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
-void CPU::ins_sbc(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){}
+void CPU::ins_rti(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_rts(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_sbc(unsigned long addrmode, Byte &expectedCyclesToUse){}
 
-void CPU::ins_sec(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_sec(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.C = 1;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_sed(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_sed(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.D = 1;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_sei(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_sei(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.I = 1;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_sta(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_sta(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address =
 		getAddress(addrmode, expectedCyclesToUse);
 	WriteByte(address, A);
 }
 
-void CPU::ins_stx(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_stx(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address =
 		getAddress(addrmode, expectedCyclesToUse);
 	WriteByte(address, X);
 }
 
-void CPU::ins_sty(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_sty(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Word address =
 		getAddress(addrmode, expectedCyclesToUse);
 	WriteByte(address, Y);
 }
 
-void CPU::ins_tax(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_tax(unsigned long addrmode, Byte &expectedCyclesToUse){
 	X = A;
 	SetFlagZ(X);
 	SetFlagN(X);
 	Cycles++;
 }
 
-void CPU::ins_tay(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_tay(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Y = A;
 	SetFlagZ(Y);
 	SetFlagN(Y);
 	Cycles++;
 }
 
-void CPU::ins_tsx(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_tsx(unsigned long addrmode, Byte &expectedCyclesToUse){
 	X = SP;
 	SetFlagZ(X);
 	SetFlagN(X);
 	Cycles++;
 }
 
-void CPU::ins_txa(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_txa(unsigned long addrmode, Byte &expectedCyclesToUse){
 	A = X;
 	SetFlagZ(A);
 	SetFlagN(A);
 	Cycles++;
 }
 
-void CPU::ins_txs(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_txs(unsigned long addrmode, Byte &expectedCyclesToUse){
 	SP = X;
 	Cycles++;
 }
 
-void CPU::ins_tya(unsigned long addrmode,
-		    Byte &expectedCyclesToUse){
+void CPU::ins_tya(unsigned long addrmode, Byte &expectedCyclesToUse){
 	A = Y;
 	SetFlagZ(A);
 	SetFlagN(A);
