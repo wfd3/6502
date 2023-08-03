@@ -83,6 +83,7 @@ TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
 	$(TESTS_DIR)/6502_tests_asl.cc \
 	$(TESTS_DIR)/6502_tests_bit.cc \
+	$(TESTS_DIR)/6502_tests_brk.cc \
 	$(TESTS_DIR)/6502_tests_cmp.cc \
 	$(TESTS_DIR)/6502_tests_dec_dex_dey.cc \
 	$(TESTS_DIR)/6502_tests_eor.cc \
@@ -96,6 +97,7 @@ TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_ora.cc \
 	$(TESTS_DIR)/6502_tests_pushpop.cc \
 	$(TESTS_DIR)/6502_tests_rol_ror.cc \
+	$(TESTS_DIR)/6502_tests_rti.cc \
 	$(TESTS_DIR)/6502_tests_rts.cc \
 	$(TESTS_DIR)/6502_tests_tx_ty.cc
 
@@ -103,6 +105,7 @@ TESTS_OBJS = 6502.o memory.o \
 	$(TESTS_DIR)/6502_tests_and.o \
 	$(TESTS_DIR)/6502_tests_asl.cc \
 	$(TESTS_DIR)/6502_tests_bit.o \
+	$(TESTS_DIR)/6502_tests_brk.cc \
 	$(TESTS_DIR)/6502_tests_cmp.o \
 	$(TESTS_DIR)/6502_tests_dec_dex_dey.o \
 	$(TESTS_DIR)/6502_tests_eor.o \
@@ -116,6 +119,7 @@ TESTS_OBJS = 6502.o memory.o \
 	$(TESTS_DIR)/6502_tests_ora.o \
 	$(TESTS_DIR)/6502_tests_pushpop.o \
 	$(TESTS_DIR)/6502_tests_rol_ror.o \
+	$(TESTS_DIR)/6502_tests_rti.o \
 	$(TESTS_DIR)/6502_tests_rts.o \
 	$(TESTS_DIR)/6502_tests_tx_ty.o
 

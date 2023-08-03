@@ -56,7 +56,15 @@ void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse){
 void CPU::ins_bmi(unsigned long addrmode, Byte &expectedCyclesToUse){}
 void CPU::ins_bne(unsigned long addrmode, Byte &expectedCyclesToUse){}
 void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse){}
+
+void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	PushWord(PC);
+	Push(PS);
+	PC = ReadWord(INT_VECTOR);
+	Flags.B = 1;
+	Cycles++;
+}
+
 void CPU::ins_bvc(unsigned long addrmode, Byte &expectedCyclesToUse){}
 void CPU::ins_bvs(unsigned long addrmode, Byte &expectedCyclesToUse){}
 
@@ -311,7 +319,11 @@ void CPU::ins_ror(unsigned long addrmode, Byte &expectedCyclesToUse){
 		Cycles++;
 }
 
-void CPU::ins_rti(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_rti(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	PS = Pop();
+	PC = PopWord();
+	Cycles += 2;
+}
 
 void CPU::ins_rts(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	PC = PopWord();
@@ -336,8 +348,7 @@ void CPU::ins_sei(unsigned long addrmode, Byte &expectedCyclesToUse){
 }
 
 void CPU::ins_sta(unsigned long addrmode, Byte &expectedCyclesToUse){
-	Word address =
-		getAddress(addrmode, expectedCyclesToUse);
+	Word address = getAddress(addrmode, expectedCyclesToUse);
 	WriteByte(address, A);
 }
 
@@ -773,14 +784,13 @@ void CPU::PushWord(Word value) {
 
 Word CPU::PopWord() {
 	Word w;
-	w = Pop() | (Pop() << 8);
+	w = (Pop() << 8) | Pop();
 	return w;
 }
 
 void CPU::Push(Byte value) {
 	Word SPAddress = STACK_FRAME + SP;
 	WriteByte(SPAddress, value);
-	printf("Push %x at %lx\n", value, SPAddress);
 	SP--;
 }
 
@@ -790,6 +800,20 @@ Byte CPU::Pop() {
 	SPAddress = STACK_FRAME + SP;
 	return ReadByte(SPAddress);
 }
+
+void CPU::dumpstack() {
+	Byte p = SP | STACK_FRAME;
+	Word a;
+	printf("---\nStack dump:\n");
+	printf("STACK POINTER: %02x\n", SP);
+	while (p != 0xff) {
+		p++;
+		a = STACK_FRAME | p;
+		printf("[%04x] = %02x\n", a, mem->ReadByte(a));
+	}
+	printf("---\n");
+}
+	
 
 Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 	Word address, addrmode, flags;

@@ -21,6 +21,7 @@ public:
 	
 	constexpr static Byte INITIAL_SP = 0xFF;
 	constexpr static Word INITIAL_PC = 0xFFFC;
+	constexpr static Word INT_VECTOR = 0xFFFE;
 
 	Word PC;
 	Byte SP;
@@ -312,5 +313,7 @@ private:
 	void ins_txa(unsigned long, Byte &);
 	void ins_txs(unsigned long, Byte &);
 	void ins_tya(unsigned long, Byte &);
+
+	void dumpstack();
 };
 	
