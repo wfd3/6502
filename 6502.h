@@ -206,13 +206,13 @@ private:
 	void SetFlagsForCompare(Byte b, Byte v);
 	void SetFlagZ(Byte);
 	void SetFlagN(Byte);
-	Byte FetchIns();
 	void Push(Byte);
 	Byte Pop();
 	void PushWord(Word);
 	Word PopWord();
 	Word getAddress(unsigned long, Byte &);
 	Byte getData(unsigned long, Byte &);
+	Byte ReadByteAtPC();
 
 	Memory *mem;
 
@@ -256,6 +256,8 @@ private:
 	void WriteByte(Word, Byte);
 	Byte ReadByte(Word);
 	Word ReadWord(Word);
+	void dumpstack();
+	void do_branch(bool, Word, Byte &);
 
 	void ins_adc(unsigned long, Byte &);
 	void ins_and(unsigned long, Byte &);
@@ -314,6 +316,5 @@ private:
 	void ins_txs(unsigned long, Byte &);
 	void ins_tya(unsigned long, Byte &);
 
-	void dumpstack();
 };
 	

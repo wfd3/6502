@@ -39,9 +39,35 @@ void CPU::ins_asl(unsigned long addrmode, Byte &expectedCyclesToUse) {
 		Cycles++;	
 }
 
-void CPU::ins_bcc(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_bcs(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_beq(unsigned long addrmode, Byte &expectedCyclesToUse){}
+// Set PC to @address if @condition is true
+void CPU::do_branch(bool condition, Word address, Byte &expectedCyclesToUse) {
+	if (condition) {
+		Cycles++;	// Branch taken
+		expectedCyclesToUse++;
+
+		if ((PC >> 8) != (address >> 8)) { // Crossed page boundry
+			Cycles += 2;
+			expectedCyclesToUse += 2;
+		}
+
+		PC = address;
+	}
+}
+
+void CPU::ins_bcc(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(!Flags.C, address, expectedCyclesToUse);
+}
+
+void CPU::ins_bcs(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(Flags.C, address, expectedCyclesToUse);
+}
+
+void CPU::ins_beq(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(Flags.Z, address, expectedCyclesToUse);
+}
 
 void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Byte data;
@@ -53,9 +79,20 @@ void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.V = (data & (1 << 6)) == (1 << 6);
 }
 
-void CPU::ins_bmi(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_bne(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bmi(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(Flags.N, address, expectedCyclesToUse);
+}
+
+void CPU::ins_bne(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(!Flags.Z, address, expectedCyclesToUse);
+}
+
+void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(!Flags.N, address, expectedCyclesToUse);
+}
 
 void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	PushWord(PC);
@@ -65,8 +102,15 @@ void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_bvc(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_bvs(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_bvc(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(!Flags.V, address, expectedCyclesToUse);
+}
+
+void CPU::ins_bvs(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(addrmode, expectedCyclesToUse);
+	do_branch(Flags.V, address, expectedCyclesToUse);
+}
 
 void CPU::ins_clc(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Flags.C = 0;
@@ -767,7 +811,7 @@ Word CPU::ReadWord(Word address) {
 	return w;
 }
 
-Byte CPU::FetchIns() {
+Byte CPU::ReadByteAtPC() {
 	Byte opcode = ReadByte(PC);
 	PC++;
 	return opcode;
@@ -817,7 +861,7 @@ void CPU::dumpstack() {
 
 Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 	Word address, addrmode, flags;
-	Byte rel;
+	SByte rel;
 	
 	addrmode = mode &  0b00111111111111;
 	flags    = mode & ~0b00111111111111;
@@ -825,26 +869,28 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 	switch (addrmode) {
 	// ZeroPage mode (tested)
 	case ADDR_MODE_ZP:
-		address = FetchIns();
+		address = ReadByteAtPC();
 		break;
 
 	// ZeroPage,X (tested)
 	case ADDR_MODE_ZPX:
-		address = FetchIns();
+		address = ReadByteAtPC();
 		address += X;
 		Cycles++;
 		break;
 
         // ZeroPage,Y (tested)
 	case ADDR_MODE_ZPY:
-		address = FetchIns();
+		address = ReadByteAtPC();
 		address += Y;
 		Cycles++;
 		break;
 		
 	case ADDR_MODE_REL:
-		rel = SByte(FetchIns());
+		rel = SByte(ReadByteAtPC());
 		address = PC + rel;
+		printf("pc = %d, rel = %d, address = %d\n", PC, rel, address);
+	
 		break;
 
 	// Absolute (tested)
@@ -858,7 +904,8 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		address = ReadWord(PC);
 		PC += 2;
 		// Add a cycle if a page boundry is crossed
-		if ((flags &CYCLE_CROSS_PAGE) && ((address + X) >> 8) != (address >> 8)) {
+		if ((flags & CYCLE_CROSS_PAGE) && ((address + X) >> 8) !=
+		    (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
@@ -870,7 +917,8 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		address = ReadWord(PC);
 		PC += 2;
 		// Add a cycle if a page boundry is crossed
-		if ((flags &CYCLE_CROSS_PAGE) && ((address + Y) >> 8) != (address >> 8)) {
+		if ((flags & CYCLE_CROSS_PAGE) && ((address + Y) >> 8) !=
+		    (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
@@ -884,7 +932,7 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 
         // (Indirect,X) or Indexed Indirect (tested)
 	case ADDR_MODE_IDX:	
-		address = FetchIns() + X;
+		address = ReadByteAtPC() + X;
 		if (address > 0xFF)
 			address -= 0xFF;
 		address = ReadWord(address);
@@ -893,7 +941,7 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 
 	// (Indirect),Y or Indirect Indexed (tested)
 	case ADDR_MODE_IDY:
-		address = FetchIns();
+		address = ReadByteAtPC();
 		address = ReadWord(address);
 		address += Y;
 		break;
@@ -921,7 +969,7 @@ Byte CPU::getData(unsigned long mode, Byte &expectedCycles) {
 
 	// Immediate mode (tested)
 	case ADDR_MODE_IMM:
-		data = FetchIns();
+		data = ReadByteAtPC();
 		break;
 
 	default:
@@ -940,7 +988,7 @@ std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
 	Byte expectedCyclesToUse;
 	opfn_t op;
 
-	opcode = FetchIns();
+	opcode = ReadByteAtPC();
 
 	if (instructions.count(opcode) == 0) {
 		printf("Invalid opcode 0x%x\n", opcode);
