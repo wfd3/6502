@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
 #include "../6502.h"
 
-extern	mos6502::MEMORY mem;
-extern	mos6502::CPU cpu;
-
 class MOS6502CMPTests : public testing::Test {
 public:
 
+	Memory mem{CPU::MAX_MEM};
+	CPU cpu{&mem};
+
 	virtual void SetUp() {
+		cpu.Reset(CPU::INITIAL_PC);
+		mem.Init();
 	}
 	
 	virtual void TearDown()	{
@@ -15,11 +17,11 @@ public:
 };
 
 TEST_F(MOS6502CMPTests, CmpImmediate) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -38,11 +40,11 @@ TEST_F(MOS6502CMPTests, CmpImmediate) {
 }
 
 TEST_F(MOS6502CMPTests, CmpImmediateSetsCFlagFalse) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -61,11 +63,11 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsCFlagFalse) {
 }
 
 TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -84,11 +86,11 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CmpImmediateSetsNFlagTrue) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -107,11 +109,11 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsNFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CmpZeroPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ZP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ZP;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -131,11 +133,11 @@ TEST_F(MOS6502CMPTests, CmpZeroPage) {
 }
 
 TEST_F(MOS6502CMPTests, CmpZeroPageX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ZPX;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ZPX;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -156,11 +158,11 @@ TEST_F(MOS6502CMPTests, CmpZeroPageX) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsolute) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ABS;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ABS;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -181,11 +183,11 @@ TEST_F(MOS6502CMPTests, CmpAbsolute) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ABX;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ABX;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -207,11 +209,11 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteX) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteXCrossesPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ABX;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ABX;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -233,11 +235,11 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteXCrossesPage) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteY) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ABY;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ABY;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -259,11 +261,11 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteY) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteYCrossesPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_ABY;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_ABY;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -285,11 +287,11 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteYCrossesPage) {
 }
 
 TEST_F(MOS6502CMPTests, CmpIndirectX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IDX;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IDX;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -312,11 +314,11 @@ TEST_F(MOS6502CMPTests, CmpIndirectX) {
 }
 
 TEST_F(MOS6502CMPTests, CmpIndirectY) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IDY;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IDY;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -339,11 +341,11 @@ TEST_F(MOS6502CMPTests, CmpIndirectY) {
 }
 
 TEST_F(MOS6502CMPTests, CmpIndirectYCrossesPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CMP_IDY;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CMP_IDY;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -367,11 +369,11 @@ TEST_F(MOS6502CMPTests, CmpIndirectYCrossesPage) {
 
 // CPX
 TEST_F(MOS6502CMPTests, CpxImmediate) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPX_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -390,11 +392,11 @@ TEST_F(MOS6502CMPTests, CpxImmediate) {
 }
 
 TEST_F(MOS6502CMPTests, CpxImmediateSetsCFlagFalse) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPX_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -413,11 +415,11 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsCFlagFalse) {
 }
 
 TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPX_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -436,11 +438,11 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpxImmediateSetsNFlagTrue) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPX_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -459,11 +461,11 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsNFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpxZeroPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPX_ZP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPX_ZP;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -483,11 +485,11 @@ TEST_F(MOS6502CMPTests, CpxZeroPage) {
 }
 
 TEST_F(MOS6502CMPTests, CpxAbsolute) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPX_ABS;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPX_ABS;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -509,11 +511,11 @@ TEST_F(MOS6502CMPTests, CpxAbsolute) {
 
 // CPY
 TEST_F(MOS6502CMPTests, CpyImmediate) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPY_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -532,11 +534,11 @@ TEST_F(MOS6502CMPTests, CpyImmediate) {
 }
 
 TEST_F(MOS6502CMPTests, CpyImmediateSetsCFlagFalse) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPY_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -555,11 +557,11 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsCFlagFalse) {
 }
 
 TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPY_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -578,11 +580,11 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpyImmediateSetsNFlagTrue) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPY_IMM;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -601,11 +603,11 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsNFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpyZeroPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPY_ZP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPY_ZP;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -625,11 +627,11 @@ TEST_F(MOS6502CMPTests, CpyZeroPage) {
 }
 
 TEST_F(MOS6502CMPTests, CpyAbsolute) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CPY_ABS;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CPY_ABS;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

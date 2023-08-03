@@ -4,755 +4,732 @@
 #include <functional>
 #include "6502.h"
 
-extern mos6502::MEMORY mem;
-extern mos6502::CPU cpu;
-
-constexpr static unsigned long ADDR_MODE_IMM    = 1 << 0;  // Immediate
-constexpr static unsigned long ADDR_MODE_ZP     = 1 << 1;  // Zero Page
-constexpr static unsigned long ADDR_MODE_ZPX    = 1 << 2;  // Zero Page,X
-constexpr static unsigned long ADDR_MODE_ZPY    = 1 << 3;  // Zero Page,Y
-constexpr static unsigned long ADDR_MODE_REL    = 1 << 4;  // Relative
-constexpr static unsigned long ADDR_MODE_ABS    = 1 << 5;  // Absolute
-constexpr static unsigned long ADDR_MODE_ABX    = 1 << 6;  // Absolute,X
-constexpr static unsigned long ADDR_MODE_ABY    = 1 << 7;  // Absolute,y
-constexpr static unsigned long ADDR_MODE_IND    = 1 << 8;  // Indirect
-constexpr static unsigned long ADDR_MODE_IDX    = 1 << 9;  // Indexed Ind
-constexpr static unsigned long ADDR_MODE_IDY    = 1 << 10; // Indirect Idx
-constexpr static unsigned long ADDR_MODE_IMP    = 1 << 11; // Implied
-constexpr static unsigned long ADDR_MODE_ACC    = 1 << 12; // Accumulator
-
-// How the CPU should add cycle counts on branches and when
-// instructions fetch data across page boundries.
-constexpr static unsigned long CYCLE_BRANCH     = 1 << 13;
-constexpr static unsigned long CYCLE_CROSS_PAGE = 1 << 14;
-
-//
-constexpr static mos6502::Byte NegativeBit = 1 << 7;
-	
 /////////////////////////////////////////////////////////////////////////
-
-static void ins_adc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse) {
+CPU::CPU(Memory *m) {
+	mem = m;
 }
 
-static void ins_and(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse) {
-	mos6502::Byte data;
-
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->A &= data;
-	cpu->SetFlagsForRegister(cpu->A);
+void CPU::ins_adc(unsigned long addrmode,
+		    Byte &expectedCyclesToUse) {
 }
 
-static void ins_asl(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_bcc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_bcs(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_beq(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+void CPU::ins_and(unsigned long addrmode,
+		    Byte &expectedCyclesToUse) {
+	Byte data;
 
-static void ins_bit(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Byte data;
-
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	data &= cpu->A;
-	cpu->SetFlagZ(data);
-	cpu->SetFlagN(data);
-	cpu->Flags.V = (data & (1 << 6)) == (1 << 6);
+	data = getData(addrmode, expectedCyclesToUse);
+	A &= data;
+	SetFlagsForRegister(A);
 }
 
-static void ins_bmi(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_bne(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_bpl(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_brk(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_bvc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_bvs(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+void CPU::ins_asl(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_bcc(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_bcs(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_beq(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
 
-static void ins_clc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.C = 0;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_bit(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Byte data;
+
+	data = getData(addrmode, expectedCyclesToUse);
+	data &= A;
+	SetFlagZ(data);
+	SetFlagN(data);
+	Flags.V = (data & (1 << 6)) == (1 << 6);
 }
 
-static void ins_cld(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.D = 0;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_bmi(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_bne(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_bpl(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_brk(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_bvc(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_bvs(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+
+void CPU::ins_clc(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.C = 0;
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_cli(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.I = 0;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_cld(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.D = 0;
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_clv(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.V = 0;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_cli(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.I = 0;
+	Cycles++;		// Single byte instruction
 }
 
-// HERE
-static void ins_cmp(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Byte data;
-
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->Flags.C = cpu->A >= data;
-	cpu->Flags.Z = cpu->A == data;
-	cpu->Flags.N = cpu->A  < data;
+void CPU::ins_clv(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.V = 0;
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_cpx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Byte data;
+void CPU::ins_cmp(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Byte data;
 
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->Flags.C = cpu->X >= data;
-	cpu->Flags.Z = cpu->X == data;
-	cpu->Flags.N = cpu->X  < data;
+	data = getData(addrmode, expectedCyclesToUse);
+	Flags.C = A >= data;
+	Flags.Z = A == data;
+	Flags.N = A  < data;
 }
 
-static void ins_cpy(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Byte data;
+void CPU::ins_cpx(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Byte data;
 
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->Flags.C = cpu->Y >= data;
-	cpu->Flags.Z = cpu->Y == data;
-	cpu->Flags.N = cpu->Y  < data;
+	data = getData(addrmode, expectedCyclesToUse);
+	Flags.C = X >= data;
+	Flags.Z = X == data;
+	Flags.N = X  < data;
+}
+
+void CPU::ins_cpy(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Byte data;
+
+	data = getData(addrmode, expectedCyclesToUse);
+	Flags.C = Y >= data;
+	Flags.Z = Y == data;
+	Flags.N = Y  < data;
 
 }
 
-static void ins_dec(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Word address;
-	mos6502::Byte data;
+void CPU::ins_dec(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Word address;
+	Byte data;
 
-	address = cpu->getAddress(addrmode, expectedCyclesToUse);
-	data = cpu->ReadByte(address);
+	address = getAddress(addrmode, expectedCyclesToUse);
+	data = ReadByte(address);
 	data--;
-	cpu->WriteByte(address, data);
-	cpu->SetFlagZ(data);
-	cpu->SetFlagN(data);
-	cpu->Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
-		cpu->Cycles++;
+	WriteByte(address, data);
+	SetFlagZ(data);
+	SetFlagN(data);
+	Cycles++;
+	if (addrmode &ADDR_MODE_ABX)
+		Cycles++;
 }
 
-static void ins_dex(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->X--;
-	cpu->SetFlagN(cpu->X);
-	cpu->SetFlagZ(cpu->X);
-	cpu->Cycles++;
+void CPU::ins_dex(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	X--;
+	SetFlagN(X);
+	SetFlagZ(X);
+	Cycles++;
 }
 
-static void ins_dey(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Y--;
-	cpu->SetFlagN(cpu->Y);
-	cpu->SetFlagZ(cpu->Y);
-	cpu->Cycles++;
+void CPU::ins_dey(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Y--;
+	SetFlagN(Y);
+	SetFlagZ(Y);
+	Cycles++;
 }
 
-static void ins_eor(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Byte data;
+void CPU::ins_eor(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Byte data;
 
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->A ^= data;
-	cpu->SetFlagsForRegister(cpu->A);
+	data = getData(addrmode, expectedCyclesToUse);
+	A ^= data;
+	SetFlagsForRegister(A);
 }
 
-static void ins_inc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Word address;
-	mos6502::Byte data;
+void CPU::ins_inc(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Word address;
+	Byte data;
 
-	address = cpu->getAddress(addrmode, expectedCyclesToUse);
-	data = cpu->ReadByte(address);
+	address = getAddress(addrmode, expectedCyclesToUse);
+	data = ReadByte(address);
 	data++;
-	cpu->WriteByte(address, data);
-	cpu->Flags.Z = data == 0;
-	cpu->Flags.N = (data & NegativeBit) > 0;
-	cpu->Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
-		cpu->Cycles++;
+	WriteByte(address, data);
+	Flags.Z = data == 0;
+	Flags.N = (data &NegativeBit) > 0;
+	Cycles++;
+	if (addrmode &ADDR_MODE_ABX)
+		Cycles++;
 }
 
-static void ins_inx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->X++;
-	cpu->SetFlagZ(cpu->X);
-	cpu->SetFlagN(cpu->X);
-	cpu->Cycles++;
+void CPU::ins_inx(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	X++;
+	SetFlagZ(X);
+	SetFlagN(X);
+	Cycles++;
 }
 
-static void ins_iny(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Y++;
-	cpu->SetFlagZ(cpu->Y);
-	cpu->SetFlagN(cpu->Y);
-	cpu->Cycles++;
+void CPU::ins_iny(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Y++;
+	SetFlagZ(Y);
+	SetFlagN(Y);
+	Cycles++;
 }
 
-static void ins_jmp(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_jsr(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+void CPU::ins_jmp(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_jsr(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
 
-static void ins_lda(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->A = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->SetFlagsForRegister(cpu->A);
+void CPU::ins_lda(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	A = getData(addrmode, expectedCyclesToUse);
+	SetFlagsForRegister(A);
 }
 
-static void ins_ldx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->X = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->SetFlagsForRegister(cpu->X);
+void CPU::ins_ldx(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	X = getData(addrmode, expectedCyclesToUse);
+	SetFlagsForRegister(X);
 }
 
-static void ins_ldy(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Y = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->SetFlagsForRegister(cpu->Y);
+void CPU::ins_ldy(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Y = getData(addrmode, expectedCyclesToUse);
+	SetFlagsForRegister(Y);
 }
 
-static void ins_lsr(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
+void CPU::ins_lsr(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
 
 
-	mos6502::Word address;
-	mos6502::Byte data;
+	Word address;
+	Byte data;
 
-	if (addrmode & ADDR_MODE_ACC) {
-		cpu->Flags.C = cpu->A & 1;
-		cpu->A = cpu->A >> 1;
+	if (addrmode &ADDR_MODE_ACC) {
+		Flags.C = A & 1;
+		A = A >> 1;
 	} else {
-		address = cpu->getAddress(addrmode, expectedCyclesToUse);
-		data = cpu->ReadByte(address);
-		cpu->Flags.C = data & 1;
+		address = getAddress(addrmode, expectedCyclesToUse);
+		data = ReadByte(address);
+		Flags.C = data & 1;
 		data = data >> 1;
-		cpu->WriteByte(address, data);
+		WriteByte(address, data);
 	}
-	cpu->Flags.N = 0;
-	cpu->Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
-		cpu->Cycles++;	
+	Flags.N = 0;
+	Cycles++;
+	if (addrmode &ADDR_MODE_ABX)
+		Cycles++;	
 }
 
-static void ins_nop(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
+void CPU::ins_nop(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
 	// NOP, like all single byte instructions, takes
 	// two cycles.
-	cpu->Cycles++;
+	Cycles++;
 }
 
-static void ins_ora(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Byte data;
+void CPU::ins_ora(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Byte data;
 
-	data = cpu->getData(addrmode, expectedCyclesToUse);
-	cpu->A |= data;
-	cpu->SetFlagsForRegister(cpu->A);
+	data = getData(addrmode, expectedCyclesToUse);
+	A |= data;
+	SetFlagsForRegister(A);
 }
 
-static void ins_pha(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Push(cpu->A);
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_pha(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Push(A);
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_pla(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->A = cpu->Pop();
-	cpu->SetFlagsForRegister(cpu->A);
-	cpu->Cycles += 2;      
+void CPU::ins_pla(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	A = Pop();
+	SetFlagsForRegister(A);
+	Cycles += 2;      
 }
 
-static void ins_php(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Push(cpu->PS);
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_php(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Push(PS);
+	Cycles++;		// Single byte instruction
 }
-static void ins_plp(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->PS = cpu->Pop();
-	cpu->Cycles += 2;
+void CPU::ins_plp(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	PS = Pop();
+	Cycles += 2;
 }
-static void ins_rol(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
+void CPU::ins_rol(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
 
-	mos6502::Word address;
-	mos6502::Byte data;
+	Word address;
+	Byte data;
 
-	if (addrmode & ADDR_MODE_ACC) {
-		data = cpu->A;
-		cpu->A = (cpu->A << 1) | cpu->Flags.C;
+	if (addrmode &ADDR_MODE_ACC) {
+		data = A;
+		A = (A << 1) | Flags.C;
 	} else {
-		address = cpu->getAddress(addrmode, expectedCyclesToUse);
-		data = cpu->ReadByte(address);
-		cpu->WriteByte(address, (data << 1) | cpu->Flags.C);
+		address = getAddress(addrmode, expectedCyclesToUse);
+		data = ReadByte(address);
+		WriteByte(address, (data << 1) | Flags.C);
 	}
 
-	cpu->Flags.C = (data & (1 << 7)) > 0;
-	cpu->SetFlagZ(data);
-	cpu->SetFlagN(data << 1);
+	Flags.C = (data & (1 << 7)) > 0;
+	SetFlagZ(data);
+	SetFlagN(data << 1);
 
-	cpu->Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
-		cpu->Cycles++;
+	Cycles++;
+	if (addrmode &ADDR_MODE_ABX)
+		Cycles++;
 }
 
-static void ins_ror(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Word address;
-	mos6502::Byte data, carry;
+void CPU::ins_ror(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Word address;
+	Byte data, carry;
 
-	carry = cpu->Flags.C;
+	carry = Flags.C;
 
-	if (addrmode & ADDR_MODE_ACC) 
-		data = cpu->A;
+	if (addrmode &ADDR_MODE_ACC) 
+		data = A;
 	else {
-		address = cpu->getAddress(addrmode, expectedCyclesToUse);
-		data = cpu->ReadByte(address);
+		address = getAddress(addrmode, expectedCyclesToUse);
+		data = ReadByte(address);
 	}
 
-	cpu->Flags.C = (data & 1) > 0;
+	Flags.C = (data & 1) > 0;
 
 	data = (data >> 1) | (carry << 7);
 
-	if (addrmode & ADDR_MODE_ACC)
-		cpu->A = data;
+	if (addrmode &ADDR_MODE_ACC)
+		A = data;
 	else 
-		cpu->WriteByte(address, data);
+		WriteByte(address, data);
 
-	cpu->SetFlagN(data);
-	cpu->SetFlagZ(data);
+	SetFlagN(data);
+	SetFlagZ(data);
 
-	cpu->Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
-		cpu->Cycles++;
+	Cycles++;
+	if (addrmode &ADDR_MODE_ABX)
+		Cycles++;
 }
 
-static void ins_rti(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_rts(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
-static void ins_sbc(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){}
+void CPU::ins_rti(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_rts(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
+void CPU::ins_sbc(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){}
 
-static void ins_sec(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.C = 1;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_sec(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.C = 1;
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_sed(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.D = 1;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_sed(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.D = 1;
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_sei(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Flags.I = 1;
-	cpu->Cycles++;		// Single byte instruction
+void CPU::ins_sei(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Flags.I = 1;
+	Cycles++;		// Single byte instruction
 }
 
-static void ins_sta(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Word address =
-		cpu->getAddress(addrmode, expectedCyclesToUse);
-	cpu->WriteByte(address, cpu->A);
+void CPU::ins_sta(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Word address =
+		getAddress(addrmode, expectedCyclesToUse);
+	WriteByte(address, A);
 }
 
-static void ins_stx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Word address =
-		cpu->getAddress(addrmode, expectedCyclesToUse);
-	cpu->WriteByte(address, cpu->X);
+void CPU::ins_stx(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Word address =
+		getAddress(addrmode, expectedCyclesToUse);
+	WriteByte(address, X);
 }
 
-static void ins_sty(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	mos6502::Word address =
-		cpu->getAddress(addrmode, expectedCyclesToUse);
-	cpu->WriteByte(address, cpu->Y);
+void CPU::ins_sty(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Word address =
+		getAddress(addrmode, expectedCyclesToUse);
+	WriteByte(address, Y);
 }
 
-static void ins_tax(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->X = cpu->A;
-	cpu->SetFlagZ(cpu->X);
-	cpu->SetFlagN(cpu->X);
-	cpu->Cycles++;
+void CPU::ins_tax(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	X = A;
+	SetFlagZ(X);
+	SetFlagN(X);
+	Cycles++;
 }
 
-static void ins_tay(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->Y = cpu->A;
-	cpu->SetFlagZ(cpu->Y);
-	cpu->SetFlagN(cpu->Y);
-	cpu->Cycles++;
+void CPU::ins_tay(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	Y = A;
+	SetFlagZ(Y);
+	SetFlagN(Y);
+	Cycles++;
 }
 
-static void ins_tsx(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->X = cpu->SP;
-	cpu->SetFlagZ(cpu->X);
-	cpu->SetFlagN(cpu->X);
-	cpu->Cycles++;
+void CPU::ins_tsx(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	X = SP;
+	SetFlagZ(X);
+	SetFlagN(X);
+	Cycles++;
 }
 
-static void ins_txa(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->A = cpu->X;
-	cpu->SetFlagZ(cpu->A);
-	cpu->SetFlagN(cpu->A);
-	cpu->Cycles++;
+void CPU::ins_txa(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	A = X;
+	SetFlagZ(A);
+	SetFlagN(A);
+	Cycles++;
 }
 
-static void ins_txs(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->SP = cpu->X;
-	cpu->Cycles++;
+void CPU::ins_txs(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	SP = X;
+	Cycles++;
 }
 
-static void ins_tya(mos6502::CPU *cpu, unsigned long addrmode,
-		    mos6502::Byte &expectedCyclesToUse){
-	cpu->A = cpu->Y;
-	cpu->SetFlagZ(cpu->A);
-	cpu->SetFlagN(cpu->A);
-	cpu->Cycles++;
+void CPU::ins_tya(unsigned long addrmode,
+		    Byte &expectedCyclesToUse){
+	A = Y;
+	SetFlagZ(A);
+	SetFlagN(A);
+	Cycles++;
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-struct mos6502::CPU::instruction makeIns(const char *name, unsigned long addrmode,
-				mos6502::Byte cycles, mos6502::CPU::opfn_t opfn) {
-	struct mos6502::CPU::instruction ins = { name, addrmode, cycles, opfn };
+CPU::instruction CPU::makeIns(const char *name, unsigned long addrmode,
+			      Byte cycles, opfn_t opfn) {
+	struct instruction ins = { name, addrmode, cycles, opfn };
 	return ins;
 }
 
-void setupInstructionMap() {
-	cpu.instructions[mos6502::CPU::INS_BRK_IMP] = 
-		makeIns("BRK", ADDR_MODE_IMP, 7, ins_brk);
-	cpu.instructions[mos6502::CPU::INS_ORA_IDX] = 
-		makeIns("ORA", ADDR_MODE_IDX, 6, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_ASL_ACC] = 
-		makeIns("ASL", ADDR_MODE_ACC, 2, ins_asl);
-	cpu.instructions[mos6502::CPU::INS_ADC_ZP] = 
-		makeIns("ADC", ADDR_MODE_ZP, 3, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ROR_ZP] = 
-		makeIns("ROR", ADDR_MODE_ZP, 5, ins_ror);
-	cpu.instructions[mos6502::CPU::INS_ADC_IMM] = 
-		makeIns("ADC", ADDR_MODE_IMM, 2, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ROR_ACC] = 
-		makeIns("ROR", ADDR_MODE_ACC, 2, ins_ror);
-	cpu.instructions[mos6502::CPU::INS_JMP_IND] = 
-		makeIns("JMP", ADDR_MODE_IND, 5, ins_jmp);
-	cpu.instructions[mos6502::CPU::INS_ADC_ABS] = 
-		makeIns("ADC", ADDR_MODE_ABS, 4, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ROR_ABS] = 
-		makeIns("ROR", ADDR_MODE_ABS, 6, ins_ror);
-	cpu.instructions[mos6502::CPU::INS_BVS_REL] = 
-		makeIns("BVS", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bvs);
-	cpu.instructions[mos6502::CPU::INS_ADC_IDY] = 
-		makeIns("ADC", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ADC_ZPX] = 
-		makeIns("ADC", ADDR_MODE_ZPX, 4, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ROR_ZPX] = 
-		makeIns("ROR", ADDR_MODE_ZPX, 6, ins_ror);
-	cpu.instructions[mos6502::CPU::INS_SEI_IMP] = 
-		makeIns("SEI", ADDR_MODE_IMP, 2, ins_sei);
-	cpu.instructions[mos6502::CPU::INS_ADC_ABY] = 
-		makeIns("ADC", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ADC_ABX] = 
-		makeIns("ADC", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_adc);
-	cpu.instructions[mos6502::CPU::INS_ROR_ABX] = 
-		makeIns("ROR", ADDR_MODE_ABX, 7, ins_ror);
-	cpu.instructions[mos6502::CPU::INS_STA_IDX] = 
-		makeIns("STA", ADDR_MODE_IDX, 6, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_ORA_ABS] = 
-		makeIns("ORA", ADDR_MODE_ABS, 4, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_STY_ZP] = 
-		makeIns("STY", ADDR_MODE_ZP, 3, ins_sty);
-	cpu.instructions[mos6502::CPU::INS_STA_ZP] = 
-		makeIns("STA", ADDR_MODE_ZP, 3, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_STX_ZP] = 
-		makeIns("STX", ADDR_MODE_ZP, 3, ins_stx);
-	cpu.instructions[mos6502::CPU::INS_DEY_IMP] = 
-		makeIns("DEY", ADDR_MODE_IMP, 2, ins_dey);
-	cpu.instructions[mos6502::CPU::INS_TXA_IMP] = 
-		makeIns("TXA", ADDR_MODE_IMP, 2, ins_txa);
-	cpu.instructions[mos6502::CPU::INS_ASL_ABS] = 
-		makeIns("ASL", ADDR_MODE_ABS, 6, ins_asl);
-	cpu.instructions[mos6502::CPU::INS_STY_ABS] = 
-		makeIns("STY", ADDR_MODE_ABS, 4, ins_sty);
-	cpu.instructions[mos6502::CPU::INS_STA_ABS] = 
-		makeIns("STA", ADDR_MODE_ABS, 4, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_STX_ABS] = 
-		makeIns("STX", ADDR_MODE_ABS, 4, ins_stx);
-	cpu.instructions[mos6502::CPU::INS_BCC_REL] = 
-		makeIns("BCC", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bcc);
-	cpu.instructions[mos6502::CPU::INS_STA_IDY] = 
-		makeIns("STA", ADDR_MODE_IDY, 6, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_STY_ZPX] = 
-		makeIns("STY", ADDR_MODE_ZPX, 4, ins_sty);
-	cpu.instructions[mos6502::CPU::INS_STA_ZPX] = 
-		makeIns("STA", ADDR_MODE_ZPX, 4, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_STX_ZPY] = 
-		makeIns("STX", ADDR_MODE_ZPY, 4, ins_stx);
-	cpu.instructions[mos6502::CPU::INS_TYA_IMP] = 
-		makeIns("TYA", ADDR_MODE_IMP, 2, ins_tya);
-	cpu.instructions[mos6502::CPU::INS_STA_ABY] = 
-		makeIns("STA", ADDR_MODE_ABY, 5, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_TXS_IMP] = 
-		makeIns("TXS", ADDR_MODE_IMP, 2, ins_txs);
-	cpu.instructions[mos6502::CPU::INS_STA_ABX] = 
-		makeIns("STA", ADDR_MODE_ABX, 5, ins_sta);
-	cpu.instructions[mos6502::CPU::INS_BPL_REL] = 
-		makeIns("BPL", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bpl);
-	cpu.instructions[mos6502::CPU::INS_LDY_IMM] = 
-		makeIns("LDY", ADDR_MODE_IMM, 2, ins_ldy);
-	cpu.instructions[mos6502::CPU::INS_LDA_IDX] = 
-		makeIns("LDA", ADDR_MODE_IDX, 6, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_LDX_IMM] = 
-		makeIns("LDX", ADDR_MODE_IMM, 2, ins_ldx);
-	cpu.instructions[mos6502::CPU::INS_LDY_ZP] = 
-		makeIns("LDY", ADDR_MODE_ZP, 3, ins_ldy);
-	cpu.instructions[mos6502::CPU::INS_LDA_ZP] = 
-		makeIns("LDA", ADDR_MODE_ZP, 3, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_LDX_ZP] = 
-		makeIns("LDX", ADDR_MODE_ZP, 3, ins_ldx);
-	cpu.instructions[mos6502::CPU::INS_TAY_IMP] = 
-		makeIns("TAY", ADDR_MODE_IMP, 2, ins_tay);
-	cpu.instructions[mos6502::CPU::INS_LDA_IMM] = 
-		makeIns("LDA", ADDR_MODE_IMM, 2, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_ORA_IDY] = 
-		makeIns("ORA", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_TAX_IMP] = 
-		makeIns("TAX", ADDR_MODE_IMP, 2, ins_tax);
-	cpu.instructions[mos6502::CPU::INS_LDY_ABS] = 
-		makeIns("LDY", ADDR_MODE_ABS, 4, ins_ldy);
-	cpu.instructions[mos6502::CPU::INS_LDA_ABS] = 
-		makeIns("LDA", ADDR_MODE_ABS, 4, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_LDX_ABS] = 
-		makeIns("LDX", ADDR_MODE_ABS, 4, ins_ldx);
-	cpu.instructions[mos6502::CPU::INS_BCS_REL] = 
-		makeIns("BCS", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bcs);
-	cpu.instructions[mos6502::CPU::INS_LDA_IDY] = 
-		makeIns("LDA", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_LDY_ZPX] = 
-		makeIns("LDY", ADDR_MODE_ZPX, 4, ins_ldy);
-	cpu.instructions[mos6502::CPU::INS_LDA_ZPX] = 
-		makeIns("LDA", ADDR_MODE_ZPX, 4, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_LDX_ZPY] =
-		makeIns("LDX", ADDR_MODE_ZPY, 4, ins_ldx);
-	cpu.instructions[mos6502::CPU::INS_CLV_IMP] = 
-		makeIns("CLV", ADDR_MODE_IMP, 2, ins_clv);
-	cpu.instructions[mos6502::CPU::INS_LDA_ABY] = 
-		makeIns("LDA", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_TSX_IMP] = 
-		makeIns("TSX", ADDR_MODE_IMP, 2, ins_tsx);
-	cpu.instructions[mos6502::CPU::INS_LDY_ABX] = 
-		makeIns("LDY", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,  ins_ldy);
-	cpu.instructions[mos6502::CPU::INS_LDA_ABX] = 
-		makeIns("LDA", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_lda);
-	cpu.instructions[mos6502::CPU::INS_LDX_ABY] = 
-		makeIns("LDX", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_ldx);
-	cpu.instructions[mos6502::CPU::INS_CPY_IMM] = 
-		makeIns("CPY", ADDR_MODE_IMM, 2, ins_cpy);
-	cpu.instructions[mos6502::CPU::INS_CMP_IDX] = 
-		makeIns("CMP", ADDR_MODE_IDX, 6, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_CPY_ZP] = 
-		makeIns("CPY", ADDR_MODE_ZP, 3, ins_cpy);
-	cpu.instructions[mos6502::CPU::INS_CMP_ZP] = 
-		makeIns("CMP", ADDR_MODE_ZP, 3, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_DEC_ZP] = 
-		makeIns("DEC", ADDR_MODE_ZP, 5, ins_dec);
-	cpu.instructions[mos6502::CPU::INS_INY_IMP] = 
-		makeIns("INY", ADDR_MODE_IMP, 2, ins_iny);
-	cpu.instructions[mos6502::CPU::INS_CMP_IMM] = 
-		makeIns("CMP", ADDR_MODE_IMM, 2, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_DEX_IMP] = 
-		makeIns("DEX", ADDR_MODE_IMP, 2, ins_dex);
-	cpu.instructions[mos6502::CPU::INS_CPY_ABS] = 
-		makeIns("CPY", ADDR_MODE_ABS, 4, ins_cpy);
-	cpu.instructions[mos6502::CPU::INS_CMP_ABS] = 
-		makeIns("CMP", ADDR_MODE_ABS, 4, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_DEC_ABS] = 
-		makeIns("DEC", ADDR_MODE_ABS, 6, ins_dec);
-	cpu.instructions[mos6502::CPU::INS_BNE_REL] = 
-		makeIns("BNE", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bne);
-	cpu.instructions[mos6502::CPU::INS_CMP_IDY] = 
-		makeIns("CMP", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_ORA_ZPX] = 
-		makeIns("ORA", ADDR_MODE_ZPX, 4, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_CMP_ZPX] = 
-		makeIns("CMP", ADDR_MODE_ZPX, 4, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_DEC_ZPX] = 
-		makeIns("DEC", ADDR_MODE_ZPX, 6, ins_dec);
-	cpu.instructions[mos6502::CPU::INS_CLD_IMP] = 
-		makeIns("CLD", ADDR_MODE_IMP, 2, ins_cld);
-	cpu.instructions[mos6502::CPU::INS_CMP_ABY] = 
-		makeIns("CMP", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_ASL_ZPX] = 
-		makeIns("ASL", ADDR_MODE_ZPX, 6, ins_asl);
-	cpu.instructions[mos6502::CPU::INS_CMP_ABX] = 
-		makeIns("CMP", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_cmp);
-	cpu.instructions[mos6502::CPU::INS_DEC_ABX] = 
-		makeIns("DEC", ADDR_MODE_ABX, 7, ins_dec);
-	cpu.instructions[mos6502::CPU::INS_CPX_IMM] = 
-		makeIns("CPX", ADDR_MODE_IMM, 2, ins_cpx);
-	cpu.instructions[mos6502::CPU::INS_SBC_IDX] = 
-		makeIns("SBC", ADDR_MODE_IDX, 6, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_CPX_ZP] = 
-		makeIns("CPX", ADDR_MODE_ZP, 3, ins_cpx);
-	cpu.instructions[mos6502::CPU::INS_SBC_ZP] = 
-		makeIns("SBC", ADDR_MODE_ZP, 3, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_INC_ZP] = 
-		makeIns("INC", ADDR_MODE_ZP, 5, ins_inc);
-	cpu.instructions[mos6502::CPU::INS_INX_IMP] = 
-		makeIns("INX", ADDR_MODE_IMP, 2, ins_inx);
-	cpu.instructions[mos6502::CPU::INS_SBC_IMM] = 
-		makeIns("SBC", ADDR_MODE_IMM, 2, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_NOP_IMP] = 
-		makeIns("NOP", ADDR_MODE_IMP, 2, ins_nop);
-	cpu.instructions[mos6502::CPU::INS_CPX_ABS] = 
-		makeIns("CPX", ADDR_MODE_ABS, 4, ins_cpx);
-	cpu.instructions[mos6502::CPU::INS_SBC_ABS] = 
-		makeIns("SBC", ADDR_MODE_ABS, 4, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_INC_ABS] = 
-		makeIns("INC", ADDR_MODE_ABS, 6, ins_inc);
-	cpu.instructions[mos6502::CPU::INS_CLC_IMP] = 
-		makeIns("CLC", ADDR_MODE_IMP, 2, ins_clc);
-	cpu.instructions[mos6502::CPU::INS_BEQ_REL] = 
-		makeIns("BEQ", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_beq);
-	cpu.instructions[mos6502::CPU::INS_SBC_IDY] = 
-		makeIns("SBC", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_SBC_ZPX] = 
-		makeIns("SBC", ADDR_MODE_ZPX, 4, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_INC_ZPX] = 
-		makeIns("INC", ADDR_MODE_ZPX, 6, ins_inc);
-	cpu.instructions[mos6502::CPU::INS_SED_IMP] = 
-		makeIns("SED", ADDR_MODE_IMP, 2, ins_sed);
-	cpu.instructions[mos6502::CPU::INS_SBC_ABY] = 
-		makeIns("SBC", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_ORA_ABY] = 
-		makeIns("ORA", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_SBC_ABX] = 
-		makeIns("SBC", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_sbc);
-	cpu.instructions[mos6502::CPU::INS_INC_ABX] = 
-		makeIns("INC", ADDR_MODE_ABX, 7, ins_inc);
-	cpu.instructions[mos6502::CPU::INS_ORA_ABX] = 
-		makeIns("ORA", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_ASL_ABX] = 
-		makeIns("ASL", ADDR_MODE_ABX, 7, ins_asl);
-	cpu.instructions[mos6502::CPU::INS_JSR_ABS] = 
-		makeIns("JSR", ADDR_MODE_ABS, 6, ins_jsr);
-	cpu.instructions[mos6502::CPU::INS_AND_IDX] = 
-		makeIns("AND", ADDR_MODE_IDX, 6, ins_and);
-	cpu.instructions[mos6502::CPU::INS_BIT_ZP] = 
-		makeIns("BIT", ADDR_MODE_ZP, 3, ins_bit);
-	cpu.instructions[mos6502::CPU::INS_AND_ZP] = 
-		makeIns("AND", ADDR_MODE_ZP, 3, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ROL_ZP] = 
-		makeIns("ROL", ADDR_MODE_ZP, 5, ins_rol);
-	cpu.instructions[mos6502::CPU::INS_PLP_IMP] = 
-		makeIns("PLP", ADDR_MODE_IMP, 4, ins_plp);
-	cpu.instructions[mos6502::CPU::INS_AND_IMM] = 
-		makeIns("AND", ADDR_MODE_IMM, 2, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ROL_ACC] = 
-		makeIns("ROL", ADDR_MODE_ACC, 2, ins_rol);
-	cpu.instructions[mos6502::CPU::INS_BIT_ABS] = 
-		makeIns("BIT", ADDR_MODE_ABS, 4, ins_bit);
-	cpu.instructions[mos6502::CPU::INS_AND_ABS] = 
-		makeIns("AND", ADDR_MODE_ABS, 4, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ROL_ABS] = 
-		makeIns("ROL", ADDR_MODE_ABS, 6, ins_rol);
-	cpu.instructions[mos6502::CPU::INS_BMI_REL] = 
-		makeIns("BMI", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bmi);
-	cpu.instructions[mos6502::CPU::INS_AND_IDY] = 
-		makeIns("AND", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ORA_ZP] = 
-		makeIns("ORA", ADDR_MODE_ZP, 3, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_AND_ZPX] = 
-		makeIns("AND", ADDR_MODE_ZPX, 4, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ROL_ZPX] = 
-		makeIns("ROL", ADDR_MODE_ZPX, 6, ins_rol);
-	cpu.instructions[mos6502::CPU::INS_SEC_IMP] = 
-		makeIns("SEC", ADDR_MODE_IMP, 2, ins_sec);
-	cpu.instructions[mos6502::CPU::INS_AND_ABY] = 
-		makeIns("AND", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ASL_ZP] = 
-		makeIns("ASL", ADDR_MODE_ZP, 5, ins_asl);
-	cpu.instructions[mos6502::CPU::INS_AND_ABX] = 
-		makeIns("AND", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_and);
-	cpu.instructions[mos6502::CPU::INS_ROL_ABX] = 
-		makeIns("ROL", ADDR_MODE_ABX, 7, ins_rol);
-	cpu.instructions[mos6502::CPU::INS_RTI_IMP] = 
-		makeIns("RTI", ADDR_MODE_IMP, 6, ins_rti);
-	cpu.instructions[mos6502::CPU::INS_EOR_IDX] = 
-		makeIns("EOR", ADDR_MODE_IDX, 6, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_EOR_ZP] = 
-		makeIns("EOR", ADDR_MODE_ZP, 3, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_LSR_ZP] = 
-		makeIns("LSR", ADDR_MODE_ZP, 5, ins_lsr);
-	cpu.instructions[mos6502::CPU::INS_PHA_IMP] = 
-		makeIns("PHA", ADDR_MODE_IMP, 3, ins_pha);
-	cpu.instructions[mos6502::CPU::INS_PLA_IMP] = 
-		makeIns("PLA", ADDR_MODE_IMP, 4, ins_pla);
-	cpu.instructions[mos6502::CPU::INS_EOR_IMM] = 
-		makeIns("EOR", ADDR_MODE_IMM, 2, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_LSR_ACC] = 
-		makeIns("LSR", ADDR_MODE_ACC, 2, ins_lsr);
-	cpu.instructions[mos6502::CPU::INS_JMP_ABS] = 
-		makeIns("JMP", ADDR_MODE_ABS, 3, ins_jmp);
-	cpu.instructions[mos6502::CPU::INS_EOR_ABS] = 
-		makeIns("EOR", ADDR_MODE_ABS, 4, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_LSR_ABS] = 
-		makeIns("LSR", ADDR_MODE_ABS, 6, ins_lsr);
-	cpu.instructions[mos6502::CPU::INS_PHP_IMP] = 
-		makeIns("PHP", ADDR_MODE_IMP, 3, ins_php);
-	cpu.instructions[mos6502::CPU::INS_BVC_REL] = 
-		makeIns("BVC", ADDR_MODE_REL | CYCLE_BRANCH, 2, ins_bvc);
-	cpu.instructions[mos6502::CPU::INS_EOR_IDY] = 
-		makeIns("EOR", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_EOR_ZPX] = 
-		makeIns("EOR", ADDR_MODE_ZPX, 4, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_LSR_ZPX] = 
-		makeIns("LSR", ADDR_MODE_ZPX, 6, ins_lsr);
-	cpu.instructions[mos6502::CPU::INS_CLI_IMP] = 
-		makeIns("CLI", ADDR_MODE_IMP, 2, ins_cli);
-	cpu.instructions[mos6502::CPU::INS_EOR_ABY] = 
-		makeIns("EOR", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_ORA_IMM] = 
-		makeIns("ORA", ADDR_MODE_IMM, 2, ins_ora);
-	cpu.instructions[mos6502::CPU::INS_EOR_ABX] = 
-		makeIns("EOR", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, ins_eor);
-	cpu.instructions[mos6502::CPU::INS_LSR_ABX] = 
-		makeIns("LSR", ADDR_MODE_ABX, 7, ins_lsr);
-	cpu.instructions[mos6502::CPU::INS_RTS_IMP] = 
-		makeIns("RTS", ADDR_MODE_IMP, 6, ins_rts);
-	cpu.instructions[mos6502::CPU::INS_ADC_IDX] = 
-		makeIns("ADC", ADDR_MODE_IDX, 6, ins_adc);
+void CPU::setupInstructionMap() {
+	instructions[CPU::INS_BRK_IMP] = 
+		makeIns("BRK", ADDR_MODE_IMP, 7, &CPU::ins_brk);
+	instructions[CPU::INS_ORA_IDX] = 
+		makeIns("ORA", ADDR_MODE_IDX, 6, &CPU::ins_ora);
+	instructions[CPU::INS_ASL_ACC] = 
+		makeIns("ASL", ADDR_MODE_ACC, 2, &CPU::ins_asl);
+	instructions[CPU::INS_ADC_ZP] = 
+		makeIns("ADC", ADDR_MODE_ZP, 3, &CPU::ins_adc);
+	instructions[CPU::INS_ROR_ZP] = 
+		makeIns("ROR", ADDR_MODE_ZP, 5, &CPU::ins_ror);
+	instructions[CPU::INS_ADC_IMM] = 
+		makeIns("ADC", ADDR_MODE_IMM, 2, &CPU::ins_adc);
+	instructions[CPU::INS_ROR_ACC] = 
+		makeIns("ROR", ADDR_MODE_ACC, 2, &CPU::ins_ror);
+	instructions[CPU::INS_JMP_IND] = 
+		makeIns("JMP", ADDR_MODE_IND, 5, &CPU::ins_jmp);
+	instructions[CPU::INS_ADC_ABS] = 
+		makeIns("ADC", ADDR_MODE_ABS, 4, &CPU::ins_adc);
+	instructions[CPU::INS_ROR_ABS] = 
+		makeIns("ROR", ADDR_MODE_ABS, 6, &CPU::ins_ror);
+	instructions[CPU::INS_BVS_REL] = 
+		makeIns("BVS", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bvs);
+	instructions[CPU::INS_ADC_IDY] = 
+		makeIns("ADC", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_adc);
+	instructions[CPU::INS_ADC_ZPX] = 
+		makeIns("ADC", ADDR_MODE_ZPX, 4, &CPU::ins_adc);
+	instructions[CPU::INS_ROR_ZPX] = 
+		makeIns("ROR", ADDR_MODE_ZPX, 6, &CPU::ins_ror);
+	instructions[CPU::INS_SEI_IMP] = 
+		makeIns("SEI", ADDR_MODE_IMP, 2, &CPU::ins_sei);
+	instructions[CPU::INS_ADC_ABY] = 
+		makeIns("ADC", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_adc);
+	instructions[CPU::INS_ADC_ABX] = 
+		makeIns("ADC", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_adc);
+	instructions[CPU::INS_ROR_ABX] = 
+		makeIns("ROR", ADDR_MODE_ABX, 7, &CPU::ins_ror);
+	instructions[CPU::INS_STA_IDX] = 
+		makeIns("STA", ADDR_MODE_IDX, 6, &CPU::ins_sta);
+	instructions[CPU::INS_ORA_ABS] = 
+		makeIns("ORA", ADDR_MODE_ABS, 4, &CPU::ins_ora);
+	instructions[CPU::INS_STY_ZP] = 
+		makeIns("STY", ADDR_MODE_ZP, 3, &CPU::ins_sty);
+	instructions[CPU::INS_STA_ZP] = 
+		makeIns("STA", ADDR_MODE_ZP, 3, &CPU::ins_sta);
+	instructions[CPU::INS_STX_ZP] = 
+		makeIns("STX", ADDR_MODE_ZP, 3, &CPU::ins_stx);
+	instructions[CPU::INS_DEY_IMP] = 
+		makeIns("DEY", ADDR_MODE_IMP, 2, &CPU::ins_dey);
+	instructions[CPU::INS_TXA_IMP] = 
+		makeIns("TXA", ADDR_MODE_IMP, 2, &CPU::ins_txa);
+	instructions[CPU::INS_ASL_ABS] = 
+		makeIns("ASL", ADDR_MODE_ABS, 6, &CPU::ins_asl);
+	instructions[CPU::INS_STY_ABS] = 
+		makeIns("STY", ADDR_MODE_ABS, 4, &CPU::ins_sty);
+	instructions[CPU::INS_STA_ABS] = 
+		makeIns("STA", ADDR_MODE_ABS, 4, &CPU::ins_sta);
+	instructions[CPU::INS_STX_ABS] = 
+		makeIns("STX", ADDR_MODE_ABS, 4, &CPU::ins_stx);
+	instructions[CPU::INS_BCC_REL] = 
+		makeIns("BCC", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bcc);
+	instructions[CPU::INS_STA_IDY] = 
+		makeIns("STA", ADDR_MODE_IDY, 6, &CPU::ins_sta);
+	instructions[CPU::INS_STY_ZPX] = 
+		makeIns("STY", ADDR_MODE_ZPX, 4, &CPU::ins_sty);
+	instructions[CPU::INS_STA_ZPX] = 
+		makeIns("STA", ADDR_MODE_ZPX, 4, &CPU::ins_sta);
+	instructions[CPU::INS_STX_ZPY] = 
+		makeIns("STX", ADDR_MODE_ZPY, 4, &CPU::ins_stx);
+	instructions[CPU::INS_TYA_IMP] = 
+		makeIns("TYA", ADDR_MODE_IMP, 2, &CPU::ins_tya);
+	instructions[CPU::INS_STA_ABY] = 
+		makeIns("STA", ADDR_MODE_ABY, 5, &CPU::ins_sta);
+	instructions[CPU::INS_TXS_IMP] = 
+		makeIns("TXS", ADDR_MODE_IMP, 2, &CPU::ins_txs);
+	instructions[CPU::INS_STA_ABX] = 
+		makeIns("STA", ADDR_MODE_ABX, 5, &CPU::ins_sta);
+	instructions[CPU::INS_BPL_REL] = 
+		makeIns("BPL", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bpl);
+	instructions[CPU::INS_LDY_IMM] = 
+		makeIns("LDY", ADDR_MODE_IMM, 2, &CPU::ins_ldy);
+	instructions[CPU::INS_LDA_IDX] = 
+		makeIns("LDA", ADDR_MODE_IDX, 6, &CPU::ins_lda);
+	instructions[CPU::INS_LDX_IMM] = 
+		makeIns("LDX", ADDR_MODE_IMM, 2, &CPU::ins_ldx);
+	instructions[CPU::INS_LDY_ZP] = 
+		makeIns("LDY", ADDR_MODE_ZP, 3, &CPU::ins_ldy);
+	instructions[CPU::INS_LDA_ZP] = 
+		makeIns("LDA", ADDR_MODE_ZP, 3, &CPU::ins_lda);
+	instructions[CPU::INS_LDX_ZP] = 
+		makeIns("LDX", ADDR_MODE_ZP, 3, &CPU::ins_ldx);
+	instructions[CPU::INS_TAY_IMP] = 
+		makeIns("TAY", ADDR_MODE_IMP, 2, &CPU::ins_tay);
+	instructions[CPU::INS_LDA_IMM] = 
+		makeIns("LDA", ADDR_MODE_IMM, 2, &CPU::ins_lda);
+	instructions[CPU::INS_ORA_IDY] = 
+		makeIns("ORA", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_ora);
+	instructions[CPU::INS_TAX_IMP] = 
+		makeIns("TAX", ADDR_MODE_IMP, 2, &CPU::ins_tax);
+	instructions[CPU::INS_LDY_ABS] = 
+		makeIns("LDY", ADDR_MODE_ABS, 4, &CPU::ins_ldy);
+	instructions[CPU::INS_LDA_ABS] = 
+		makeIns("LDA", ADDR_MODE_ABS, 4, &CPU::ins_lda);
+	instructions[CPU::INS_LDX_ABS] = 
+		makeIns("LDX", ADDR_MODE_ABS, 4, &CPU::ins_ldx);
+	instructions[CPU::INS_BCS_REL] = 
+		makeIns("BCS", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bcs);
+	instructions[CPU::INS_LDA_IDY] = 
+		makeIns("LDA", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_lda);
+	instructions[CPU::INS_LDY_ZPX] = 
+		makeIns("LDY", ADDR_MODE_ZPX, 4, &CPU::ins_ldy);
+	instructions[CPU::INS_LDA_ZPX] = 
+		makeIns("LDA", ADDR_MODE_ZPX, 4, &CPU::ins_lda);
+	instructions[CPU::INS_LDX_ZPY] =
+		makeIns("LDX", ADDR_MODE_ZPY, 4, &CPU::ins_ldx);
+	instructions[CPU::INS_CLV_IMP] = 
+		makeIns("CLV", ADDR_MODE_IMP, 2, &CPU::ins_clv);
+	instructions[CPU::INS_LDA_ABY] = 
+		makeIns("LDA", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_lda);
+	instructions[CPU::INS_TSX_IMP] = 
+		makeIns("TSX", ADDR_MODE_IMP, 2, &CPU::ins_tsx);
+	instructions[CPU::INS_LDY_ABX] = 
+		makeIns("LDY", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_ldy);
+	instructions[CPU::INS_LDA_ABX] = 
+		makeIns("LDA", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_lda);
+	instructions[CPU::INS_LDX_ABY] = 
+		makeIns("LDX", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_ldx);
+	instructions[CPU::INS_CPY_IMM] = 
+		makeIns("CPY", ADDR_MODE_IMM, 2, &CPU::ins_cpy);
+	instructions[CPU::INS_CMP_IDX] = 
+		makeIns("CMP", ADDR_MODE_IDX, 6, &CPU::ins_cmp);
+	instructions[CPU::INS_CPY_ZP] = 
+		makeIns("CPY", ADDR_MODE_ZP, 3, &CPU::ins_cpy);
+	instructions[CPU::INS_CMP_ZP] = 
+		makeIns("CMP", ADDR_MODE_ZP, 3, &CPU::ins_cmp);
+	instructions[CPU::INS_DEC_ZP] = 
+		makeIns("DEC", ADDR_MODE_ZP, 5, &CPU::ins_dec);
+	instructions[CPU::INS_INY_IMP] = 
+		makeIns("INY", ADDR_MODE_IMP, 2, &CPU::ins_iny);
+	instructions[CPU::INS_CMP_IMM] = 
+		makeIns("CMP", ADDR_MODE_IMM, 2, &CPU::ins_cmp);
+	instructions[CPU::INS_DEX_IMP] = 
+		makeIns("DEX", ADDR_MODE_IMP, 2, &CPU::ins_dex);
+	instructions[CPU::INS_CPY_ABS] = 
+		makeIns("CPY", ADDR_MODE_ABS, 4, &CPU::ins_cpy);
+	instructions[CPU::INS_CMP_ABS] = 
+		makeIns("CMP", ADDR_MODE_ABS, 4, &CPU::ins_cmp);
+	instructions[CPU::INS_DEC_ABS] = 
+		makeIns("DEC", ADDR_MODE_ABS, 6, &CPU::ins_dec);
+	instructions[CPU::INS_BNE_REL] = 
+		makeIns("BNE", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bne);
+	instructions[CPU::INS_CMP_IDY] = 
+		makeIns("CMP", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_cmp);
+	instructions[CPU::INS_ORA_ZPX] = 
+		makeIns("ORA", ADDR_MODE_ZPX, 4, &CPU::ins_ora);
+	instructions[CPU::INS_CMP_ZPX] = 
+		makeIns("CMP", ADDR_MODE_ZPX, 4, &CPU::ins_cmp);
+	instructions[CPU::INS_DEC_ZPX] = 
+		makeIns("DEC", ADDR_MODE_ZPX, 6, &CPU::ins_dec);
+	instructions[CPU::INS_CLD_IMP] = 
+		makeIns("CLD", ADDR_MODE_IMP, 2, &CPU::ins_cld);
+	instructions[CPU::INS_CMP_ABY] = 
+		makeIns("CMP", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_cmp);
+	instructions[CPU::INS_ASL_ZPX] = 
+		makeIns("ASL", ADDR_MODE_ZPX, 6, &CPU::ins_asl);
+	instructions[CPU::INS_CMP_ABX] = 
+		makeIns("CMP", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_cmp);
+	instructions[CPU::INS_DEC_ABX] = 
+		makeIns("DEC", ADDR_MODE_ABX, 7, &CPU::ins_dec);
+	instructions[CPU::INS_CPX_IMM] = 
+		makeIns("CPX", ADDR_MODE_IMM, 2, &CPU::ins_cpx);
+	instructions[CPU::INS_SBC_IDX] = 
+		makeIns("SBC", ADDR_MODE_IDX, 6, &CPU::ins_sbc);
+	instructions[CPU::INS_CPX_ZP] = 
+		makeIns("CPX", ADDR_MODE_ZP, 3, &CPU::ins_cpx);
+	instructions[CPU::INS_SBC_ZP] = 
+		makeIns("SBC", ADDR_MODE_ZP, 3, &CPU::ins_sbc);
+	instructions[CPU::INS_INC_ZP] = 
+		makeIns("INC", ADDR_MODE_ZP, 5, &CPU::ins_inc);
+	instructions[CPU::INS_INX_IMP] = 
+		makeIns("INX", ADDR_MODE_IMP, 2, &CPU::ins_inx);
+	instructions[CPU::INS_SBC_IMM] = 
+		makeIns("SBC", ADDR_MODE_IMM, 2, &CPU::ins_sbc);
+	instructions[CPU::INS_NOP_IMP] = 
+		makeIns("NOP", ADDR_MODE_IMP, 2, &CPU::ins_nop);
+	instructions[CPU::INS_CPX_ABS] = 
+		makeIns("CPX", ADDR_MODE_ABS, 4, &CPU::ins_cpx);
+	instructions[CPU::INS_SBC_ABS] = 
+		makeIns("SBC", ADDR_MODE_ABS, 4, &CPU::ins_sbc);
+	instructions[CPU::INS_INC_ABS] = 
+		makeIns("INC", ADDR_MODE_ABS, 6, &CPU::ins_inc);
+	instructions[CPU::INS_CLC_IMP] = 
+		makeIns("CLC", ADDR_MODE_IMP, 2, &CPU::ins_clc);
+	instructions[CPU::INS_BEQ_REL] = 
+		makeIns("BEQ", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_beq);
+	instructions[CPU::INS_SBC_IDY] = 
+		makeIns("SBC", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_sbc);
+	instructions[CPU::INS_SBC_ZPX] = 
+		makeIns("SBC", ADDR_MODE_ZPX, 4, &CPU::ins_sbc);
+	instructions[CPU::INS_INC_ZPX] = 
+		makeIns("INC", ADDR_MODE_ZPX, 6, &CPU::ins_inc);
+	instructions[CPU::INS_SED_IMP] = 
+		makeIns("SED", ADDR_MODE_IMP, 2, &CPU::ins_sed);
+	instructions[CPU::INS_SBC_ABY] = 
+		makeIns("SBC", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_sbc);
+	instructions[CPU::INS_ORA_ABY] = 
+		makeIns("ORA", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_ora);
+	instructions[CPU::INS_SBC_ABX] = 
+		makeIns("SBC", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_sbc);
+	instructions[CPU::INS_INC_ABX] = 
+		makeIns("INC", ADDR_MODE_ABX, 7, &CPU::ins_inc);
+	instructions[CPU::INS_ORA_ABX] = 
+		makeIns("ORA", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_ora);
+	instructions[CPU::INS_ASL_ABX] = 
+		makeIns("ASL", ADDR_MODE_ABX, 7, &CPU::ins_asl);
+	instructions[CPU::INS_JSR_ABS] = 
+		makeIns("JSR", ADDR_MODE_ABS, 6, &CPU::ins_jsr);
+	instructions[CPU::INS_AND_IDX] = 
+		makeIns("AND", ADDR_MODE_IDX, 6, &CPU::ins_and);
+	instructions[CPU::INS_BIT_ZP] = 
+		makeIns("BIT", ADDR_MODE_ZP, 3, &CPU::ins_bit);
+	instructions[CPU::INS_AND_ZP] = 
+		makeIns("AND", ADDR_MODE_ZP, 3, &CPU::ins_and);
+	instructions[CPU::INS_ROL_ZP] = 
+		makeIns("ROL", ADDR_MODE_ZP, 5, &CPU::ins_rol);
+	instructions[CPU::INS_PLP_IMP] = 
+		makeIns("PLP", ADDR_MODE_IMP, 4, &CPU::ins_plp);
+	instructions[CPU::INS_AND_IMM] = 
+		makeIns("AND", ADDR_MODE_IMM, 2, &CPU::ins_and);
+	instructions[CPU::INS_ROL_ACC] = 
+		makeIns("ROL", ADDR_MODE_ACC, 2, &CPU::ins_rol);
+	instructions[CPU::INS_BIT_ABS] = 
+		makeIns("BIT", ADDR_MODE_ABS, 4, &CPU::ins_bit);
+	instructions[CPU::INS_AND_ABS] = 
+		makeIns("AND", ADDR_MODE_ABS, 4, &CPU::ins_and);
+	instructions[CPU::INS_ROL_ABS] = 
+		makeIns("ROL", ADDR_MODE_ABS, 6, &CPU::ins_rol);
+	instructions[CPU::INS_BMI_REL] = 
+		makeIns("BMI", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bmi);
+	instructions[CPU::INS_AND_IDY] = 
+		makeIns("AND", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_and);
+	instructions[CPU::INS_ORA_ZP] = 
+		makeIns("ORA", ADDR_MODE_ZP, 3, &CPU::ins_ora);
+	instructions[CPU::INS_AND_ZPX] = 
+		makeIns("AND", ADDR_MODE_ZPX, 4, &CPU::ins_and);
+	instructions[CPU::INS_ROL_ZPX] = 
+		makeIns("ROL", ADDR_MODE_ZPX, 6, &CPU::ins_rol);
+	instructions[CPU::INS_SEC_IMP] = 
+		makeIns("SEC", ADDR_MODE_IMP, 2, &CPU::ins_sec);
+	instructions[CPU::INS_AND_ABY] = 
+		makeIns("AND", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_and);
+	instructions[CPU::INS_ASL_ZP] = 
+		makeIns("ASL", ADDR_MODE_ZP, 5, &CPU::ins_asl);
+	instructions[CPU::INS_AND_ABX] = 
+		makeIns("AND", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_and);
+	instructions[CPU::INS_ROL_ABX] = 
+		makeIns("ROL", ADDR_MODE_ABX, 7, &CPU::ins_rol);
+	instructions[CPU::INS_RTI_IMP] = 
+		makeIns("RTI", ADDR_MODE_IMP, 6, &CPU::ins_rti);
+	instructions[CPU::INS_EOR_IDX] = 
+		makeIns("EOR", ADDR_MODE_IDX, 6, &CPU::ins_eor);
+	instructions[CPU::INS_EOR_ZP] = 
+		makeIns("EOR", ADDR_MODE_ZP, 3, &CPU::ins_eor);
+	instructions[CPU::INS_LSR_ZP] = 
+		makeIns("LSR", ADDR_MODE_ZP, 5, &CPU::ins_lsr);
+	instructions[CPU::INS_PHA_IMP] = 
+		makeIns("PHA", ADDR_MODE_IMP, 3, &CPU::ins_pha);
+	instructions[CPU::INS_PLA_IMP] = 
+		makeIns("PLA", ADDR_MODE_IMP, 4, &CPU::ins_pla);
+	instructions[CPU::INS_EOR_IMM] = 
+		makeIns("EOR", ADDR_MODE_IMM, 2, &CPU::ins_eor);
+	instructions[CPU::INS_LSR_ACC] = 
+		makeIns("LSR", ADDR_MODE_ACC, 2, &CPU::ins_lsr);
+	instructions[CPU::INS_JMP_ABS] = 
+		makeIns("JMP", ADDR_MODE_ABS, 3, &CPU::ins_jmp);
+	instructions[CPU::INS_EOR_ABS] = 
+		makeIns("EOR", ADDR_MODE_ABS, 4, &CPU::ins_eor);
+	instructions[CPU::INS_LSR_ABS] = 
+		makeIns("LSR", ADDR_MODE_ABS, 6, &CPU::ins_lsr);
+	instructions[CPU::INS_PHP_IMP] = 
+		makeIns("PHP", ADDR_MODE_IMP, 3, &CPU::ins_php);
+	instructions[CPU::INS_BVC_REL] = 
+		makeIns("BVC", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bvc);
+	instructions[CPU::INS_EOR_IDY] = 
+		makeIns("EOR", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5, &CPU::ins_eor);
+	instructions[CPU::INS_EOR_ZPX] = 
+		makeIns("EOR", ADDR_MODE_ZPX, 4, &CPU::ins_eor);
+	instructions[CPU::INS_LSR_ZPX] = 
+		makeIns("LSR", ADDR_MODE_ZPX, 6, &CPU::ins_lsr);
+	instructions[CPU::INS_CLI_IMP] = 
+		makeIns("CLI", ADDR_MODE_IMP, 2, &CPU::ins_cli);
+	instructions[CPU::INS_EOR_ABY] = 
+		makeIns("EOR", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4, &CPU::ins_eor);
+	instructions[CPU::INS_ORA_IMM] = 
+		makeIns("ORA", ADDR_MODE_IMM, 2, &CPU::ins_ora);
+	instructions[CPU::INS_EOR_ABX] = 
+		makeIns("EOR", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4, &CPU::ins_eor);
+	instructions[CPU::INS_LSR_ABX] = 
+		makeIns("LSR", ADDR_MODE_ABX, 7, &CPU::ins_lsr);
+	instructions[CPU::INS_RTS_IMP] = 
+		makeIns("RTS", ADDR_MODE_IMP, 6, &CPU::ins_rts);
+	instructions[CPU::INS_ADC_IDX] = 
+		makeIns("ADC", ADDR_MODE_IDX, 6, &CPU::ins_adc);
 
 }
 
-void mos6502::CPU::Reset(mos6502::Word ResetVector) {
+void CPU::Reset(Word ResetVector) {
 	PC = ResetVector;
 	SP = INITIAL_SP;
 	A = X = Y = 0;
@@ -760,85 +737,84 @@ void mos6502::CPU::Reset(mos6502::Word ResetVector) {
 	setupInstructionMap();
 }
 
-void mos6502::CPU::Exception() {
-	printf("mos6502::CPU Exception");
+void CPU::Exception() {
+	printf("CPU Exception");
 	throw -1;
 }
 
-void mos6502::CPU::SetFlagZ(mos6502::Byte val) {
+void CPU::SetFlagZ(Byte val) {
 	Flags.Z = (val == 0);
 }
 
-void mos6502::CPU::SetFlagN(mos6502::Byte val) {
+void CPU::SetFlagN(Byte val) {
 	Flags.N = (val & NegativeBit) >> 7;
 }
 
-void mos6502::CPU::SetFlagsForRegister(mos6502::Byte b) {
+void CPU::SetFlagsForRegister(Byte b) {
 	SetFlagZ(b);
 	SetFlagN(b);
 
 }
 
-void mos6502::CPU::SetFlagsForCompare(mos6502::Byte b, mos6502::Byte v) {
+void CPU::SetFlagsForCompare(Byte b, Byte v) {
 	Flags.C = (b >= v);
 	SetFlagZ(b);
 	SetFlagN(b);
 }
 
-mos6502::Byte mos6502::CPU::ReadByte(mos6502::Word address) {
-	mos6502::Byte data = mem.ReadByte(address);
+Byte CPU::ReadByte(Word address) {
+	Byte data = mem->ReadByte(address);
 	Cycles++;
 	return data;
 }
 
-void mos6502::CPU::WriteByte(mos6502::Word address, mos6502::Byte value) {
-	mem.WriteByte(address, value);
+void CPU::WriteByte(Word address, Byte value) {
+	mem->WriteByte(address, value);
 	Cycles++;
 }
 
-mos6502::Word  mos6502::CPU::ReadWord(mos6502::Word address) {
-	mos6502::Word w = ReadByte(address) | (ReadByte(address + 1) << 8);
+Word CPU::ReadWord(Word address) {
+	Word w = ReadByte(address) | (ReadByte(address + 1) << 8);
 	return w;
 }
 
-mos6502::Byte mos6502::CPU::FetchIns() {
-	mos6502::Byte opcode = ReadByte(PC);
+Byte CPU::FetchIns() {
+	Byte opcode = ReadByte(PC);
 	PC++;
 	return opcode;
 }
 
-void mos6502::CPU::PushWord(mos6502::Word value) {
-	mos6502::Byte b;
+void CPU::PushWord(Word value) {
+	Byte b;
 
-	b = (mos6502::Byte) value & 0xff;
+	b = (Byte) value & 0xff;
 	Push(b);
-	b = (mos6502::Byte) (value >> 8) & 0xff;
+	b = (Byte) (value >> 8) & 0xff;
 	Push(b);
 }
 
-mos6502::Word mos6502::CPU::PopWord() {
-	mos6502::Word w;
+Word CPU::PopWord() {
+	Word w;
 	w = Pop() | (Pop() << 8);
 	return w;
 }
 
-void mos6502::CPU::Push(mos6502::Byte value) {
-	mos6502::Word SPAddress = mos6502::CPU::STACK_FRAME + SP;
+void CPU::Push(Byte value) {
+	Word SPAddress =STACK_FRAME + SP;
 	WriteByte(SPAddress, value);
 	SP--;
 }
 
-mos6502::Byte mos6502::CPU::Pop() {
-	mos6502::Word SPAddress;
+Byte CPU::Pop() {
+	Word SPAddress;
 	SP++;
 	SPAddress = STACK_FRAME + SP;
 	return ReadByte(SPAddress);
 }
 
-mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
-				       mos6502::Byte &expectedCycles) {
-	mos6502::Word address, addrmode, flags;
-	mos6502::Byte rel;
+Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
+	Word address, addrmode, flags;
+	Byte rel;
 	
 	addrmode = mode &  0b00111111111111;
 	flags    = mode & ~0b00111111111111;
@@ -879,7 +855,7 @@ mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
 		address = ReadWord(PC);
 		PC += 2;
 		// Add a cycle if a page boundry is crossed
-		if ((flags & CYCLE_CROSS_PAGE) && ((address + X) >> 8) != (address >> 8)) {
+		if ((flags &CYCLE_CROSS_PAGE) && ((address + X) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
@@ -891,7 +867,7 @@ mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
 		address = ReadWord(PC);
 		PC += 2;
 		// Add a cycle if a page boundry is crossed
-		if ((flags & CYCLE_CROSS_PAGE) && ((address + Y) >> 8) != (address >> 8)) {
+		if ((flags &CYCLE_CROSS_PAGE) && ((address + Y) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
@@ -926,10 +902,10 @@ mos6502::Word mos6502::CPU::getAddress(unsigned long mode,
 	return address;
 }
 
-mos6502::Byte mos6502::CPU::getData(unsigned long mode, mos6502::Byte &expectedCycles) {
-	mos6502::Byte data;
-	mos6502::Word address;
-	mos6502::Word addrmode;
+Byte CPU::getData(unsigned long mode, Byte &expectedCycles) {
+	Byte data;
+	Word address;
+	Word addrmode;
 
 	addrmode = mode & 0b00111111111111;
 	
@@ -952,12 +928,12 @@ mos6502::Byte mos6502::CPU::getData(unsigned long mode, mos6502::Byte &expectedC
 	return data;
 }
 
-std::tuple<mos6502::Cycles_t, mos6502::Cycles_t>
-mos6502::CPU::ExecuteOneInstruction() {
-	struct instruction ins;
-	mos6502::Byte opcode;
-	mos6502::Byte expectedCyclesToUse;
-	mos6502::Cycles_t startCycles = Cycles;
+std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
+	Byte opcode;
+	Cycles_t startCycles = Cycles;
+	unsigned long addrmode;
+	Byte expectedCyclesToUse;
+	opfn_t op;
 
 	opcode = FetchIns();
 
@@ -965,184 +941,14 @@ mos6502::CPU::ExecuteOneInstruction() {
 		printf("Invalid opcode 0x%x\n", opcode);
 		Exception();
 	}
-	
-	ins = cpu.instructions[opcode];
-	expectedCyclesToUse = ins.cycles;
-	ins.opfn(this, ins.addrmode, expectedCyclesToUse);
+
+	addrmode = instructions[opcode].addrmode;
+	expectedCyclesToUse = instructions[opcode].cycles;
+	op = instructions[opcode].opfn;
+
+	(this->*op)(addrmode, expectedCyclesToUse);
 
 	return std::make_tuple(Cycles - startCycles,
 			       expectedCyclesToUse);
 }
 
-#if 0
-/////////////////////////////////////////////////////////////////////////
-// Tests
-
-void and_imm() {
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-	mem[0xFFFC] = mos6502::CPU::INS_AND_IMM;
-	mem[0xFFFD] = 0x0F;
-	cpu.A = 0xFF;
-	mos6502::Cycles_t StartC;
-
-	StartC = cpu.Cycles;
-	cpu.ExecuteOneInstruction();
-
-	printf("and_imm: A = 0x%x\n", cpu.A);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", cpu.Cycles - StartC);
-
-	if (cpu.A == 0x0f) {
-		printf("PASSED\n");
-	} else {
-		printf("FAILED - Expected A == 0x0f\n");
-		throw -1;
-	}
-}
-
-
-void and_zp() {
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-
-	mem[0xFFFC] = mos6502::CPU::INS_AND_ZP;
-	mem[0xFFFD] = 0x10;
-	mem[0x0010] = 0x0F;
-	cpu.A = 0xFF;
-	mos6502::Cycles_t StartC;
-
-	StartC = cpu.Cycles;
-
-	cpu.ExecuteOneInstruction();
-
-	printf("and_zp: A = 0x%x\n", cpu.A);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", cpu.Cycles - StartC);
-	if (cpu.A == 0x0f) {
-		printf("PASSED\n");
-	} else {
-		printf("FAILED - Expected A == 0x0f\n");
-		throw -1;
-	}
-}
-
-void and_z_flag_is_unset() {
-	mos6502::Cycles_t StartC;
-
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-	mem[0xFFFC] = 0x29;
-	mem[0xFFFD] = 0xFF;
-	cpu.A = 0xFF;
-
-	StartC = cpu.Cycles;
-	cpu.ExecuteOneInstruction();
-
-	printf("and_set_z_flag: A = 0x%x\n", cpu.A);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", cpu.Cycles - StartC);
-	if (cpu.A != 0 && cpu.Z == 0) {
-		printf("PASSED\n");
-	} else {
-		printf("FAILED\n");
-		throw -1;
-	}
-}
-
-void and_z_flag_is_set() {
-	mos6502::Cycles_t StartC;
-
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-
-	mem[0xFFFC] = 0x29;
-	mem[0xFFFD] = 0x00;
-	cpu.A = 0xFF;
-
-	StartC = cpu.Cycles;
-	cpu.ExecuteOneInstruction();
-
-	printf("and_set_z_flag: A = 0x%x\n", cpu.A);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", cpu.Cycles - StartC);
-	if (cpu.A == 0 && cpu.Z == 1) {
-		printf("PASSED\n");
-	} else {
-		printf("FAILED\n");
-		throw -1;
-	}
-		     }
-
-
-void ora_imm() {
-	mos6502::Cycles_t StartC;
-
-	printf("======= ora_imm():\n");
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-	mem[0xfffc] = 0x09;
-	mem[0xfffd] = 0x10;
-	cpu.A = 0x00;
-	
-	StartC = cpu.Cycles;
-	cpu.ExecuteOneInstruction();
-
-	printf("ora_imm: A = 0x%x\n", cpu.A);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", Cycles - StartC);
-
-}
-
-
-void ora_zp() {
-	mos6502::Cycles_t StartC;
-
-	printf("======= ora_zp():\n");
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-	mem[0xfffc] = 0x05;
-	mem[0xfffd] = 0x10;
-	mem[0x0010] == 0x00;
-	cpu.A = 0x00;
-	
-	StartC = Cycles;
-	cpu.ExecuteOneInstruction();
-
-	printf("ora_zp: A = 0x%x\n", cpu.A);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", Cycles - StartC);
-
-}
-
-void pha() {
-	mos6502::Cycles_t StartC;
-
-	printf("======= pha():\n");
-	mem.Init();
-	cpu.Reset(INITIAL_PC);
-	mem[0xfffc] = 0x48;
-	cpu.A = 0x10;
-	
-	StartC = Cycles;
-	cpu.ExecuteOneInstruction();
-
-	printf("ora_zp: SP_START = 0x%x\n", mem[cpu.INITIAL_SP]);
-	printf("cpu.Z == %d\n", cpu.Z);
-	printf("Cycles used = %ld\n", Cycles - StartC);
-}
-
-int main() {
-	printf("MOS 6502\n");
-	and_imm();
-	and_zp();
-	and_z_flag_is_unset();
-	and_z_flag_is_set();
-//
-//	ora_imm();
-//	ora_zp();
-//	pha();
-}
-
-	
-#endif       

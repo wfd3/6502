@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
 #include "../6502.h"
 
-extern	mos6502::MEMORY mem;
-extern	mos6502::CPU cpu;
-
 class MOS6502LSRTests : public testing::Test {
 public:
 
+	Memory mem{CPU::MAX_MEM};
+	CPU cpu{&mem};
+
 	virtual void SetUp() {
+		cpu.Reset(CPU::INITIAL_PC);
+		mem.Init();
 	}
 	
 	virtual void TearDown()	{
@@ -15,11 +17,11 @@ public:
 };
 
 TEST_F(MOS6502LSRTests, LsrAccumulator) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_LSR_ACC;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_LSR_ACC;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -37,11 +39,11 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_LSR_ZP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_LSR_ZP;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -60,11 +62,11 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPageX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_LSR_ZPX;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_LSR_ZPX;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -84,11 +86,11 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoltute) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_LSR_ABS;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_LSR_ABS;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -108,11 +110,11 @@ TEST_F(MOS6502LSRTests, LsrAbsoltute) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoltuteX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_LSR_ABX;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_LSR_ABX;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
 #include "../6502.h"
 
-extern	mos6502::MEMORY mem;
-extern	mos6502::CPU cpu;
-
 class MOS6502RORROLTests : public testing::Test {
 public:
 
+	Memory mem{CPU::MAX_MEM};
+	CPU cpu{&mem};
+
 	virtual void SetUp() {
+		cpu.Reset(CPU::INITIAL_PC);
+		mem.Init();
 	}
 	
 	virtual void TearDown()	{
@@ -15,12 +17,12 @@ public:
 };
 
 TEST_F(MOS6502RORROLTests, RolAccumulator) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROL_ACC;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROL_ACC;
+	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -38,12 +40,12 @@ TEST_F(MOS6502RORROLTests, RolAccumulator) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROL_ACC;
-	mos6502::Byte data = 0b10000001;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROL_ACC;
+	Byte data = 0b10000001;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -56,17 +58,17 @@ TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, mos6502::Byte(data << 1));
+	EXPECT_EQ(cpu.A, Byte(data << 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
 TEST_F(MOS6502RORROLTests, RolZeroPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROL_ZP;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROL_ZP;
+	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -85,12 +87,12 @@ TEST_F(MOS6502RORROLTests, RolZeroPage) {
 }
 
 TEST_F(MOS6502RORROLTests, RolZeroPageX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROL_ZPX;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROL_ZPX;
+	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -110,12 +112,12 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAbsoltute) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROL_ABS;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROL_ABS;
+	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -135,12 +137,12 @@ TEST_F(MOS6502RORROLTests, RolAbsoltute) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAbsoltuteX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROL_ABX;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROL_ABX;
+	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -156,18 +158,18 @@ TEST_F(MOS6502RORROLTests, RolAbsoltuteX) {
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
 	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(mem[0x2005], mos6502::Byte(data << 1));
+	EXPECT_EQ(mem[0x2005], Byte(data << 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
 // ROR
 TEST_F(MOS6502RORROLTests, RorAccumulator) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ACC;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ACC;
+	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -185,12 +187,12 @@ TEST_F(MOS6502RORROLTests, RorAccumulator) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ACC;
-	mos6502::Byte data = 0b10000001;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ACC;
+	Byte data = 0b10000001;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -203,17 +205,17 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, mos6502::Byte(data >> 1));
+	EXPECT_EQ(cpu.A, Byte(data >> 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ACC;
-	mos6502::Byte data = 0b10000000;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ACC;
+	Byte data = 0b10000000;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -227,17 +229,17 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
 	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, mos6502::Byte(data >> 1) | (1 << 7));
+	EXPECT_EQ(cpu.A, Byte(data >> 1) | (1 << 7));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
 TEST_F(MOS6502RORROLTests, RorZeroPage) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ZP;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ZP;
+	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -256,12 +258,12 @@ TEST_F(MOS6502RORROLTests, RorZeroPage) {
 }
 
 TEST_F(MOS6502RORROLTests, RorZeroPageX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ZPX;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ZPX;
+	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -282,12 +284,12 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 
 //HERE
 TEST_F(MOS6502RORROLTests, RorAbsoltute) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ABS;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ABS;
+	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -307,12 +309,12 @@ TEST_F(MOS6502RORROLTests, RorAbsoltute) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAbsoltuteX) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_ROR_ABX;
-	mos6502::Byte data = 0b01010101;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ROR_ABX;
+	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -328,6 +330,6 @@ TEST_F(MOS6502RORROLTests, RorAbsoltuteX) {
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(mem[0x2005], mos6502::Byte(data >> 1));
+	EXPECT_EQ(mem[0x2005], Byte(data >> 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

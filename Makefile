@@ -40,11 +40,11 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 all: runtests
 
-6502.o: 6502.cc 6502.h
-	g++ -c 6502.cc
+#6502.o: 6502.cc 6502.h memory.cc memory.h
+#	g++ -c 6502.cc
 
-6502: 6502.o
-	g++ -o 6502 6502.cc
+#6502: 6502.o
+#	g++ -o 6502 6502.cc
 
 tests : $(TESTS)
 
@@ -79,41 +79,39 @@ gtest_main.a : gtest-all.o gtest_main.o
 # Build the tests
 
 TESTS_DIR = ./tests
-TESTS_FILES = 6502.cc \
-	$(TESTS_DIR)/6502_tests_setup.cc \
+TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
-	$(TESTS_DIR)/6502_tests_ora.cc \
-	$(TESTS_DIR)/6502_tests_eor.cc \
-	$(TESTS_DIR)/6502_tests_nop.cc \
-	$(TESTS_DIR)/6502_tests_pushpop.cc \
-	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.cc \
-	$(TESTS_DIR)/6502_tests_flags.cc \
 	$(TESTS_DIR)/6502_tests_bit.cc \
 	$(TESTS_DIR)/6502_tests_cmp.cc \
 	$(TESTS_DIR)/6502_tests_dec_dex_dey.cc \
+	$(TESTS_DIR)/6502_tests_eor.cc \
+	$(TESTS_DIR)/6502_tests_flags.cc \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.cc \
+	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.cc \
 	$(TESTS_DIR)/6502_tests_lsr.cc \
+	$(TESTS_DIR)/6502_tests_nop.cc \
+	$(TESTS_DIR)/6502_tests_ora.cc \
+	$(TESTS_DIR)/6502_tests_pushpop.cc \
 	$(TESTS_DIR)/6502_tests_rol_ror.cc \
 	$(TESTS_DIR)/6502_tests_tx_ty.cc
 
-TESTS_OBJS = 6502.o \
-	$(TESTS_DIR)/6502_tests_setup.o \
+TESTS_OBJS = 6502.o memory.o \
 	$(TESTS_DIR)/6502_tests_and.o \
-	$(TESTS_DIR)/6502_tests_ora.o \
-	$(TESTS_DIR)/6502_tests_eor.o \
-	$(TESTS_DIR)/6502_tests_nop.o \
-	$(TESTS_DIR)/6502_tests_pushpop.o \
-	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.o \
-	$(TESTS_DIR)/6502_tests_flags.o \
 	$(TESTS_DIR)/6502_tests_bit.o \
 	$(TESTS_DIR)/6502_tests_cmp.o \
 	$(TESTS_DIR)/6502_tests_dec_dex_dey.o \
+	$(TESTS_DIR)/6502_tests_eor.o \
+	$(TESTS_DIR)/6502_tests_flags.o \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.o \
+	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.o \
 	$(TESTS_DIR)/6502_tests_lsr.o \
+	$(TESTS_DIR)/6502_tests_nop.o \
+	$(TESTS_DIR)/6502_tests_ora.o \
+	$(TESTS_DIR)/6502_tests_pushpop.o \
 	$(TESTS_DIR)/6502_tests_rol_ror.o \
 	$(TESTS_DIR)/6502_tests_tx_ty.o
 
-%.o: %.cc 6502.h  $(GTEST_HEADERS) 
+%.o: %.cc 6502.h memory.h $(GTEST_HEADERS) 
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
 
 6502_tests : $(TESTS_OBJS) gtest_main.a

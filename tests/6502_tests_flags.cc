@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
 #include "../6502.h"
 
-extern mos6502::MEMORY mem;
-extern mos6502::CPU cpu;
-
 class MOS6502FlagTests : public testing::Test {
 public:
 
+	Memory mem{CPU::MAX_MEM};
+	CPU cpu{&mem};
+
 	virtual void SetUp() {
+		cpu.Reset(CPU::INITIAL_PC);
+		mem.Init();
 	}
 	
 	virtual void TearDown()	{
@@ -15,10 +17,10 @@ public:
 };
 
 TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CLC_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CLC_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
@@ -34,10 +36,10 @@ TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 }
 
 TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_SEC_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_SEC_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
@@ -53,10 +55,10 @@ TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 }
 
 TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CLD_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CLD_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
@@ -72,10 +74,10 @@ TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 }
 
 TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_SED_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_SED_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
@@ -91,10 +93,10 @@ TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 }
 
 TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CLI_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CLI_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
@@ -110,10 +112,10 @@ TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 }
 
 TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_SEI_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_SEI_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
@@ -130,10 +132,10 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 
 
 TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
-	mos6502::Cycles_t UsedCycles, ExpectedCycles;
-	mos6502::Byte ins = mos6502::CPU::INS_CLV_IMP;
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_CLV_IMP;
 
-	cpu.Reset(mos6502::CPU::INITIAL_PC);
+	cpu.Reset(CPU::INITIAL_PC);
 	mem.Init();
 
 	// Given:
