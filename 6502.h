@@ -216,19 +216,19 @@ private:
 	Memory *mem;
 
 	// Addressing modes
-	constexpr static unsigned long ADDR_MODE_IMM    = 1 << 0;  // Immediate
-	constexpr static unsigned long ADDR_MODE_ZP     = 1 << 1;  // Zero Page
-	constexpr static unsigned long ADDR_MODE_ZPX    = 1 << 2;  // Zero Page,X
-	constexpr static unsigned long ADDR_MODE_ZPY    = 1 << 3;  // Zero Page,Y
-	constexpr static unsigned long ADDR_MODE_REL    = 1 << 4;  // Relative
-	constexpr static unsigned long ADDR_MODE_ABS    = 1 << 5;  // Absolute
-	constexpr static unsigned long ADDR_MODE_ABX    = 1 << 6;  // Absolute,X
-	constexpr static unsigned long ADDR_MODE_ABY    = 1 << 7;  // Absolute,y
-	constexpr static unsigned long ADDR_MODE_IND    = 1 << 8;  // Indirect
-	constexpr static unsigned long ADDR_MODE_IDX    = 1 << 9;  // Indexed Ind
-	constexpr static unsigned long ADDR_MODE_IDY    = 1 << 10; // Indirect Idx
-	constexpr static unsigned long ADDR_MODE_IMP    = 1 << 11; // Implied
-	constexpr static unsigned long ADDR_MODE_ACC    = 1 << 12; // Accumulator
+	constexpr static unsigned long ADDR_MODE_IMM = 1 << 0;  // Immediate
+	constexpr static unsigned long ADDR_MODE_ZP  = 1 << 1;  // Zero Page
+	constexpr static unsigned long ADDR_MODE_ZPX = 1 << 2;  // Zero Page,X
+	constexpr static unsigned long ADDR_MODE_ZPY = 1 << 3;  // Zero Page,Y
+	constexpr static unsigned long ADDR_MODE_REL = 1 << 4;  // Relative
+	constexpr static unsigned long ADDR_MODE_ABS = 1 << 5;  // Absolute
+	constexpr static unsigned long ADDR_MODE_ABX = 1 << 6;  // Absolute,X
+	constexpr static unsigned long ADDR_MODE_ABY = 1 << 7;  // Absolute,y
+	constexpr static unsigned long ADDR_MODE_IND = 1 << 8;  // Indirect
+	constexpr static unsigned long ADDR_MODE_IDX = 1 << 9;  // Indexed Ind
+	constexpr static unsigned long ADDR_MODE_IDY = 1 << 10; // Indirect Idx
+	constexpr static unsigned long ADDR_MODE_IMP = 1 << 11; // Implied
+	constexpr static unsigned long ADDR_MODE_ACC = 1 << 12; // Accumulator
 
         // How the CPU should add cycle counts on branches and when
         // instructions fetch data across page boundries.

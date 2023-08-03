@@ -88,12 +88,15 @@ TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_eor.cc \
 	$(TESTS_DIR)/6502_tests_flags.cc \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.cc \
+	$(TESTS_DIR)/6502_tests_jmp.cc \
+	$(TESTS_DIR)/6502_tests_jsr.cc \
 	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.cc \
 	$(TESTS_DIR)/6502_tests_lsr.cc \
 	$(TESTS_DIR)/6502_tests_nop.cc \
 	$(TESTS_DIR)/6502_tests_ora.cc \
 	$(TESTS_DIR)/6502_tests_pushpop.cc \
 	$(TESTS_DIR)/6502_tests_rol_ror.cc \
+	$(TESTS_DIR)/6502_tests_rts.cc \
 	$(TESTS_DIR)/6502_tests_tx_ty.cc
 
 TESTS_OBJS = 6502.o memory.o \
@@ -105,12 +108,15 @@ TESTS_OBJS = 6502.o memory.o \
 	$(TESTS_DIR)/6502_tests_eor.o \
 	$(TESTS_DIR)/6502_tests_flags.o \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.o \
+	$(TESTS_DIR)/6502_tests_jmp.o \
+	$(TESTS_DIR)/6502_tests_jsr.o \
 	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.o \
 	$(TESTS_DIR)/6502_tests_lsr.o \
 	$(TESTS_DIR)/6502_tests_nop.o \
 	$(TESTS_DIR)/6502_tests_ora.o \
 	$(TESTS_DIR)/6502_tests_pushpop.o \
 	$(TESTS_DIR)/6502_tests_rol_ror.o \
+	$(TESTS_DIR)/6502_tests_rts.o \
 	$(TESTS_DIR)/6502_tests_tx_ty.o
 
 %.o: %.cc 6502.h memory.h $(GTEST_HEADERS) 

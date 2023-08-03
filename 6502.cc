@@ -174,8 +174,21 @@ void CPU::ins_iny(unsigned long addrmode, Byte &expectedCyclesToUse){
 	Cycles++;
 }
 
-void CPU::ins_jmp(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_jsr(unsigned long addrmode, Byte &expectedCyclesToUse){}
+void CPU::ins_jmp(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	Word address = PC;
+
+	if (addrmode & ADDR_MODE_IND) {
+		address = getAddress(addrmode, expectedCyclesToUse);
+	}
+
+	PC = ReadWord(address);
+}
+
+void CPU::ins_jsr(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	PushWord(PC - 1);
+	PC = ReadWord(PC);
+	Cycles++;
+}
 
 void CPU::ins_lda(unsigned long addrmode, Byte &expectedCyclesToUse){
 	A = getData(addrmode, expectedCyclesToUse);
@@ -299,7 +312,12 @@ void CPU::ins_ror(unsigned long addrmode, Byte &expectedCyclesToUse){
 }
 
 void CPU::ins_rti(unsigned long addrmode, Byte &expectedCyclesToUse){}
-void CPU::ins_rts(unsigned long addrmode, Byte &expectedCyclesToUse){}
+
+void CPU::ins_rts(unsigned long addrmode, Byte &expectedCyclesToUse) {
+	PC = PopWord();
+	Cycles += 3;	       
+}
+
 void CPU::ins_sbc(unsigned long addrmode, Byte &expectedCyclesToUse){}
 
 void CPU::ins_sec(unsigned long addrmode, Byte &expectedCyclesToUse){
@@ -760,8 +778,9 @@ Word CPU::PopWord() {
 }
 
 void CPU::Push(Byte value) {
-	Word SPAddress =STACK_FRAME + SP;
+	Word SPAddress = STACK_FRAME + SP;
 	WriteByte(SPAddress, value);
+	printf("Push %x at %lx\n", value, SPAddress);
 	SP--;
 }
 
@@ -835,6 +854,8 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		break;
 
 	case ADDR_MODE_IND:
+		address = ReadWord(PC);
+		PC += 2;
 		break;
 
         // (Indirect,X) or Indexed Indirect (tested)

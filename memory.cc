@@ -3,6 +3,7 @@
 
 Memory::Memory(size_t sz) {
 	map(0, sz);
+	Init();
 }
 
 Memory::~Memory() {
