@@ -80,6 +80,7 @@ gtest_main.a : gtest-all.o gtest_main.o
 
 TESTS_DIR = ./tests
 TESTS_FILES = 6502.cc memory.cc \
+	$(TESTS_DIR)/6502_tests_adc.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
 	$(TESTS_DIR)/6502_tests_asl.cc \
 	$(TESTS_DIR)/6502_tests_bit.cc \
@@ -103,6 +104,7 @@ TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_tx_ty.cc
 
 TESTS_OBJS = 6502.o memory.o \
+	$(TESTS_DIR)/6502_tests_adc.o \
 	$(TESTS_DIR)/6502_tests_and.o \
 	$(TESTS_DIR)/6502_tests_asl.cc \
 	$(TESTS_DIR)/6502_tests_bit.o \

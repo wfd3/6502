@@ -258,6 +258,8 @@ private:
 	Word ReadWord(Word);
 	void dumpstack();
 	void do_branch(bool, Word, Byte &);
+	void do_adc(Byte);
+	void bcd_adc(Byte);
 
 	void ins_adc(unsigned long, Byte &);
 	void ins_and(unsigned long, Byte &);
