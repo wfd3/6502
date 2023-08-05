@@ -6,6 +6,11 @@ CPU::CPU(Memory *m) {
 	mem = m;
 }
 
+
+// BCD functions.
+// See:
+// https://www.electrical4u.com/bcd-or-binary-coded-decimal-bcd-conversion-addition-subtraction/
+
 void CPU::checkValidBCD(Byte a) {
 	// Check if each 4-bit 'digit' is greater than 9; throw CPU
 	// exception if so.
@@ -26,7 +31,7 @@ Byte CPU::BCDEncode(Byte v) {
 	return bcd;
 }
 
-void CPU::bcd_adc(Byte operand) {
+void CPU::bcdADC(Byte operand) {
 	Byte addend, answer, carry;
 
 	operand = BCDDecode(operand);
@@ -47,7 +52,7 @@ void CPU::bcd_adc(Byte operand) {
 	Flags.V = 0;		// TODO - Understand 6502 V & C flags in BCD
 }
 
-void CPU::bcd_sbc(Byte subtrahend) {
+void CPU::bcdSBC(Byte subtrahend) {
 	Byte minuend, answer, carry;
 
 	subtrahend = BCDDecode(subtrahend);
@@ -64,7 +69,7 @@ void CPU::bcd_sbc(Byte subtrahend) {
 }
 
 // A = A + operand + Flags.C
-void CPU::do_adc(Byte operand) {
+void CPU::doADC(Byte operand) {
 	Word result;
 	bool same_sign;
 
@@ -77,6 +82,9 @@ void CPU::do_adc(Byte operand) {
 	Flags.V = same_sign &&
 		((A & NegativeBit) !=  (operand & NegativeBit));
 }
+
+////
+// CPU Instructions
 
 void CPU::ins_adc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Byte operand = getData(addrmode, expectedCyclesToUse);
@@ -120,7 +128,7 @@ void CPU::ins_asl(unsigned long addrmode, Byte &expectedCyclesToUse) {
 }
 
 // Set PC to @address if @condition is true
-void CPU::do_branch(bool condition, Word address, Byte &expectedCyclesToUse) {
+void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
 	if (condition) {
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;

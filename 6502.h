@@ -257,10 +257,10 @@ private:
 	Byte ReadByte(Word);
 	Word ReadWord(Word);
 	void dumpstack();
-	void do_branch(bool, Word, Byte &);
-	void do_adc(Byte);
-	void bcd_adc(Byte);
-	void bcd_sbc(Byte);
+	void doBranch(bool, Word, Byte &);
+	void doADC(Byte);
+	void bcdADC(Byte);
+	void bcdSBC(Byte);
 	void checkValidBCD(Byte);
 	Byte BCDDecode(Byte v);
 	Byte BCDEncode(Byte v);
