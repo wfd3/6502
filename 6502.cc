@@ -90,11 +90,11 @@ void CPU::ins_adc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Byte operand = getData(addrmode, expectedCyclesToUse);
 	
 	if (Flags.D) {
-		bcd_adc(operand);
+		bcdADC(operand);
 		return;
 	}
 
-	do_adc(operand);
+	doADC(operand);
 }
 
 void CPU::ins_and(unsigned long addrmode, Byte &expectedCyclesToUse) {
@@ -144,17 +144,17 @@ void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
 
 void CPU::ins_bcc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(!Flags.C, address, expectedCyclesToUse);
+	doBranch(!Flags.C, address, expectedCyclesToUse);
 }
 
 void CPU::ins_bcs(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(Flags.C, address, expectedCyclesToUse);
+	doBranch(Flags.C, address, expectedCyclesToUse);
 }
 
 void CPU::ins_beq(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(Flags.Z, address, expectedCyclesToUse);
+	doBranch(Flags.Z, address, expectedCyclesToUse);
 }
 
 void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse) {
@@ -169,17 +169,17 @@ void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse) {
 
 void CPU::ins_bmi(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(Flags.N, address, expectedCyclesToUse);
+	doBranch(Flags.N, address, expectedCyclesToUse);
 }
 
 void CPU::ins_bne(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(!Flags.Z, address, expectedCyclesToUse);
+	doBranch(!Flags.Z, address, expectedCyclesToUse);
 }
 
 void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(!Flags.N, address, expectedCyclesToUse);
+	doBranch(!Flags.N, address, expectedCyclesToUse);
 }
 
 void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
@@ -195,12 +195,12 @@ void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
 
 void CPU::ins_bvc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(!Flags.V, address, expectedCyclesToUse);
+	doBranch(!Flags.V, address, expectedCyclesToUse);
 }
 
 void CPU::ins_bvs(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(addrmode, expectedCyclesToUse);
-	do_branch(Flags.V, address, expectedCyclesToUse);
+	doBranch(Flags.V, address, expectedCyclesToUse);
 }
 
 void CPU::ins_clc(unsigned long addrmode, Byte &expectedCyclesToUse) {
@@ -516,11 +516,11 @@ void CPU::ins_sbc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Byte operand = getData(addrmode, expectedCyclesToUse);
 
 	if (Flags.D) {
-		bcd_sbc(operand); 
+		bcdSBC(operand); 
 		return;
 	}
 	
-	do_adc(~operand);
+	doADC(~operand);
 }
 
 void CPU::ins_sec(unsigned long addrmode, Byte &expectedCyclesToUse) {
