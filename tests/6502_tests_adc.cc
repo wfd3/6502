@@ -582,7 +582,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-// BCD tests
+// BCD ADC tests
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 	CPU::Cycles_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
@@ -609,6 +609,33 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
+TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ADC_IMM;
+
+	//Given:
+	cpu.Reset(CPU::INITIAL_PC);
+	mem.Init();
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x28;
+	cpu.A = 0x32;
+	cpu.Flags.D = 1;
+	cpu.Flags.C = 1;
+
+	//When:
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
+
+	// Then:n
+	EXPECT_EQ(cpu.A, 0x60 + 1);
+	EXPECT_FALSE(cpu.Flags.Z);
+	EXPECT_FALSE(cpu.Flags.V);
+	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	CPU::Cycles_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
@@ -621,6 +648,115 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	mem[0xFFFD] = 0x0;
 	cpu.A = 0x0;
 	cpu.Flags.D = 1;
+
+	//When:
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
+
+	// Then:
+	EXPECT_EQ(cpu.A, 0);
+	EXPECT_TRUE(cpu.Flags.Z);
+	EXPECT_FALSE(cpu.Flags.V);
+	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
+TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_ADC_IMM;
+
+	//Given:
+	cpu.Reset(CPU::INITIAL_PC);
+	mem.Init();
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x99;
+	cpu.A = 0x99;
+	cpu.Flags.D = 1;
+
+	//When:
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
+
+	// Then:
+	EXPECT_EQ(cpu.A, 0x98);
+	EXPECT_FALSE(cpu.Flags.Z);
+	EXPECT_FALSE(cpu.Flags.V);
+	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
+// BCD SBC
+
+TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_SBC_IMM;
+
+	//Given:
+	cpu.Reset(CPU::INITIAL_PC);
+	mem.Init();
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x21;
+	cpu.A = 0x51;
+	cpu.Flags.D = 1;
+	cpu.Flags.C = 1;
+
+	//When:
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
+
+	// Then:
+	EXPECT_EQ(cpu.A, 0x30);
+	EXPECT_FALSE(cpu.Flags.Z);
+	EXPECT_FALSE(cpu.Flags.V);
+	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
+TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_SBC_IMM;
+
+	//Given:
+	cpu.Reset(CPU::INITIAL_PC);
+	mem.Init();
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x51;
+	cpu.A = 0x51;
+	cpu.Flags.D = 1;
+	cpu.Flags.C = 1;
+
+	//When:
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.ExecuteOneInstruction();
+
+	// Then:
+	EXPECT_EQ(cpu.A, 0);
+	EXPECT_TRUE(cpu.Flags.Z);
+	EXPECT_FALSE(cpu.Flags.V);
+	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
+TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNotSet) {
+	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_SBC_IMM;
+
+	//Given:
+	cpu.Reset(CPU::INITIAL_PC);
+	mem.Init();
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x1;
+	cpu.A = 0x2;
+	cpu.Flags.D = 1;
+	cpu.Flags.C = 0;
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =

@@ -6,40 +6,67 @@ CPU::CPU(Memory *m) {
 	mem = m;
 }
 
-void CPU::bcd_adc(Byte operand) {
-	Byte al, a, b;
-	Word result;
-	
-	b = operand;
-	a = A;
-
+void CPU::checkValidBCD(Byte a) {
 	// Check if each 4-bit 'digit' is greater than 9; throw CPU
 	// exception if so.
-	if ((a & 0x0f) > 9 || ((a & 0xf0) >> 4) > 9 ||
-	    (b & 0x0f) > 9 || ((b & 0xf0) >> 4) > 9)
+	if ((a & 0x0f) > 9 || ((a & 0xf0) >> 4) > 9) {
+		printf("Invalid BCD encoding: 0x%02x", a);
 		Exception();
+	}
+}
 
-	al = (a & 0x0f) + (b & 0x0f) + Flags.C;
-	if (al >= 0x0A)
-		al = ((al + 0x06) & 0x0f) + 0x10;
-	result = (a & 0xf0) + (b & 0xf0) + al;
+Byte CPU::BCDDecode(Byte v) {
+	checkValidBCD(v);
+	return (10 * (v >> 4)) + (v & 0x0f);
+}
 
-	A = (result & 0xff);
-	Flags.C = (result >= 0x100);
+Byte CPU::BCDEncode(Byte v) {
+	Byte bcd = ((v / 10) << 4) + (v - ((v / 10) * 10));
+	checkValidBCD(bcd);
+	return bcd;
+}
+
+void CPU::bcd_adc(Byte operand) {
+	Byte addend, answer, carry;
+
+	operand = BCDDecode(operand);
+	addend  = BCDDecode(A);
+	carry   = Flags.C;
+	answer = addend + operand + carry;
+	
+	if (answer >= 100) {	// Carry
+		answer -= 100;
+		Flags.C = 1;
+	} else
+		Flags.C = 0;
+
+	A = BCDEncode(answer);
+
 	SetFlagZ(A);
-	SetFlagN(A);
-	Flags.V = 0;		// TODO - Understand 6502 V flag state in BCD
+	Flags.N = 0;
+	Flags.V = 0;		// TODO - Understand 6502 V & C flags in BCD
+}
+
+void CPU::bcd_sbc(Byte subtrahend) {
+	Byte minuend, answer, carry;
+
+	subtrahend = BCDDecode(subtrahend);
+	minuend    = BCDDecode(A);
+	carry      = !Flags.C;
+	answer = minuend - subtrahend - carry;
+	A = BCDEncode(answer);
+
+	SetFlagZ(A);
+	Flags.C = (long)(minuend - subtrahend - carry) < 0;
+
+	Flags.V = 0;		// TODO - Understand 6502 V & C flags in BCD
+	Flags.N = 0;
 }
 
 // A = A + operand + Flags.C
 void CPU::do_adc(Byte operand) {
 	Word result;
 	bool same_sign;
-
-	if (Flags.D) {
-		bcd_adc(operand);
-		return;
-	}
 
 	same_sign = (A & NegativeBit) == (operand & NegativeBit);
 	result = A + operand + Flags.C;
@@ -52,8 +79,14 @@ void CPU::do_adc(Byte operand) {
 }
 
 void CPU::ins_adc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Byte data = getData(addrmode, expectedCyclesToUse);
-	do_adc(data);
+	Byte operand = getData(addrmode, expectedCyclesToUse);
+	
+	if (Flags.D) {
+		bcd_adc(operand);
+		return;
+	}
+
+	do_adc(operand);
 }
 
 void CPU::ins_and(unsigned long addrmode, Byte &expectedCyclesToUse) {
@@ -361,8 +394,6 @@ void CPU::ins_nop(unsigned long addrmode, Byte &expectedCyclesToUse) {
 
 	(void)addrmode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
-	
-
 }
 
 void CPU::ins_ora(unsigned long addrmode, Byte &expectedCyclesToUse) {
@@ -474,8 +505,14 @@ void CPU::ins_rts(unsigned long addrmode, Byte &expectedCyclesToUse) {
 }
 
 void CPU::ins_sbc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Byte data = getData(addrmode, expectedCyclesToUse);
-	do_adc(~data);
+	Byte operand = getData(addrmode, expectedCyclesToUse);
+
+	if (Flags.D) {
+		bcd_sbc(operand); 
+		return;
+	}
+	
+	do_adc(~operand);
 }
 
 void CPU::ins_sec(unsigned long addrmode, Byte &expectedCyclesToUse) {

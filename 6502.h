@@ -260,6 +260,10 @@ private:
 	void do_branch(bool, Word, Byte &);
 	void do_adc(Byte);
 	void bcd_adc(Byte);
+	void bcd_sbc(Byte);
+	void checkValidBCD(Byte);
+	Byte BCDDecode(Byte v);
+	Byte BCDEncode(Byte v);
 
 	void ins_adc(unsigned long, Byte &);
 	void ins_and(unsigned long, Byte &);
