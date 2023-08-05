@@ -7,12 +7,19 @@ class Memory {
 public:
 	Memory(size_t);
 	~Memory();
-	void map(Address_t, size_t);
-	Byte& operator[](Address_t);
+
 	void Init();
+	void map(Address_t, size_t);
+
 	Byte ReadByte(Address_t);
 	void WriteByte(Address_t, Byte byte);
-	void exception();
+	void Exception(const char *, ...);
+
+	void LoadProgramFromFile(const char *, Address_t);
+	void LoadProgram(const Byte *, Address_t, size_t);
+
+	Byte operator[](Address_t address) const;
+	Byte& operator[](Address_t address);
 
 private:
 	Byte *m;

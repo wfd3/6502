@@ -45,6 +45,8 @@ public:
 
 	void Reset(Word);
 	std::tuple<Cycles_t, Cycles_t> ExecuteOneInstruction();
+	const char *disassemble(Byte);
+
 
 	// Opcodes
 	constexpr static Byte INS_BRK_IMP = 0x00;
@@ -201,7 +203,7 @@ public:
 
 private:
 
-	void Exception();
+	void Exception(const char *, ...);
 	void SetFlagsForRegister(Byte b);
 	void SetFlagsForCompare(Byte b, Byte v);
 	void SetFlagZ(Byte);

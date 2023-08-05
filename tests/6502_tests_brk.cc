@@ -29,6 +29,9 @@ TEST_F(MOS6502BRKTests, BRKImplied) {
 	mem[0xFFFF] = 0x60;
 	cpu.PS = 1 << 5;
 
+	// Tests if BRK throws exception when B is set
+//	cpu.Flags.B = 1; 
+
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
 

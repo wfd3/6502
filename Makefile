@@ -95,6 +95,7 @@ TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_jsr.cc \
 	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.cc \
 	$(TESTS_DIR)/6502_tests_lsr.cc \
+	$(TESTS_DIR)/6502_tests_load_program.cc \
 	$(TESTS_DIR)/6502_tests_nop.cc \
 	$(TESTS_DIR)/6502_tests_ora.cc \
 	$(TESTS_DIR)/6502_tests_pushpop.cc \
@@ -117,6 +118,7 @@ TESTS_OBJS = 6502.o memory.o \
 	$(TESTS_DIR)/6502_tests_inc_inx_iny.o \
 	$(TESTS_DIR)/6502_tests_jmp.o \
 	$(TESTS_DIR)/6502_tests_jsr.o \
+	$(TESTS_DIR)/6502_tests_load_program.o \
 	$(TESTS_DIR)/6502_tests_lda_ldy_ldx.o \
 	$(TESTS_DIR)/6502_tests_lsr.o \
 	$(TESTS_DIR)/6502_tests_nop.o \

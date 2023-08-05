@@ -1,4 +1,9 @@
 #include <map>
+#include <string>
+#include <cstring>
+#include <memory>
+#include <cstdarg>
+
 #include "6502.h"
 
 /////////////////////////////////////////////////////////////////////////
@@ -15,8 +20,7 @@ void CPU::checkValidBCD(Byte a) {
 	// Check if each 4-bit 'digit' is greater than 9; throw CPU
 	// exception if so.
 	if ((a & 0x0f) > 9 || ((a & 0xf0) >> 4) > 9) {
-		printf("Invalid BCD encoding: 0x%02x", a);
-		Exception();
+		Exception("Invalid BCD encoding: 0x%02x", a);
 	}
 }
 
@@ -188,7 +192,8 @@ void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
 
 	// Unsure if you can BRK when already in an interrupt.
 	if (Flags.B)
-		Exception();
+		Exception("BRK instruction called when B flag set at PC 0x%04x",
+			PC);
 
 	// From the internets, BRK pushes PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
@@ -968,6 +973,11 @@ void CPU::setupInstructionMap() {
 
 }
 
+const char *CPU::disassemble(Byte opcode) {
+	return instructions[opcode].name;
+
+}
+
 void CPU::Reset(Word ResetVector) {
 	PC = ResetVector;
 	SP = INITIAL_SP;
@@ -976,9 +986,30 @@ void CPU::Reset(Word ResetVector) {
 	setupInstructionMap();
 }
 
-void CPU::Exception() {
-	printf("CPU Exception");
-	throw -1;
+void CPU::Exception(const char *fmt_str, ...) {
+	va_list args;
+	int final_n, n = 256;
+	std::unique_ptr<char[]> formatted;
+
+	va_start(args, fmt_str);
+	while (1) {
+		// Wrap the plain char array into the unique_ptr 
+		formatted.reset(new char[n]); 
+		strcpy(&formatted[0], fmt_str);
+
+		final_n = vsnprintf(formatted.get(), n, fmt_str, args);
+
+		if (final_n < 0 || final_n >= n)
+			n += abs(final_n - n + 1);
+		else
+			break;
+	}
+
+	va_end(args);
+
+	printf("CPU Exception: %s\n", formatted.get());
+	printf("Halting\n");
+	exit(1);
 }
 
 void CPU::SetFlagZ(Byte val) {
@@ -1151,8 +1182,7 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		break;
 
 	default:
-		printf("Invalid addressing mode: 0x%ld\n", mode);
-		Exception();
+		Exception("Invalid addressing mode: 0x%ld\n", mode);
 		break;
 	}
 	
@@ -1195,8 +1225,7 @@ std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
 	opcode = ReadByteAtPC();
 
 	if (instructions.count(opcode) == 0) {
-		printf("Invalid opcode 0x%x\n", opcode);
-		Exception();
+		Exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC - 1);
 	}
 
 	addrmode = instructions[opcode].addrmode;
