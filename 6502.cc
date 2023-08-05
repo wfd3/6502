@@ -185,11 +185,20 @@ void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse) {
 void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	(void)addrmode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
-	
+
+	// Unsure if you can BRK when already in an interrupt.
+	if (Flags.B)
+		Exception();
+
+	// From the internets, BRK pushes PC + 1 to the stack. See:
+	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
+
+	PC++;
 	PushWord(PC);
 	Push(PS);
 	PC = ReadWord(INT_VECTOR);
 	Flags.B = 1;
+	Flags.I = 1;
 	Cycles++;
 }
 
@@ -501,6 +510,8 @@ void CPU::ins_rti(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	
 	PS = Pop();
 	PC = PopWord();
+	Flags.B = 0;		// These should be cleared when we pop the PS
+	Flags.I = 0;		// off the stack, but let's be sure.
 	Cycles += 2;
 }
 
