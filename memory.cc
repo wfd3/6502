@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <string>
 #include <cstring>
 #include <memory>
@@ -89,19 +92,44 @@ void Memory::WriteByte(Address_t address, Byte byte) {
 	m[address] = byte;
 }
 
-void Memory::LoadProgramFromFile(const char *file, Address_t start_address) { }
+void Memory::LoadProgramFromFile(const char *file, Address_t startAddress) {
 
-void Memory::LoadProgram(const Byte *program, Address_t start_address,
-			 size_t program_length) {
+	int f;
+	struct stat stat;
 
-	if (start_address > memory_size)
+	if ((f = open(file, O_RDONLY)) < 0) 
+		Exception("Can't open file '%s': %s", file, strerror(errno));
+	
+	if (fstat(f, &stat) < 0)
+		Exception("File error on '%s': %s", file, strerror(errno));
+
+	if ((size_t) stat.st_size > memory_size)
+		Exception("File '%s' cannot fit into memory (size=%d)",
+			  file, stat.st_size);
+	
+	if ((size_t) stat.st_size + startAddress > memory_size)
+		Exception("File '%s' cannot fit into memory at start address "
+			  "0x%04x (size=%d)",
+			  file, startAddress, stat.st_size);
+	
+	size_t r = read(f, m + startAddress, stat.st_size);
+	if (r != (size_t) stat.st_size) 
+		Exception("Can't read file '%s': %s", file, strerror(errno));
+
+	close(f);
+}
+
+void Memory::LoadProgram(const Byte *program, Address_t startAddress,
+			 size_t programLength) {
+
+	if (startAddress > memory_size)
 		Exception("Program load address is not a valid address: 0x%04x",
-			  start_address);
-	if (start_address + program_length > memory_size)
+			  startAddress);
+	if (startAddress + programLength > memory_size)
 		Exception("Program will not fit into memory at start address "
 			  "0x%04x (program length %d bytes)",
-			  start_address, program_length);
+			  startAddress, programLength);
 
-	for (size_t i = 0; i < program_length; i++) 
-		m[start_address + i] = program[i];
+	for (size_t i = 0; i < programLength; i++) 
+		m[startAddress + i] = program[i];
 }

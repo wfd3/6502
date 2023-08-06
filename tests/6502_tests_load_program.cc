@@ -15,6 +15,7 @@ static Byte testProgram[] = {
 
 static const unsigned long programLen = 12;
 constexpr Address_t startAddress = 0x4000;
+static char *testProgramFile = "./tests/program.bin";
 
 class MOS6502LoadProgramTests : public testing::Test {
 public:	
@@ -51,6 +52,25 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 	// When:
 
 	mem.LoadProgram(testProgram, startAddress, programLen);
+	cpu.PC = startAddress;
+
+	//Then:
+	for (Word cycles = 0; cycles < 1000; cycles++) 	{
+		std::tie(UsedCycles, ExpectedCycles) =
+			cpu.ExecuteOneInstruction();
+		EXPECT_EQ(UsedCycles, ExpectedCycles);
+	}
+}
+
+TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
+{
+	Byte UsedCycles, ExpectedCycles;
+
+	// Given:
+
+	// When:
+
+	mem.LoadProgramFromFile(testProgramFile, startAddress);
 	cpu.PC = startAddress;
 
 	//Then:
