@@ -1,5 +1,5 @@
-#include <map>
 #include <string>
+#include <format>
 #include <cstring>
 #include <memory>
 #include <cstdarg>
@@ -10,7 +10,6 @@
 CPU::CPU(Memory *m) {
 	mem = m;
 }
-
 
 // BCD functions.
 // See:
@@ -973,11 +972,6 @@ void CPU::setupInstructionMap() {
 
 }
 
-const char *CPU::disassemble(Byte opcode) {
-	return instructions[opcode].name;
-
-}
-
 void CPU::Reset(Word ResetVector) {
 	PC = ResetVector;
 	SP = INITIAL_SP;
@@ -1023,7 +1017,6 @@ void CPU::SetFlagN(Byte val) {
 void CPU::SetFlagsForRegister(Byte b) {
 	SetFlagZ(b);
 	SetFlagN(b);
-
 }
 
 void CPU::SetFlagsForCompare(Byte b, Byte v) {
@@ -1081,20 +1074,6 @@ Byte CPU::Pop() {
 	SPAddress = STACK_FRAME + SP;
 	return ReadByte(SPAddress);
 }
-
-void CPU::dumpstack() {
-	Byte p = SP | STACK_FRAME;
-	Word a;
-	printf("---\nStack dump:\n");
-	printf("STACK POINTER: %02x\n", SP);
-	while (p != 0xff) {
-		p++;
-		a = STACK_FRAME | p;
-		printf("[%04x] = %02x\n", a, mem->ReadByte(a));
-	}
-	printf("---\n");
-}
-	
 
 Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 	Word address, addrmode, flags;
@@ -1238,3 +1217,9 @@ std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
 			       expectedCyclesToUse);
 }
 
+void CPU::Execute() {
+
+	while (1) {
+		CPU::ExecuteOneInstruction();
+	}
+}

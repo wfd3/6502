@@ -20,6 +20,7 @@ public:
 	Word ReadWord(Address_t);
 	void WriteWord(Address_t, Word);
 	void Exception(const char *, ...);
+	void Hexdump(Address_t, Address_t);
 
 	void LoadProgramFromFile(const char *, Address_t);
 	void LoadProgram(const Byte *, Address_t, size_t);

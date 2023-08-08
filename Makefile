@@ -12,6 +12,8 @@
 # project, except GTEST_HEADERS, which you can use in your own targets
 # but shouldn't modify.
 
+CXX=g++-13
+
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
 GTEST_DIR=../googletest/googletest-1.13.0/googletest
@@ -25,7 +27,7 @@ USER_DIR=.
 CPPFLAGS += -isystem $(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -pthread
+CXXFLAGS += -g -Wall -Wextra -pthread -std=gnu++23
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
@@ -79,7 +81,7 @@ gtest_main.a : gtest-all.o gtest_main.o
 # Build the tests
 
 TESTS_DIR = ./tests
-TESTS_FILES = 6502.cc memory.cc \
+TESTS_FILES = 6502.cc memory.cc debug.cc \
 	$(TESTS_DIR)/6502_tests_adc.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
 	$(TESTS_DIR)/6502_tests_asl.cc \
@@ -102,9 +104,11 @@ TESTS_FILES = 6502.cc memory.cc \
 	$(TESTS_DIR)/6502_tests_rol_ror.cc \
 	$(TESTS_DIR)/6502_tests_rti.cc \
 	$(TESTS_DIR)/6502_tests_rts.cc \
-	$(TESTS_DIR)/6502_tests_tx_ty.cc
+	$(TESTS_DIR)/6502_tests_tx_ty.cc \
+	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.cc
 
-TESTS_OBJS = 6502.o memory.o \
+
+TESTS_OBJS = 6502.o memory.o debug.o \
 	$(TESTS_DIR)/6502_tests_adc.o \
 	$(TESTS_DIR)/6502_tests_and.o \
 	$(TESTS_DIR)/6502_tests_asl.cc \
@@ -127,7 +131,8 @@ TESTS_OBJS = 6502.o memory.o \
 	$(TESTS_DIR)/6502_tests_rol_ror.o \
 	$(TESTS_DIR)/6502_tests_rti.o \
 	$(TESTS_DIR)/6502_tests_rts.o \
-	$(TESTS_DIR)/6502_tests_tx_ty.o
+	$(TESTS_DIR)/6502_tests_tx_ty.o \
+	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.o
 
 %.o: %.cc 6502.h memory.h $(GTEST_HEADERS) 
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<

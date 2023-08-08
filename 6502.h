@@ -4,6 +4,7 @@
 #include <map>
 #include <bitset>
 #include <tuple>
+#include <string>
 #include "memory.h"
 
 using Byte = unsigned char;
@@ -44,9 +45,13 @@ public:
 	Cycles_t Cycles;
 
 	void Reset(Word);
+	void Execute();
+	void ExecuteTrace();
+	void Debug();
+	Address_t disassemble(Address_t, unsigned long);
+	unsigned long debugPrompt();
 	std::tuple<Cycles_t, Cycles_t> ExecuteOneInstruction();
-	const char *disassemble(Byte);
-
+	std::tuple<CPU::Cycles_t, CPU::Cycles_t> TraceOneInstruction();
 
 	// Opcodes
 	constexpr static Byte INS_BRK_IMP = 0x00;
@@ -266,6 +271,10 @@ private:
 	void checkValidBCD(Byte);
 	Byte BCDDecode(Byte v);
 	Byte BCDEncode(Byte v);
+	void PrintCPUState();
+
+	std::string decodeArgs(unsigned long, Address_t);
+
 
 	void ins_adc(unsigned long, Byte &);
 	void ins_and(unsigned long, Byte &);
@@ -324,5 +333,9 @@ private:
 	void ins_txs(unsigned long, Byte &);
 	void ins_tya(unsigned long, Byte &);
 
+	bool debug_alwaysShowPS = false;
+
+	void parseMemCommand(std::string);
+	void debuggerPrompt();
 };
 	

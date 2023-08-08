@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <string>
 #include <cstring>
+#include <iostream>
+#include <format>
 #include <memory>
 #include <cstdarg>
 
@@ -73,7 +75,8 @@ Byte Memory::ReadByte(Address_t address) {
 	if (_m == NULL) 
 		Exception("Memory has not be initalized");
 	if (address > _size)
-		Exception("Memory address out of range: 0x%04x ", address);
+		Exception("Memory address out of range: 0x%04x (max 0x%04x) ",
+			  address, _size-1);
 
 	return _m[address];
 }
@@ -140,4 +143,37 @@ void Memory::LoadProgram(const Byte *program, Address_t startAddress,
 
 	for (size_t i = 0; i < programLength; i++) 
 		_m[startAddress + i] = program[i];
+}
+
+void Memory::Hexdump(Address_t start, Address_t end) {
+
+	std::cout <<
+		std::format("# Memory Dump 0x{:04x}:0x{:04x}", start, end) <<
+		std::endl;
+	
+	if (start > end || end > _size) {
+		std::cout << " -- Invalid memory range" << std::endl;
+		return;
+	}
+
+	for (Address_t i = start; i <= end; i += 16) {
+		std::string ascii = "................";
+		std::string hexdmp;
+
+		hexdmp += std::format("{:04x}  ", i);
+
+		for (Address_t j = 0; j < 16; j++) {
+			if ((unsigned long) j + i > end) {
+				hexdmp += "   ";
+				ascii += ' ';
+			} else {
+				Address_t a = j + i;
+				hexdmp += std::format("{:02x} ", _m[a]);
+				if (isprint(_m[a]))
+					ascii.at(j) = _m[a];
+			}
+		}
+
+		std::cout << hexdmp << "  " << ascii << std::endl;
+	}
 }
