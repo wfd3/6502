@@ -112,18 +112,23 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
-		Flags.C = (A & (1 << 7)) > 1;
-		A = A << 1;
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
-		Flags.C = data & (1 << 7);
-		data = data << 1;
-		WriteByte(address, data);
 	}
+
+	Flags.C = (data & NegativeBit) > 0;
+	data = data << 1;
 	SetFlagN(data);
 	SetFlagZ(data);
+
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
+		A = data;
+	} else {
+		WriteByte(address, data);
+	}
+	
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
@@ -209,11 +214,6 @@ void CPU::ins_bpl(Byte opcode, Byte &expectedCyclesToUse) {
 void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
-
-	// Unsure if you can BRK when already in an interrupt.
-	if (Flags.B)
-		Exception("BRK instruction called when B flag set at PC 0x%04x",
-			PC);
 
 	// From the internets, BRK pushes PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
@@ -432,17 +432,23 @@ void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
-		Flags.C = A & 1;
-		A = A >> 1;
-	} else {
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC) 
+		data = A;
+	else {
 		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
-		Flags.C = data & 1;
-		data = data >> 1;
-		WriteByte(address, data);
 	}
-	Flags.N = 0;
+
+	Flags.C = (data & 1);
+	data = data >> 1;
+	SetFlagZ(data);
+	SetFlagN(data);
+
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
+		A = data;
+	else 
+		WriteByte(address, data);
+
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
@@ -509,20 +515,27 @@ void CPU::ins_plp(Byte opcode, Byte &expectedCyclesToUse) {
 }
 void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
-	Byte data;
+	Byte data, carry;
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		data = A;
-		A = (A << 1) | Flags.C;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
-		WriteByte(address, (data << 1) | Flags.C);
 	}
 
-	Flags.C = (data & (1 << 7)) > 0;
+	carry = Flags.C;
+	Flags.C = (data & NegativeBit) > 0;
+
+	data = (data << 1) | carry;
+
 	SetFlagZ(data);
-	SetFlagN(data << 1);
+	SetFlagN(data);
+
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
+		A = data;
+	else 
+		WriteByte(address, data);
 
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
@@ -531,9 +544,7 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 
 void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
-	Byte data, carry;
-
-	carry = Flags.C;
+	Byte data, zero;
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC) 
 		data = A;
@@ -542,17 +553,18 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 		data = ReadByte(address);
 	}
 
-	Flags.C = (data & 1) > 0;
-
-	data = (data >> 1) | (carry << 7);
+	zero = data & 1;
+	data = data >> 1;
+	if (Flags.C)
+		data |= NegativeBit;
+	SetFlagN(data);
+	SetFlagZ(data);
+	Flags.C = zero;
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		WriteByte(address, data);
-
-	SetFlagN(data);
-	SetFlagZ(data);
 
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
