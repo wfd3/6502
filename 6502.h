@@ -5,6 +5,9 @@
 #include <bitset>
 #include <tuple>
 #include <string>
+#include <iostream>
+#include <vector>
+
 #include "memory.h"
 
 using Byte = unsigned char;
@@ -28,14 +31,14 @@ public:
 	Byte SP;
 	Byte A, X, Y;
 	struct ProcessorStatusBits {
-		Byte C:1;
-		Byte Z:1;
-		Byte I:1;
-		Byte D:1;
-		Byte B:1;
-		Byte UNUSED:1;
-		Byte V:1;
-		Byte N:1;
+		Byte C:1; 	// Carry (bit 0)
+		Byte Z:1;	// Zero (bit 1)
+		Byte I:1;	// Interrupt disable (bit 2)
+		Byte D:1;	// Decimal mode (bit 3)
+		Byte B:1;	// Break (bit 4)
+		Byte _unused:1;	// Unused (bit 5)
+		Byte V:1;	// Overflow (bit 6)
+		Byte N:1;	// Negative (bit 7)
 	};
 	union {
 		Byte PS;
@@ -46,12 +49,30 @@ public:
 
 	void Reset(Word);
 	void Execute();
-	void ExecuteTrace();
 	void Debug();
 	Address_t disassemble(Address_t, unsigned long);
+	Address_t disassembleAt(Address_t dPC, std::string &d);
 	unsigned long debugPrompt();
 	std::tuple<Cycles_t, Cycles_t> ExecuteOneInstruction();
 	std::tuple<CPU::Cycles_t, CPU::Cycles_t> TraceOneInstruction();
+
+	void ToggleDebug() {
+		debugMode = !debugMode;
+		std::cout << "# Debug mode ";
+		if (debugMode)
+			std::cout << "enabled\n";
+		else
+			std::cout << "disabled\n";
+	}
+
+	void SetDebug(bool d) {
+		debugMode = d;
+		std::cout << "# Debug mode ";
+		if (debugMode)
+			std::cout << "enabled\n";
+		else
+			std::cout << "disabled\n";
+	}
 
 	// Opcodes
 	constexpr static Byte INS_BRK_IMP = 0x00;
@@ -217,54 +238,61 @@ private:
 	Byte Pop();
 	void PushWord(Word);
 	Word PopWord();
-	Word getAddress(unsigned long, Byte &);
-	Byte getData(unsigned long, Byte &);
+	Word getAddress(Byte, Byte &);
+	Byte getData(Byte, Byte &);
 	Byte ReadByteAtPC();
+	Word ReadWordAtPC();
 
 	Memory *mem;
 
 	// Addressing modes
-	constexpr static unsigned long ADDR_MODE_IMM = 1 << 0;  // Immediate
-	constexpr static unsigned long ADDR_MODE_ZP  = 1 << 1;  // Zero Page
-	constexpr static unsigned long ADDR_MODE_ZPX = 1 << 2;  // Zero Page,X
-	constexpr static unsigned long ADDR_MODE_ZPY = 1 << 3;  // Zero Page,Y
-	constexpr static unsigned long ADDR_MODE_REL = 1 << 4;  // Relative
-	constexpr static unsigned long ADDR_MODE_ABS = 1 << 5;  // Absolute
-	constexpr static unsigned long ADDR_MODE_ABX = 1 << 6;  // Absolute,X
-	constexpr static unsigned long ADDR_MODE_ABY = 1 << 7;  // Absolute,y
-	constexpr static unsigned long ADDR_MODE_IND = 1 << 8;  // Indirect
-	constexpr static unsigned long ADDR_MODE_IDX = 1 << 9;  // Indexed Ind
-	constexpr static unsigned long ADDR_MODE_IDY = 1 << 10; // Indirect Idx
-	constexpr static unsigned long ADDR_MODE_IMP = 1 << 11; // Implied
-	constexpr static unsigned long ADDR_MODE_ACC = 1 << 12; // Accumulator
+	constexpr static unsigned long ADDR_MODE_IMM = 0;  // Immediate
+	constexpr static unsigned long ADDR_MODE_ZP  = 1;  // Zero Page
+	constexpr static unsigned long ADDR_MODE_ZPX = 2;  // Zero Page,X
+	constexpr static unsigned long ADDR_MODE_ZPY = 3;  // Zero Page,Y
+	constexpr static unsigned long ADDR_MODE_REL = 4;  // Relative
+	constexpr static unsigned long ADDR_MODE_ABS = 5;  // Absolute
+	constexpr static unsigned long ADDR_MODE_ABX = 6;  // Absolute,X
+	constexpr static unsigned long ADDR_MODE_ABY = 7;  // Absolute,y
+	constexpr static unsigned long ADDR_MODE_IND = 8;  // Indirect
+	constexpr static unsigned long ADDR_MODE_IDX = 9;  // Indexed Ind
+	constexpr static unsigned long ADDR_MODE_IDY = 10; // Indirect Idx
+	constexpr static unsigned long ADDR_MODE_IMP = 11; // Implied
+	constexpr static unsigned long ADDR_MODE_ACC = 12; // Accumulator
 
         // How the CPU should add cycle counts on branches and when
         // instructions fetch data across page boundries.
-	constexpr static unsigned long CYCLE_BRANCH     = 1 << 13;
-	constexpr static unsigned long CYCLE_CROSS_PAGE = 1 << 14;
+	constexpr static unsigned long NONE             = 0;
+	constexpr static unsigned long CYCLE_BRANCH     = 1;
+	constexpr static unsigned long CYCLE_CROSS_PAGE = 2;
 
+	// Bits for PS byte
+	constexpr static Byte BreakBit    = 1 << 4;
+	constexpr static Byte UnusedBit   = 1 << 5;
 	constexpr static Byte NegativeBit = 1 << 7;
 
 	constexpr static Word STACK_FRAME = 0x0100;
 
 	// Instruction map
-	typedef void (CPU::*opfn_t)(unsigned long, Byte &);
+	typedef void (CPU::*opfn_t)(Byte, Byte &);
 	struct instruction {
 		const char *name;
-		unsigned long addrmode;
+	        Byte addrmode;
+		Byte flags;
+		Byte bytes;
 		Byte cycles;
 		opfn_t opfn;
 	};
 	std::map<Byte, instruction> instructions;
 
-	CPU::instruction makeIns(const char *, unsigned long, Byte, opfn_t);
+	CPU::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
 	void setupInstructionMap();
 
 	void WriteByte(Word, Byte);
 	Byte ReadByte(Word);
 	Word ReadWord(Word);
 	void dumpstack();
-	void doBranch(bool, Word, Byte &);
+	void doBranch(bool, Word, Word, Byte &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
@@ -272,70 +300,149 @@ private:
 	Byte BCDDecode(Byte v);
 	Byte BCDEncode(Byte v);
 	void PrintCPUState();
+	void PushPS();
+	void PopPS();
 
-	std::string decodeArgs(unsigned long, Address_t);
+	std::string decodeArgs(Byte opcode);
+	void printInstruction(Byte opcode);
 
+	void ins_adc(Byte, Byte &);
+	void ins_and(Byte, Byte &);
+	void ins_asl(Byte, Byte &);
+	void ins_bcc(Byte, Byte &);
+	void ins_bcs(Byte, Byte &);
+	void ins_beq(Byte, Byte &);
+	void ins_bit(Byte, Byte &);
+	void ins_bmi(Byte, Byte &);
+	void ins_bne(Byte, Byte &);
+	void ins_bpl(Byte, Byte &);
+	void ins_brk(Byte, Byte &);
+	void ins_bvc(Byte, Byte &);
+	void ins_bvs(Byte, Byte &);
+	void ins_clc(Byte, Byte &);
+	void ins_cld(Byte, Byte &);
+	void ins_cli(Byte, Byte &);
+	void ins_clv(Byte, Byte &);
+	void ins_cmp(Byte, Byte &);
+	void ins_cpx(Byte, Byte &);
+	void ins_cpy(Byte, Byte &);
+	void ins_dec(Byte, Byte &);
+	void ins_dex(Byte, Byte &);
+	void ins_dey(Byte, Byte &);
+	void ins_eor(Byte, Byte &);
+	void ins_inc(Byte, Byte &);
+	void ins_inx(Byte, Byte &);
+	void ins_iny(Byte, Byte &);
+	void ins_jmp(Byte, Byte &);
+	void ins_jsr(Byte, Byte &);
+	void ins_lda(Byte, Byte &);
+	void ins_ldx(Byte, Byte &);
+	void ins_ldy(Byte, Byte &);
+	void ins_lsr(Byte, Byte &);
+	void ins_nop(Byte, Byte &);
+	void ins_ora(Byte, Byte &);
+	void ins_pha(Byte, Byte &);
+	void ins_pla(Byte, Byte &);
+	void ins_php(Byte, Byte &);
+	void ins_plp(Byte, Byte &);
+	void ins_rol(Byte, Byte &);
+	void ins_ror(Byte, Byte &);
+	void ins_rti(Byte, Byte &);
+	void ins_rts(Byte, Byte &);
+	void ins_sbc(Byte, Byte &);
+	void ins_sec(Byte, Byte &);
+	void ins_sed(Byte, Byte &);
+	void ins_sei(Byte, Byte &);
+	void ins_sta(Byte, Byte &);
+	void ins_stx(Byte, Byte &);
+	void ins_sty(Byte, Byte &);
+	void ins_tax(Byte, Byte &);
+	void ins_tay(Byte, Byte &);
+	void ins_tsx(Byte, Byte &);
+	void ins_txa(Byte, Byte &);
+	void ins_txs(Byte, Byte &);
+	void ins_tya(Byte, Byte &);
 
-	void ins_adc(unsigned long, Byte &);
-	void ins_and(unsigned long, Byte &);
-	void ins_asl(unsigned long, Byte &);
-	void ins_bcc(unsigned long, Byte &);
-	void ins_bcs(unsigned long, Byte &);
-	void ins_beq(unsigned long, Byte &);
-	void ins_bit(unsigned long, Byte &);
-	void ins_bmi(unsigned long, Byte &);
-	void ins_bne(unsigned long, Byte &);
-	void ins_bpl(unsigned long, Byte &);
-	void ins_brk(unsigned long, Byte &);
-	void ins_bvc(unsigned long, Byte &);
-	void ins_bvs(unsigned long, Byte &);
-	void ins_clc(unsigned long, Byte &);
-	void ins_cld(unsigned long, Byte &);
-	void ins_cli(unsigned long, Byte &);
-	void ins_clv(unsigned long, Byte &);
-	void ins_cmp(unsigned long, Byte &);
-	void ins_cpx(unsigned long, Byte &);
-	void ins_cpy(unsigned long, Byte &);
-	void ins_dec(unsigned long, Byte &);
-	void ins_dex(unsigned long, Byte &);
-	void ins_dey(unsigned long, Byte &);
-	void ins_eor(unsigned long, Byte &);
-	void ins_inc(unsigned long, Byte &);
-	void ins_inx(unsigned long, Byte &);
-	void ins_iny(unsigned long, Byte &);
-	void ins_jmp(unsigned long, Byte &);
-	void ins_jsr(unsigned long, Byte &);
-	void ins_lda(unsigned long, Byte &);
-	void ins_ldx(unsigned long, Byte &);
-	void ins_ldy(unsigned long, Byte &);
-	void ins_lsr(unsigned long, Byte &);
-	void ins_nop(unsigned long, Byte &);
-	void ins_ora(unsigned long, Byte &);
-	void ins_pha(unsigned long, Byte &);
-	void ins_pla(unsigned long, Byte &);
-	void ins_php(unsigned long, Byte &);
-	void ins_plp(unsigned long, Byte &);
-	void ins_rol(unsigned long, Byte &);
-	void ins_ror(unsigned long, Byte &);
-	void ins_rti(unsigned long, Byte &);
-	void ins_rts(unsigned long, Byte &);
-	void ins_sbc(unsigned long, Byte &);
-	void ins_sec(unsigned long, Byte &);
-	void ins_sed(unsigned long, Byte &);
-	void ins_sei(unsigned long, Byte &);
-	void ins_sta(unsigned long, Byte &);
-	void ins_stx(unsigned long, Byte &);
-	void ins_sty(unsigned long, Byte &);
-	void ins_tax(unsigned long, Byte &);
-	void ins_tay(unsigned long, Byte &);
-	void ins_tsx(unsigned long, Byte &);
-	void ins_txa(unsigned long, Byte &);
-	void ins_txs(unsigned long, Byte &);
-	void ins_tya(unsigned long, Byte &);
+	bool debugMode;
+	std::string debug_lastCmd;
+	bool debug_alwaysShowPS;
+	bool debug_loopDetection;
+	std::vector<Word> breakpoints;
 
-	bool debug_alwaysShowPS = false;
+	void listBreakpoints() {
+		std::vector<Word>::iterator i;
+		int c = 0;
+
+		printf("# Active breakpoints:\n");
+		for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
+			printf("  %04x ", *i);
+			c++;
+			if (c == 4) {
+				c = 0;
+				printf("\n");
+			}
+		}
+
+		printf("\n");
+	}
+
+	bool isBreakpoint(Word _pc) {
+		std::vector<Word>::iterator i;
+
+		for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
+			if (*i == _pc)
+				return true;
+		}
+		return false;
+	}
+
+	void deleteBreakpoint(Word bp) {
+		std::vector<Word>::iterator i;
+
+		for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
+			if (*i == bp) {
+				breakpoints.erase(i);
+				printf("# Removed breakpoint at %04x\n", *i);
+				return;
+			}
+		}
+		printf("# No breakpoint set at %04x\n", bp);
+	}
+
+	void addBreakpoint(Word bp) {
+		if (isBreakpoint(bp)) {
+			printf("# Breakpoint already set at %04x\n", bp);
+			return;
+		}
+		breakpoints.push_back(bp);
+		printf("# Set breakpoint at %04x\n", bp);
+	}
+				
 
 	void parseMemCommand(std::string);
 	void debuggerPrompt();
-};
-	
+	bool InterpretNextOpcodeAsByte;
+
+	std::vector<std::string> backtrace;
+
+	void showBacktrace() {
+		std::vector<std::string>::iterator i = backtrace.begin();
+		unsigned int cnt = 0;
+
+		printf("# Backtrace: %ld entries\n", backtrace.size());
+		for ( ; i < backtrace.end(); i++ )
+			printf("#%02d:  %s\n", cnt++, (*i).c_str());
+
+	}
+
+	void addBacktrace(Word PC) {
+		std::string ins;
+		disassembleAt(PC, ins);
+		backtrace.push_back(ins);
+	}
+
+	void removeBacktrace() {
+		if (!backtrace.empty())
+			backtrace.pop_back();
+	}
+};	

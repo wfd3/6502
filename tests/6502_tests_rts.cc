@@ -22,8 +22,8 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 
 	//Given:
 	cpu.Reset(CPU::INITIAL_PC);
-	mem[0x01FF] = 0x00;
-	mem[0x01FE] = 0x20;
+	mem[0x01FF] = 0x20;
+	mem[0x01FE] = 0x00;
 	cpu.SP -= 2;
 
 	mem[0xFFFC] = ins;
@@ -32,7 +32,7 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 	std::tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
 
 	// Then:
-	EXPECT_EQ(cpu.PC, 0x2000);
+	EXPECT_EQ(cpu.PC, 0x2000 + 1);
 	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

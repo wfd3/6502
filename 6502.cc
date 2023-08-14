@@ -1,5 +1,4 @@
 #include <string>
-#include <format>
 #include <cstring>
 #include <memory>
 #include <cstdarg>
@@ -89,8 +88,8 @@ void CPU::doADC(Byte operand) {
 ////
 // CPU Instructions
 
-void CPU::ins_adc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Byte operand = getData(addrmode, expectedCyclesToUse);
+void CPU::ins_adc(Byte opcode, Byte &expectedCyclesToUse) {
+	Byte operand = getData(opcode, expectedCyclesToUse);
 	
 	if (Flags.D) {
 		bcdADC(operand);
@@ -100,24 +99,24 @@ void CPU::ins_adc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	doADC(operand);
 }
 
-void CPU::ins_and(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_and(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
+	data = getData(opcode, expectedCyclesToUse);
 	A &= data;
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_asl(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (addrmode & ADDR_MODE_ACC) {
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		Flags.C = (A & (1 << 7)) > 1;
 		A = A << 1;
 		data = A;
 	} else {
-		address = getAddress(addrmode, expectedCyclesToUse);
+		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
 		Flags.C = data & (1 << 7);
 		data = data << 1;
@@ -126,13 +125,16 @@ void CPU::ins_asl(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	SetFlagN(data);
 	SetFlagZ(data);
 	Cycles++;
-	if (addrmode & ADDR_MODE_ABX)
+	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
 }
 
 // Set PC to @address if @condition is true
-void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
+void CPU::doBranch(bool condition, Word address, Word _PC,
+		   Byte &expectedCyclesToUse) {
 	if (condition) {
+		addBacktrace(_PC);
+		
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;
 
@@ -145,48 +147,67 @@ void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
 	}
 }
 
-void CPU::ins_bcc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(!Flags.C, address, expectedCyclesToUse);
+void CPU::ins_bcc(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(!Flags.C, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_bcs(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(Flags.C, address, expectedCyclesToUse);
+void CPU::ins_bcs(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(Flags.C, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_beq(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(Flags.Z, address, expectedCyclesToUse);
+void CPU::ins_beq(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(Flags.Z, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_bit(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_bit(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
-	data &= A;
-	SetFlagZ(data);
+	data = getData(opcode, expectedCyclesToUse);
+	SetFlagZ(A & data);
+	printf("A = %x, data = %x, (A & data) = %x\n",
+	       A, data, (A & data));
 	SetFlagN(data);
-	Flags.V = (data & (1 << 6)) == (1 << 6);
+	Flags.V = (data & (1 << 6)) != 0;
 }
 
-void CPU::ins_bmi(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(Flags.N, address, expectedCyclesToUse);
+void CPU::ins_bmi(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(Flags.N, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_bne(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(!Flags.Z, address, expectedCyclesToUse);
+void CPU::ins_bne(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(!Flags.Z, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_bpl(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(!Flags.N, address, expectedCyclesToUse);
+void CPU::ins_bpl(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(!Flags.N, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 
 	// Unsure if you can BRK when already in an interrupt.
@@ -199,100 +220,110 @@ void CPU::ins_brk(unsigned long addrmode, Byte &expectedCyclesToUse) {
 
 	PC++;
 	PushWord(PC);
-	Push(PS);
+	printf("* [%04x] BRK: setting return address to %04x\n", PC - 2, PC);	
+
+	addBacktrace(PC);
+
+	PushPS();
 	PC = ReadWord(INT_VECTOR);
 	Flags.B = 1;
 	Flags.I = 1;
 	Cycles++;
 }
 
-void CPU::ins_bvc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(!Flags.V, address, expectedCyclesToUse);
+void CPU::ins_bvc(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(!Flags.V, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_bvs(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
-	doBranch(Flags.V, address, expectedCyclesToUse);
+void CPU::ins_bvs(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address, _pc;
+
+	_pc = PC - 1;
+	address = getAddress(opcode, expectedCyclesToUse);
+	doBranch(Flags.V, address, _pc, expectedCyclesToUse);
 }
 
-void CPU::ins_clc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_clc(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.C = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_cld(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_cld(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.D = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_cli(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_cli(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.I = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_clv(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_clv(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.V = 0;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_cmp(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_cmp(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
+	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = A >= data;
 	Flags.Z = A == data;
 	Flags.N = A  < data;
 }
 
-void CPU::ins_cpx(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_cpx(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
+	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = X >= data;
 	Flags.Z = X == data;
 	Flags.N = X  < data;
 }
 
-void CPU::ins_cpy(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_cpy(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
+	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = Y >= data;
 	Flags.Z = Y == data;
 	Flags.N = Y  < data;
 
 }
 
-void CPU::ins_dec(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_dec(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	address = getAddress(addrmode, expectedCyclesToUse);
+	address = getAddress(opcode, expectedCyclesToUse);
 	data = ReadByte(address);
 	data--;
 	WriteByte(address, data);
 	SetFlagZ(data);
 	SetFlagN(data);
 	Cycles++;
-	if (addrmode &ADDR_MODE_ABX)
+	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
-void CPU::ins_dex(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_dex(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	X--;
@@ -301,8 +332,8 @@ void CPU::ins_dex(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_dey(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_dey(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Y--;
@@ -311,31 +342,31 @@ void CPU::ins_dey(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_eor(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_eor(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
+	data = getData(opcode, expectedCyclesToUse);
 	A ^= data;
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_inc(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_inc(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	address = getAddress(addrmode, expectedCyclesToUse);
+	address = getAddress(opcode, expectedCyclesToUse);
 	data = ReadByte(address);
 	data++;
 	WriteByte(address, data);
 	Flags.Z = data == 0;
 	Flags.N = (data &NegativeBit) > 0;
 	Cycles++;
-	if (addrmode &ADDR_MODE_ABX)
+	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
-void CPU::ins_inx(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_inx(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	X++;
@@ -344,8 +375,8 @@ void CPU::ins_inx(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_iny(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_iny(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Y++;
@@ -354,49 +385,58 @@ void CPU::ins_iny(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_jmp(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_jmp(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address = PC;
 
-	if (addrmode & ADDR_MODE_IND) {
-		address = getAddress(addrmode, expectedCyclesToUse);
+	addBacktrace(PC - 1);
+
+	if (instructions[opcode].addrmode == ADDR_MODE_IND) {
+		address = getAddress(opcode, expectedCyclesToUse);
 	}
 
 	PC = ReadWord(address);
 }
 
-void CPU::ins_jsr(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
+void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
+	Word newPC;
 	
-	PushWord(PC - 1);
-	PC = ReadWord(PC);
+	addBacktrace(PC - 1);
+
+	newPC = ReadWord(PC);
+	PushWord(PC + 1);
+	printf("* JSR: setting return address to %04x\n", PC + 1);	
+	PC = newPC;
+	
 	Cycles++;
+
+	(void)opcode;		// Suppress '-Wununsed' warnings
+	(void)expectedCyclesToUse;
 }
 
-void CPU::ins_lda(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	A = getData(addrmode, expectedCyclesToUse);
+void CPU::ins_lda(Byte opcode, Byte &expectedCyclesToUse) {
+	A = getData(opcode, expectedCyclesToUse);
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_ldx(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	X = getData(addrmode, expectedCyclesToUse);
+void CPU::ins_ldx(Byte opcode, Byte &expectedCyclesToUse) {
+	X = getData(opcode, expectedCyclesToUse);
 	SetFlagsForRegister(X);
 }
 
-void CPU::ins_ldy(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Y = getData(addrmode, expectedCyclesToUse);
+void CPU::ins_ldy(Byte opcode, Byte &expectedCyclesToUse) {
+	Y = getData(opcode, expectedCyclesToUse);
 	SetFlagsForRegister(Y);
 }
 
-void CPU::ins_lsr(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (addrmode &ADDR_MODE_ACC) {
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		Flags.C = A & 1;
 		A = A >> 1;
 	} else {
-		address = getAddress(addrmode, expectedCyclesToUse);
+		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
 		Flags.C = data & 1;
 		data = data >> 1;
@@ -404,37 +444,37 @@ void CPU::ins_lsr(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	}
 	Flags.N = 0;
 	Cycles++;
-	if (addrmode &ADDR_MODE_ABX)
+	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
 }
 
-void CPU::ins_nop(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_nop(Byte opcode, Byte &expectedCyclesToUse) {
 	// NOP, like all single byte instructions, takes
 	// two cycles.
 	Cycles++;
 
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 }
 
-void CPU::ins_ora(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_ora(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
-	data = getData(addrmode, expectedCyclesToUse);
+	data = getData(opcode, expectedCyclesToUse);
 	A |= data;
 	SetFlagsForRegister(A);
 }
 
-void CPU::ins_pha(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_pha(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Push(A);
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_pla(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_pla(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	A = Pop();
@@ -442,29 +482,40 @@ void CPU::ins_pla(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles += 2;      
 }
 
-void CPU::ins_php(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::PushPS() {
+	// PHP silently sets the Unused flag (bit 5) and the Break flag (bit 4)
+	Push(PS | UnusedBit | BreakBit);
+}
+
+void CPU::PopPS() {
+	PS = Pop();
+	Flags.B = false;
+	Flags._unused = false;
+}
+
+void CPU::ins_php(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
-	
-	Push(PS);
+
+	PushPS();
 	Cycles++;		// Single byte instruction
 }
-void CPU::ins_plp(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_plp(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
-	PS = Pop();
+	PopPS();
 	Cycles += 2;
 }
-void CPU::ins_rol(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (addrmode &ADDR_MODE_ACC) {
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		data = A;
 		A = (A << 1) | Flags.C;
 	} else {
-		address = getAddress(addrmode, expectedCyclesToUse);
+		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
 		WriteByte(address, (data << 1) | Flags.C);
 	}
@@ -474,20 +525,20 @@ void CPU::ins_rol(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	SetFlagN(data << 1);
 
 	Cycles++;
-	if (addrmode &ADDR_MODE_ABX)
+	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
-void CPU::ins_ror(unsigned long addrmode, Byte &expectedCyclesToUse) {
+void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data, carry;
 
 	carry = Flags.C;
 
-	if (addrmode &ADDR_MODE_ACC) 
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC) 
 		data = A;
 	else {
-		address = getAddress(addrmode, expectedCyclesToUse);
+		address = getAddress(opcode, expectedCyclesToUse);
 		data = ReadByte(address);
 	}
 
@@ -495,7 +546,7 @@ void CPU::ins_ror(unsigned long addrmode, Byte &expectedCyclesToUse) {
 
 	data = (data >> 1) | (carry << 7);
 
-	if (addrmode &ADDR_MODE_ACC)
+	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		WriteByte(address, data);
@@ -504,31 +555,35 @@ void CPU::ins_ror(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	SetFlagZ(data);
 
 	Cycles++;
-	if (addrmode &ADDR_MODE_ABX)
+	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
-void CPU::ins_rti(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_rti(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
-	
-	PS = Pop();
+
+	printf("* [%04x] RTS: returning to ", PC - 1);
+	removeBacktrace();
+	PopPS();
 	PC = PopWord();
-	Flags.B = 0;		// These should be cleared when we pop the PS
-	Flags.I = 0;		// off the stack, but let's be sure.
+	printf("%04x\n", PC);
 	Cycles += 2;
 }
 
-void CPU::ins_rts(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_rts(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
+
+	removeBacktrace();
 	
-	PC = PopWord();
+	PC = PopWord() + 1;
+	printf("* RTS: returning to %04x\n", PC);
 	Cycles += 3;	       
 }
 
-void CPU::ins_sbc(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Byte operand = getData(addrmode, expectedCyclesToUse);
+void CPU::ins_sbc(Byte opcode, Byte &expectedCyclesToUse) {
+	Byte operand = getData(opcode, expectedCyclesToUse);
 
 	if (Flags.D) {
 		bcdSBC(operand); 
@@ -538,47 +593,47 @@ void CPU::ins_sbc(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	doADC(~operand);
 }
 
-void CPU::ins_sec(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_sec(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.C = 1;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_sed(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_sed(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.D = 1;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_sei(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_sei(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Flags.I = 1;
 	Cycles++;		// Single byte instruction
 }
 
-void CPU::ins_sta(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
+void CPU::ins_sta(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(opcode, expectedCyclesToUse);
 	WriteByte(address, A);
 }
 
-void CPU::ins_stx(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
+void CPU::ins_stx(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(opcode, expectedCyclesToUse);
 	WriteByte(address, X);
 }
 
-void CPU::ins_sty(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	Word address = getAddress(addrmode, expectedCyclesToUse);
+void CPU::ins_sty(Byte opcode, Byte &expectedCyclesToUse) {
+	Word address = getAddress(opcode, expectedCyclesToUse);
 	WriteByte(address, Y);
 }
 
-void CPU::ins_tax(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_tax(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	X = A;
@@ -587,8 +642,8 @@ void CPU::ins_tax(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_tay(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_tay(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	Y = A;
@@ -597,8 +652,8 @@ void CPU::ins_tay(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_tsx(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_tsx(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	X = SP;
@@ -607,8 +662,8 @@ void CPU::ins_tsx(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_txa(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_txa(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	A = X;
@@ -617,16 +672,16 @@ void CPU::ins_txa(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-void CPU::ins_txs(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_txs(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	SP = X;
 	Cycles++;
 }
 
-void CPU::ins_tya(unsigned long addrmode, Byte &expectedCyclesToUse) {
-	(void)addrmode;		// Suppress '-Wununsed' warnings
+void CPU::ins_tya(Byte opcode, Byte &expectedCyclesToUse) {
+	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
 	A = Y;
@@ -635,349 +690,17 @@ void CPU::ins_tya(unsigned long addrmode, Byte &expectedCyclesToUse) {
 	Cycles++;
 }
 
-/////////////////////////////////////////////////////////////////////////
-
-CPU::instruction CPU::makeIns(const char *name, unsigned long addrmode,
-			      Byte cycles, opfn_t opfn) {
-	struct instruction ins = { name, addrmode, cycles, opfn };
-	return ins;
-}
-
-void CPU::setupInstructionMap() {
-	instructions[CPU::INS_BRK_IMP] = 
-		makeIns("BRK", ADDR_MODE_IMP, 7, &CPU::ins_brk);
-	instructions[CPU::INS_ORA_IDX] = 
-		makeIns("ORA", ADDR_MODE_IDX, 6, &CPU::ins_ora);
-	instructions[CPU::INS_ASL_ACC] = 
-		makeIns("ASL", ADDR_MODE_ACC, 2, &CPU::ins_asl);
-	instructions[CPU::INS_ADC_ZP] = 
-		makeIns("ADC", ADDR_MODE_ZP, 3, &CPU::ins_adc);
-	instructions[CPU::INS_ROR_ZP] = 
-		makeIns("ROR", ADDR_MODE_ZP, 5, &CPU::ins_ror);
-	instructions[CPU::INS_ADC_IMM] = 
-		makeIns("ADC", ADDR_MODE_IMM, 2, &CPU::ins_adc);
-	instructions[CPU::INS_ROR_ACC] = 
-		makeIns("ROR", ADDR_MODE_ACC, 2, &CPU::ins_ror);
-	instructions[CPU::INS_JMP_IND] = 
-		makeIns("JMP", ADDR_MODE_IND, 5, &CPU::ins_jmp);
-	instructions[CPU::INS_ADC_ABS] = 
-		makeIns("ADC", ADDR_MODE_ABS, 4, &CPU::ins_adc);
-	instructions[CPU::INS_ROR_ABS] = 
-		makeIns("ROR", ADDR_MODE_ABS, 6, &CPU::ins_ror);
-	instructions[CPU::INS_BVS_REL] = 
-		makeIns("BVS", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bvs);
-	instructions[CPU::INS_ADC_IDY] = 
-		makeIns("ADC", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_adc);
-	instructions[CPU::INS_ADC_ZPX] = 
-		makeIns("ADC", ADDR_MODE_ZPX, 4, &CPU::ins_adc);
-	instructions[CPU::INS_ROR_ZPX] = 
-		makeIns("ROR", ADDR_MODE_ZPX, 6, &CPU::ins_ror);
-	instructions[CPU::INS_SEI_IMP] = 
-		makeIns("SEI", ADDR_MODE_IMP, 2, &CPU::ins_sei);
-	instructions[CPU::INS_ADC_ABY] = 
-		makeIns("ADC", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_adc);
-	instructions[CPU::INS_ADC_ABX] = 
-		makeIns("ADC", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_adc);
-	instructions[CPU::INS_ROR_ABX] = 
-		makeIns("ROR", ADDR_MODE_ABX, 7, &CPU::ins_ror);
-	instructions[CPU::INS_STA_IDX] = 
-		makeIns("STA", ADDR_MODE_IDX, 6, &CPU::ins_sta);
-	instructions[CPU::INS_ORA_ABS] = 
-		makeIns("ORA", ADDR_MODE_ABS, 4, &CPU::ins_ora);
-	instructions[CPU::INS_STY_ZP] = 
-		makeIns("STY", ADDR_MODE_ZP, 3, &CPU::ins_sty);
-	instructions[CPU::INS_STA_ZP] = 
-		makeIns("STA", ADDR_MODE_ZP, 3, &CPU::ins_sta);
-	instructions[CPU::INS_STX_ZP] = 
-		makeIns("STX", ADDR_MODE_ZP, 3, &CPU::ins_stx);
-	instructions[CPU::INS_DEY_IMP] = 
-		makeIns("DEY", ADDR_MODE_IMP, 2, &CPU::ins_dey);
-	instructions[CPU::INS_TXA_IMP] = 
-		makeIns("TXA", ADDR_MODE_IMP, 2, &CPU::ins_txa);
-	instructions[CPU::INS_ASL_ABS] = 
-		makeIns("ASL", ADDR_MODE_ABS, 6, &CPU::ins_asl);
-	instructions[CPU::INS_STY_ABS] = 
-		makeIns("STY", ADDR_MODE_ABS, 4, &CPU::ins_sty);
-	instructions[CPU::INS_STA_ABS] = 
-		makeIns("STA", ADDR_MODE_ABS, 4, &CPU::ins_sta);
-	instructions[CPU::INS_STX_ABS] = 
-		makeIns("STX", ADDR_MODE_ABS, 4, &CPU::ins_stx);
-	instructions[CPU::INS_BCC_REL] = 
-		makeIns("BCC", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bcc);
-	instructions[CPU::INS_STA_IDY] = 
-		makeIns("STA", ADDR_MODE_IDY, 6, &CPU::ins_sta);
-	instructions[CPU::INS_STY_ZPX] = 
-		makeIns("STY", ADDR_MODE_ZPX, 4, &CPU::ins_sty);
-	instructions[CPU::INS_STA_ZPX] = 
-		makeIns("STA", ADDR_MODE_ZPX, 4, &CPU::ins_sta);
-	instructions[CPU::INS_STX_ZPY] = 
-		makeIns("STX", ADDR_MODE_ZPY, 4, &CPU::ins_stx);
-	instructions[CPU::INS_TYA_IMP] = 
-		makeIns("TYA", ADDR_MODE_IMP, 2, &CPU::ins_tya);
-	instructions[CPU::INS_STA_ABY] = 
-		makeIns("STA", ADDR_MODE_ABY, 5, &CPU::ins_sta);
-	instructions[CPU::INS_TXS_IMP] = 
-		makeIns("TXS", ADDR_MODE_IMP, 2, &CPU::ins_txs);
-	instructions[CPU::INS_STA_ABX] = 
-		makeIns("STA", ADDR_MODE_ABX, 5, &CPU::ins_sta);
-	instructions[CPU::INS_BPL_REL] = 
-		makeIns("BPL", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bpl);
-	instructions[CPU::INS_LDY_IMM] = 
-		makeIns("LDY", ADDR_MODE_IMM, 2, &CPU::ins_ldy);
-	instructions[CPU::INS_LDA_IDX] = 
-		makeIns("LDA", ADDR_MODE_IDX, 6, &CPU::ins_lda);
-	instructions[CPU::INS_LDX_IMM] = 
-		makeIns("LDX", ADDR_MODE_IMM, 2, &CPU::ins_ldx);
-	instructions[CPU::INS_LDY_ZP] = 
-		makeIns("LDY", ADDR_MODE_ZP, 3, &CPU::ins_ldy);
-	instructions[CPU::INS_LDA_ZP] = 
-		makeIns("LDA", ADDR_MODE_ZP, 3, &CPU::ins_lda);
-	instructions[CPU::INS_LDX_ZP] = 
-		makeIns("LDX", ADDR_MODE_ZP, 3, &CPU::ins_ldx);
-	instructions[CPU::INS_TAY_IMP] = 
-		makeIns("TAY", ADDR_MODE_IMP, 2, &CPU::ins_tay);
-	instructions[CPU::INS_LDA_IMM] = 
-		makeIns("LDA", ADDR_MODE_IMM, 2, &CPU::ins_lda);
-	instructions[CPU::INS_ORA_IDY] = 
-		makeIns("ORA", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_ora);
-	instructions[CPU::INS_TAX_IMP] = 
-		makeIns("TAX", ADDR_MODE_IMP, 2, &CPU::ins_tax);
-	instructions[CPU::INS_LDY_ABS] = 
-		makeIns("LDY", ADDR_MODE_ABS, 4, &CPU::ins_ldy);
-	instructions[CPU::INS_LDA_ABS] = 
-		makeIns("LDA", ADDR_MODE_ABS, 4, &CPU::ins_lda);
-	instructions[CPU::INS_LDX_ABS] = 
-		makeIns("LDX", ADDR_MODE_ABS, 4, &CPU::ins_ldx);
-	instructions[CPU::INS_BCS_REL] = 
-		makeIns("BCS", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bcs);
-	instructions[CPU::INS_LDA_IDY] = 
-		makeIns("LDA", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_lda);
-	instructions[CPU::INS_LDY_ZPX] = 
-		makeIns("LDY", ADDR_MODE_ZPX, 4, &CPU::ins_ldy);
-	instructions[CPU::INS_LDA_ZPX] = 
-		makeIns("LDA", ADDR_MODE_ZPX, 4, &CPU::ins_lda);
-	instructions[CPU::INS_LDX_ZPY] =
-		makeIns("LDX", ADDR_MODE_ZPY, 4, &CPU::ins_ldx);
-	instructions[CPU::INS_CLV_IMP] = 
-		makeIns("CLV", ADDR_MODE_IMP, 2, &CPU::ins_clv);
-	instructions[CPU::INS_LDA_ABY] = 
-		makeIns("LDA", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_lda);
-	instructions[CPU::INS_TSX_IMP] = 
-		makeIns("TSX", ADDR_MODE_IMP, 2, &CPU::ins_tsx);
-	instructions[CPU::INS_LDY_ABX] = 
-		makeIns("LDY", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_ldy);
-	instructions[CPU::INS_LDA_ABX] = 
-		makeIns("LDA", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_lda);
-	instructions[CPU::INS_LDX_ABY] = 
-		makeIns("LDX", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_ldx);
-	instructions[CPU::INS_CPY_IMM] = 
-		makeIns("CPY", ADDR_MODE_IMM, 2, &CPU::ins_cpy);
-	instructions[CPU::INS_CMP_IDX] = 
-		makeIns("CMP", ADDR_MODE_IDX, 6, &CPU::ins_cmp);
-	instructions[CPU::INS_CPY_ZP] = 
-		makeIns("CPY", ADDR_MODE_ZP, 3, &CPU::ins_cpy);
-	instructions[CPU::INS_CMP_ZP] = 
-		makeIns("CMP", ADDR_MODE_ZP, 3, &CPU::ins_cmp);
-	instructions[CPU::INS_DEC_ZP] = 
-		makeIns("DEC", ADDR_MODE_ZP, 5, &CPU::ins_dec);
-	instructions[CPU::INS_INY_IMP] = 
-		makeIns("INY", ADDR_MODE_IMP, 2, &CPU::ins_iny);
-	instructions[CPU::INS_CMP_IMM] = 
-		makeIns("CMP", ADDR_MODE_IMM, 2, &CPU::ins_cmp);
-	instructions[CPU::INS_DEX_IMP] = 
-		makeIns("DEX", ADDR_MODE_IMP, 2, &CPU::ins_dex);
-	instructions[CPU::INS_CPY_ABS] = 
-		makeIns("CPY", ADDR_MODE_ABS, 4, &CPU::ins_cpy);
-	instructions[CPU::INS_CMP_ABS] = 
-		makeIns("CMP", ADDR_MODE_ABS, 4, &CPU::ins_cmp);
-	instructions[CPU::INS_DEC_ABS] = 
-		makeIns("DEC", ADDR_MODE_ABS, 6, &CPU::ins_dec);
-	instructions[CPU::INS_BNE_REL] = 
-		makeIns("BNE", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bne);
-	instructions[CPU::INS_CMP_IDY] = 
-		makeIns("CMP", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_cmp);
-	instructions[CPU::INS_ORA_ZPX] = 
-		makeIns("ORA", ADDR_MODE_ZPX, 4, &CPU::ins_ora);
-	instructions[CPU::INS_CMP_ZPX] = 
-		makeIns("CMP", ADDR_MODE_ZPX, 4, &CPU::ins_cmp);
-	instructions[CPU::INS_DEC_ZPX] = 
-		makeIns("DEC", ADDR_MODE_ZPX, 6, &CPU::ins_dec);
-	instructions[CPU::INS_CLD_IMP] = 
-		makeIns("CLD", ADDR_MODE_IMP, 2, &CPU::ins_cld);
-	instructions[CPU::INS_CMP_ABY] = 
-		makeIns("CMP", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_cmp);
-	instructions[CPU::INS_ASL_ZPX] = 
-		makeIns("ASL", ADDR_MODE_ZPX, 6, &CPU::ins_asl);
-	instructions[CPU::INS_CMP_ABX] = 
-		makeIns("CMP", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_cmp);
-	instructions[CPU::INS_DEC_ABX] = 
-		makeIns("DEC", ADDR_MODE_ABX, 7, &CPU::ins_dec);
-	instructions[CPU::INS_CPX_IMM] = 
-		makeIns("CPX", ADDR_MODE_IMM, 2, &CPU::ins_cpx);
-	instructions[CPU::INS_SBC_IDX] = 
-		makeIns("SBC", ADDR_MODE_IDX, 6, &CPU::ins_sbc);
-	instructions[CPU::INS_CPX_ZP] = 
-		makeIns("CPX", ADDR_MODE_ZP, 3, &CPU::ins_cpx);
-	instructions[CPU::INS_SBC_ZP] = 
-		makeIns("SBC", ADDR_MODE_ZP, 3, &CPU::ins_sbc);
-	instructions[CPU::INS_INC_ZP] = 
-		makeIns("INC", ADDR_MODE_ZP, 5, &CPU::ins_inc);
-	instructions[CPU::INS_INX_IMP] = 
-		makeIns("INX", ADDR_MODE_IMP, 2, &CPU::ins_inx);
-	instructions[CPU::INS_SBC_IMM] = 
-		makeIns("SBC", ADDR_MODE_IMM, 2, &CPU::ins_sbc);
-	instructions[CPU::INS_NOP_IMP] = 
-		makeIns("NOP", ADDR_MODE_IMP, 2, &CPU::ins_nop);
-	instructions[CPU::INS_CPX_ABS] = 
-		makeIns("CPX", ADDR_MODE_ABS, 4, &CPU::ins_cpx);
-	instructions[CPU::INS_SBC_ABS] = 
-		makeIns("SBC", ADDR_MODE_ABS, 4, &CPU::ins_sbc);
-	instructions[CPU::INS_INC_ABS] = 
-		makeIns("INC", ADDR_MODE_ABS, 6, &CPU::ins_inc);
-	instructions[CPU::INS_CLC_IMP] = 
-		makeIns("CLC", ADDR_MODE_IMP, 2, &CPU::ins_clc);
-	instructions[CPU::INS_BEQ_REL] = 
-		makeIns("BEQ", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_beq);
-	instructions[CPU::INS_SBC_IDY] = 
-		makeIns("SBC", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_sbc);
-	instructions[CPU::INS_SBC_ZPX] = 
-		makeIns("SBC", ADDR_MODE_ZPX, 4, &CPU::ins_sbc);
-	instructions[CPU::INS_INC_ZPX] = 
-		makeIns("INC", ADDR_MODE_ZPX, 6, &CPU::ins_inc);
-	instructions[CPU::INS_SED_IMP] = 
-		makeIns("SED", ADDR_MODE_IMP, 2, &CPU::ins_sed);
-	instructions[CPU::INS_SBC_ABY] = 
-		makeIns("SBC", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_sbc);
-	instructions[CPU::INS_ORA_ABY] = 
-		makeIns("ORA", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_ora);
-	instructions[CPU::INS_SBC_ABX] = 
-		makeIns("SBC", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_sbc);
-	instructions[CPU::INS_INC_ABX] = 
-		makeIns("INC", ADDR_MODE_ABX, 7, &CPU::ins_inc);
-	instructions[CPU::INS_ORA_ABX] = 
-		makeIns("ORA", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_ora);
-	instructions[CPU::INS_ASL_ABX] = 
-		makeIns("ASL", ADDR_MODE_ABX, 7, &CPU::ins_asl);
-	instructions[CPU::INS_JSR_ABS] = 
-		makeIns("JSR", ADDR_MODE_ABS, 6, &CPU::ins_jsr);
-	instructions[CPU::INS_AND_IDX] = 
-		makeIns("AND", ADDR_MODE_IDX, 6, &CPU::ins_and);
-	instructions[CPU::INS_BIT_ZP] = 
-		makeIns("BIT", ADDR_MODE_ZP, 3, &CPU::ins_bit);
-	instructions[CPU::INS_AND_ZP] = 
-		makeIns("AND", ADDR_MODE_ZP, 3, &CPU::ins_and);
-	instructions[CPU::INS_ROL_ZP] = 
-		makeIns("ROL", ADDR_MODE_ZP, 5, &CPU::ins_rol);
-	instructions[CPU::INS_PLP_IMP] = 
-		makeIns("PLP", ADDR_MODE_IMP, 4, &CPU::ins_plp);
-	instructions[CPU::INS_AND_IMM] = 
-		makeIns("AND", ADDR_MODE_IMM, 2, &CPU::ins_and);
-	instructions[CPU::INS_ROL_ACC] = 
-		makeIns("ROL", ADDR_MODE_ACC, 2, &CPU::ins_rol);
-	instructions[CPU::INS_BIT_ABS] = 
-		makeIns("BIT", ADDR_MODE_ABS, 4, &CPU::ins_bit);
-	instructions[CPU::INS_AND_ABS] = 
-		makeIns("AND", ADDR_MODE_ABS, 4, &CPU::ins_and);
-	instructions[CPU::INS_ROL_ABS] = 
-		makeIns("ROL", ADDR_MODE_ABS, 6, &CPU::ins_rol);
-	instructions[CPU::INS_BMI_REL] = 
-		makeIns("BMI", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bmi);
-	instructions[CPU::INS_AND_IDY] = 
-		makeIns("AND", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_and);
-	instructions[CPU::INS_ORA_ZP] = 
-		makeIns("ORA", ADDR_MODE_ZP, 3, &CPU::ins_ora);
-	instructions[CPU::INS_AND_ZPX] = 
-		makeIns("AND", ADDR_MODE_ZPX, 4, &CPU::ins_and);
-	instructions[CPU::INS_ROL_ZPX] = 
-		makeIns("ROL", ADDR_MODE_ZPX, 6, &CPU::ins_rol);
-	instructions[CPU::INS_SEC_IMP] = 
-		makeIns("SEC", ADDR_MODE_IMP, 2, &CPU::ins_sec);
-	instructions[CPU::INS_AND_ABY] = 
-		makeIns("AND", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_and);
-	instructions[CPU::INS_ASL_ZP] = 
-		makeIns("ASL", ADDR_MODE_ZP, 5, &CPU::ins_asl);
-	instructions[CPU::INS_AND_ABX] = 
-		makeIns("AND", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_and);
-	instructions[CPU::INS_ROL_ABX] = 
-		makeIns("ROL", ADDR_MODE_ABX, 7, &CPU::ins_rol);
-	instructions[CPU::INS_RTI_IMP] = 
-		makeIns("RTI", ADDR_MODE_IMP, 6, &CPU::ins_rti);
-	instructions[CPU::INS_EOR_IDX] = 
-		makeIns("EOR", ADDR_MODE_IDX, 6, &CPU::ins_eor);
-	instructions[CPU::INS_EOR_ZP] = 
-		makeIns("EOR", ADDR_MODE_ZP, 3, &CPU::ins_eor);
-	instructions[CPU::INS_LSR_ZP] = 
-		makeIns("LSR", ADDR_MODE_ZP, 5, &CPU::ins_lsr);
-	instructions[CPU::INS_PHA_IMP] = 
-		makeIns("PHA", ADDR_MODE_IMP, 3, &CPU::ins_pha);
-	instructions[CPU::INS_PLA_IMP] = 
-		makeIns("PLA", ADDR_MODE_IMP, 4, &CPU::ins_pla);
-	instructions[CPU::INS_EOR_IMM] = 
-		makeIns("EOR", ADDR_MODE_IMM, 2, &CPU::ins_eor);
-	instructions[CPU::INS_LSR_ACC] = 
-		makeIns("LSR", ADDR_MODE_ACC, 2, &CPU::ins_lsr);
-	instructions[CPU::INS_JMP_ABS] = 
-		makeIns("JMP", ADDR_MODE_ABS, 3, &CPU::ins_jmp);
-	instructions[CPU::INS_EOR_ABS] = 
-		makeIns("EOR", ADDR_MODE_ABS, 4, &CPU::ins_eor);
-	instructions[CPU::INS_LSR_ABS] = 
-		makeIns("LSR", ADDR_MODE_ABS, 6, &CPU::ins_lsr);
-	instructions[CPU::INS_PHP_IMP] = 
-		makeIns("PHP", ADDR_MODE_IMP, 3, &CPU::ins_php);
-	instructions[CPU::INS_BVC_REL] = 
-		makeIns("BVC", ADDR_MODE_REL | CYCLE_BRANCH, 2, &CPU::ins_bvc);
-	instructions[CPU::INS_EOR_IDY] = 
-		makeIns("EOR", ADDR_MODE_IDY | CYCLE_CROSS_PAGE, 5,
-			&CPU::ins_eor);
-	instructions[CPU::INS_EOR_ZPX] = 
-		makeIns("EOR", ADDR_MODE_ZPX, 4, &CPU::ins_eor);
-	instructions[CPU::INS_LSR_ZPX] = 
-		makeIns("LSR", ADDR_MODE_ZPX, 6, &CPU::ins_lsr);
-	instructions[CPU::INS_CLI_IMP] = 
-		makeIns("CLI", ADDR_MODE_IMP, 2, &CPU::ins_cli);
-	instructions[CPU::INS_EOR_ABY] = 
-		makeIns("EOR", ADDR_MODE_ABY | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_eor);
-	instructions[CPU::INS_ORA_IMM] = 
-		makeIns("ORA", ADDR_MODE_IMM, 2, &CPU::ins_ora);
-	instructions[CPU::INS_EOR_ABX] = 
-		makeIns("EOR", ADDR_MODE_ABX | CYCLE_CROSS_PAGE, 4,
-			&CPU::ins_eor);
-	instructions[CPU::INS_LSR_ABX] = 
-		makeIns("LSR", ADDR_MODE_ABX, 7, &CPU::ins_lsr);
-	instructions[CPU::INS_RTS_IMP] = 
-		makeIns("RTS", ADDR_MODE_IMP, 6, &CPU::ins_rts);
-	instructions[CPU::INS_ADC_IDX] = 
-		makeIns("ADC", ADDR_MODE_IDX, 6, &CPU::ins_adc);
-
-}
-
 void CPU::Reset(Word ResetVector) {
 	PC = ResetVector;
 	SP = INITIAL_SP;
 	A = X = Y = 0;
 	PS = 0; //C = Z = I = D = B = V = N = 0;
-	setupInstructionMap();
+
+	debugMode = false;
+	debug_alwaysShowPS = false;
+	debug_lastCmd = "";
+	InterpretNextOpcodeAsByte = false;
+	CPU::setupInstructionMap();
 }
 
 void CPU::Exception(const char *fmt_str, ...) {
@@ -1002,8 +725,9 @@ void CPU::Exception(const char *fmt_str, ...) {
 	va_end(args);
 
 	printf("CPU Exception: %s\n", formatted.get());
-	printf("Halting\n");
-	exit(1);
+	printf("Entering debugger\n");
+	debugMode = true;
+	Debug();
 }
 
 void CPU::SetFlagZ(Byte val) {
@@ -1011,7 +735,7 @@ void CPU::SetFlagZ(Byte val) {
 }
 
 void CPU::SetFlagN(Byte val) {
-	Flags.N = (val & NegativeBit) >> 7;
+	Flags.N = (val & NegativeBit) != 0;
 }
 
 void CPU::SetFlagsForRegister(Byte b) {
@@ -1041,6 +765,11 @@ Word CPU::ReadWord(Word address) {
 	return w;
 }
 
+Word CPU::ReadWordAtPC() {
+	Word w = ReadByteAtPC() | (ReadByteAtPC() << 8);
+	return w;
+}
+
 Byte CPU::ReadByteAtPC() {
 	Byte opcode = ReadByte(PC);
 	PC++;
@@ -1050,15 +779,18 @@ Byte CPU::ReadByteAtPC() {
 void CPU::PushWord(Word value) {
 	Byte b;
 
-	b = (Byte) value & 0xff;
+	b = (Byte) (value >> 8); // value high
 	Push(b);
-	b = (Byte) (value >> 8) & 0xff;
+
+	b = (Byte) value & 0xff; // value low
 	Push(b);
 }
 
 Word CPU::PopWord() {
 	Word w;
-	w = (Pop() << 8) | Pop();
+
+	// Low byte then high byte
+	w = Pop() | (Pop() << 8);
 	return w;
 }
 
@@ -1075,50 +807,50 @@ Byte CPU::Pop() {
 	return ReadByte(SPAddress);
 }
 
-Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
-	Word address, addrmode, flags;
+Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
+	Word address;
+	Byte zpaddr;
+	Byte flags;
 	SByte rel;
+
+	flags = instructions[opcode].flags;
 	
-	addrmode = mode &  0b00111111111111;
-	flags    = mode & ~0b00111111111111;
-	
-	switch (addrmode) {
-	// ZeroPage mode (tested)
+	switch (instructions[opcode].addrmode) {
+
+        // ZeroPage mode (tested)
 	case ADDR_MODE_ZP:
 		address = ReadByteAtPC();
 		break;
 
-	// ZeroPage,X (tested)
+	// ZeroPage,X 
 	case ADDR_MODE_ZPX:
-		address = ReadByteAtPC();
-		address += X;
+		zpaddr = ReadByteAtPC() + X;
+		address = zpaddr;
 		Cycles++;
 		break;
 
-        // ZeroPage,Y (tested)
+        // ZeroPage,Y 
 	case ADDR_MODE_ZPY:
-		address = ReadByteAtPC();
-		address += Y;
+		zpaddr = ReadByteAtPC() + Y;
+		address = zpaddr;
 		Cycles++;
 		break;
-		
+
 	case ADDR_MODE_REL:
 		rel = SByte(ReadByteAtPC());
 		address = PC + rel;
 		break;
 
-	// Absolute (tested)
+	// Absolute
 	case ADDR_MODE_ABS:
-		address = ReadWord(PC);
-		PC += 2;
+		address = ReadWordAtPC();
 		break;
 
-	// Absolute,X (tested)
+	// Absolute,X 
 	case ADDR_MODE_ABX:
-		address = ReadWord(PC);
-		PC += 2;
+		address = ReadWordAtPC();
 		// Add a cycle if a page boundry is crossed
-		if ((flags & CYCLE_CROSS_PAGE) && ((address + X) >> 8) !=
+		if ((flags == CYCLE_CROSS_PAGE) && ((address + X) >> 8) !=
 		    (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
@@ -1126,12 +858,11 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		address += X;
 		break;
 
-	// Absolute,Y (tested)
+	// Absolute,Y 
 	case ADDR_MODE_ABY:
-		address = ReadWord(PC);
-		PC += 2;
+		address = ReadWordAtPC();
 		// Add a cycle if a page boundry is crossed
-		if ((flags & CYCLE_CROSS_PAGE) && ((address + Y) >> 8) !=
+		if ((flags == CYCLE_CROSS_PAGE) && ((address + Y) >> 8) !=
 		    (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
@@ -1139,21 +870,19 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		address += Y;
 		break;
 
+	// Indirect 
 	case ADDR_MODE_IND:
-		address = ReadWord(PC);
-		PC += 2;
+		address = ReadWordAtPC();
 		break;
 
-        // (Indirect,X) or Indexed Indirect (tested)
+        // (Indirect,X) or Indexed Indirect
 	case ADDR_MODE_IDX:	
-		address = ReadByteAtPC() + X;
-		if (address > 0xFF)
-			address -= 0xFF;
-		address = ReadWord(address);
+		zpaddr = ReadByteAtPC() + X;
+		address = ReadWord(zpaddr);
 		Cycles++;
 		break;
 
-	// (Indirect),Y or Indirect Indexed (tested)
+	// (Indirect),Y or Indirect Indexed
 	case ADDR_MODE_IDY:
 		address = ReadByteAtPC();
 		address = ReadWord(address);
@@ -1161,21 +890,19 @@ Word CPU::getAddress(unsigned long mode, Byte &expectedCycles) {
 		break;
 
 	default:
-		Exception("Invalid addressing mode: 0x%ld\n", mode);
+		Exception("Invalid addressing mode: 0x%ld\n",
+			  instructions[opcode].addrmode);
 		break;
 	}
 	
 	return address;
 }
 
-Byte CPU::getData(unsigned long mode, Byte &expectedCycles) {
+Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 	Byte data;
 	Word address;
-	Word addrmode;
 
-	addrmode = mode & 0b00111111111111;
-	
-	switch (addrmode) {
+	switch (instructions[opcode].addrmode) {
 	case ADDR_MODE_IMP:
 	case ADDR_MODE_ACC:
 		return 0;
@@ -1186,7 +913,7 @@ Byte CPU::getData(unsigned long mode, Byte &expectedCycles) {
 		break;
 
 	default:
-		address = getAddress(mode, expectedCycles);
+		address = getAddress(opcode, expectedCycles);
 		data = ReadByte(address);
 		break;
 	}
@@ -1197,29 +924,37 @@ Byte CPU::getData(unsigned long mode, Byte &expectedCycles) {
 std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
 	Byte opcode;
 	Cycles_t startCycles = Cycles;
-	unsigned long addrmode;
 	Byte expectedCyclesToUse;
+	Word startPC;
 	opfn_t op;
 
+	startPC = PC;
 	opcode = ReadByteAtPC();
 
 	if (instructions.count(opcode) == 0) {
 		Exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC - 1);
 	}
 
-	addrmode = instructions[opcode].addrmode;
 	expectedCyclesToUse = instructions[opcode].cycles;
 	op = instructions[opcode].opfn;
 
-	(this->*op)(addrmode, expectedCyclesToUse);
+	(this->*op)(opcode, expectedCyclesToUse);
 
-	return std::make_tuple(Cycles - startCycles,
-			       expectedCyclesToUse);
+	if (CPU::debug_loopDetection && startPC == PC) {
+		printf("# Loop detected, forcing break at %04x\n", PC);
+		CPU::addBreakpoint(PC);
+	}
+
+	return std::make_tuple(Cycles - startCycles, expectedCyclesToUse);
 }
 
 void CPU::Execute() {
 
 	while (1) {
-		CPU::ExecuteOneInstruction();
+		if (CPU::debugMode || CPU::isBreakpoint(PC))
+			CPU::Debug();
+		else
+			CPU::ExecuteOneInstruction();
 	}
 }
+

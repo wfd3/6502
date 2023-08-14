@@ -54,6 +54,7 @@ while (<>) {
 	$opcodes_stored++;
 	$i{$op}{"ins"} = $ins;
 	$i{$op}{"amode"} = $amode;
+	$i{$op}{"bytes"} = $bytes;
 	$i{$op}{"cycles"} = $cycles;
 	$cycle_flags = "NONE" if ($cycle_flags eq "");
 	$i{$op}{"cycle_flags"} = $cycle_flags;
@@ -84,17 +85,17 @@ foreach my $opcode (sort keys(%i)) {
 # i[INS_XXX] = makeIns(...);
 printf("// --------------------------------------------------------------\n");
 foreach my $opcode (sort keys(%i)) {
-    $ins    = "CPU::" . $i{$opcode}{"ins"};
+    $ins    = lc($i{$opcode}{"ins"});
     $amode  = $i{$opcode}{"amode"};
-    $fn     = "ins_" . lc($ins);		# ins_xxx -- note no '()' 
+    $fn     = "&CPU::ins_" . lc($ins);		# ins_xxx -- note no '()' 
     $const  = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM
     $cycles = $i{$opcode}{"cycles"};
-    $flags  = "CYCLE_" . $i{$opcode}{"cycle_flags"};
+    $bytes  = $i{$opcode}{"bytes"};
+    $flags  = $i{$opcode}{"cycle_flags"};
     
 			  
-    printf("instructions[%s] = \n\t"
-	   "makeIns(\"%s\", ADDR_MODE_%s, %d, %s, %s);\n",
-	   $const, $ins, $amode, $cycles, $flags, $fn);
+    printf("\tinstructions[%s] = \n\t\tmakeIns(\"%s\", ADDR_MODE_%s, %d, %d, %s,\n\t\t\t %s);\n\n",
+	   $const, $ins, $amode, $bytes, $cycles, $flags, $fn);
 }
 
 

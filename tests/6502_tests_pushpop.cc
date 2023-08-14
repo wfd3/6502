@@ -81,7 +81,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 		cpu.ExecuteOneInstruction();
 
 	// Then:
-	EXPECT_EQ(mem[0x01FF], 0b01010101);
+	EXPECT_EQ(mem[0x01FF], 0b01110101);
 	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP - 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -104,7 +104,7 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 		cpu.ExecuteOneInstruction();
 
 	// Then:
-	EXPECT_EQ(cpu.PS, 0b01010101);
+	EXPECT_EQ(cpu.PS, 0b01000101);
 	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

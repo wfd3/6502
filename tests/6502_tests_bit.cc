@@ -75,7 +75,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
-	mem[0x0001] = 0x0F;
+	mem[0x0001] = 0xF;
 	cpu.A = 0x00;
 
 	//When:
@@ -99,7 +99,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
-	mem[0x0001] = 0xFF;
+	mem[0x0001] = 0x4F;
 	cpu.A = 1 << 6;
 
 	//When:
@@ -123,7 +123,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
-	mem[0x0001] = 0xFF;
+	mem[0x0001] = 0x8F;
 	cpu.A = 1 << 7;
 
 	//When:

@@ -5,9 +5,9 @@
 #include <string>
 #include <cstring>
 #include <iostream>
-#include <format>
 #include <memory>
 #include <cstdarg>
+#include <vector>
 
 #include "memory.h"
 
@@ -63,8 +63,10 @@ void Memory::Init() {
 	if (_m == NULL) 
 		Exception("Memory has not be initalized");
 
-	for (i = 0; i < _size; i++)
+	for (i = 0; i < _size; i++) {
 		_m[i] = 0;
+		_watch[i] = false;
+	}
 }
 
 Byte& Memory::operator[](Address_t address) {
@@ -86,6 +88,12 @@ void Memory::WriteByte(Address_t address, Byte value) {
 		Exception("Memory has not be initalized");
 	if (address > _size)
 		Exception("Memory address out of range: 0x%04x ", address);
+
+	if (_watch[address]) {
+		printf("# mem[%04lx] %02x -> %02x\n",
+		       address, _m[address], value);
+	}
+
 	_m[address] = value;
 }
 
@@ -145,14 +153,36 @@ void Memory::LoadProgram(const Byte *program, Address_t startAddress,
 		_m[startAddress + i] = program[i];
 }
 
+static const std::string vformat(const char * const zcFormat, ...) {
+
+    // initialize use of the variable argument array
+    va_list vaArgs;
+    va_start(vaArgs, zcFormat);
+
+    // reliably acquire the size
+    // from a copy of the variable argument array
+    // and a functionally reliable call to mock the formatting
+    va_list vaArgsCopy;
+    va_copy(vaArgsCopy, vaArgs);
+    const int iLen = std::vsnprintf(NULL, 0, zcFormat, vaArgsCopy);
+    va_end(vaArgsCopy);
+
+    // return a formatted string without risking memory mismanagement
+    // and without assuming any compiler or platform specific behavior
+    std::vector<char> zc(iLen + 1);
+    std::vsnprintf(zc.data(), zc.size(), zcFormat, vaArgs);
+    va_end(vaArgs);
+    return std::string(zc.data(), iLen);
+}
+
+//extern std::string vformat(const char * const, ...);
+
 void Memory::Hexdump(Address_t start, Address_t end) {
 
-	std::cout <<
-		std::format("# Memory Dump 0x{:04x}:0x{:04x}", start, end) <<
-		std::endl;
-	
+	printf("# Memory Dump 0x%04lx:0x%04lx\n", start, end);
+
 	if (start > end || end > _size) {
-		std::cout << " -- Invalid memory range" << std::endl;
+		printf("# -- Invalid memory range\n");
 		return;
 	}
 
@@ -160,7 +190,7 @@ void Memory::Hexdump(Address_t start, Address_t end) {
 		std::string ascii = "................";
 		std::string hexdmp;
 
-		hexdmp += std::format("{:04x}  ", i);
+		hexdmp += vformat("%04x  ", i);
 
 		for (Address_t j = 0; j < 16; j++) {
 			if ((unsigned long) j + i > end) {
@@ -168,7 +198,7 @@ void Memory::Hexdump(Address_t start, Address_t end) {
 				ascii += ' ';
 			} else {
 				Address_t a = j + i;
-				hexdmp += std::format("{:02x} ", _m[a]);
+				hexdmp += vformat("%02x ", _m[a]);
 				if (isprint(_m[a]))
 					ascii.at(j) = _m[a];
 			}

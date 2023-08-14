@@ -33,7 +33,7 @@ TEST_F(MOS6502JSRTests, JsrAbsolute) {
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4321);
-	EXPECT_EQ(mem[0x01FF], 0xFC);
-	EXPECT_EQ(mem[0x01FE], 0xFF);	
+	EXPECT_EQ(mem[0x01FE], 0xFC+2);
+	EXPECT_EQ(mem[0x01FF], 0xFF);	
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

@@ -12,7 +12,7 @@
 # project, except GTEST_HEADERS, which you can use in your own targets
 # but shouldn't modify.
 
-CXX=g++-13
+CXX=g++
 
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
@@ -42,13 +42,10 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 all: runtests
 
-#6502.o: 6502.cc 6502.h memory.cc memory.h
-#	g++ -c 6502.cc
+RUN6502_FILES = 6502.cc 6502.h memory.cc memory.h debug.cc run6502.cc ins.cc
+RUN6502_OBJS  = 6502.o memory.o debug.o run6502.o ins.o
 
-#6502: 6502.o
-#	g++ -o 6502 6502.cc
-
-tests : $(TESTS)
+tests : $(TESTS) 
 
 clean :
 	rm -f $(TESTS) gtest.a gtest_main.a *.o *~
@@ -81,7 +78,7 @@ gtest_main.a : gtest-all.o gtest_main.o
 # Build the tests
 
 TESTS_DIR = ./tests
-TESTS_FILES = 6502.cc memory.cc debug.cc \
+TESTS_FILES = 6502.cc memory.cc debug.cc ins.cc \
 	$(TESTS_DIR)/6502_tests_adc.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
 	$(TESTS_DIR)/6502_tests_asl.cc \
@@ -108,7 +105,7 @@ TESTS_FILES = 6502.cc memory.cc debug.cc \
 	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.cc
 
 
-TESTS_OBJS = 6502.o memory.o debug.o \
+TESTS_OBJS = 6502.o memory.o debug.o ins.o \
 	$(TESTS_DIR)/6502_tests_adc.o \
 	$(TESTS_DIR)/6502_tests_and.o \
 	$(TESTS_DIR)/6502_tests_asl.cc \
@@ -139,6 +136,10 @@ TESTS_OBJS = 6502.o memory.o debug.o \
 
 6502_tests : $(TESTS_OBJS) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+
+
+run6502 : $(RUN6502_OBJS) 
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS)  $^ -o $@
 
 runtests: 6502_tests
 	./6502_tests

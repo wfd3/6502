@@ -1,25 +1,25 @@
 #
-#!<ins>
+#!<Ins>
 #<amode> <opcode> <bytes> <cycles> <cycle flags>
 !ADC
 Immediate $69 2 2
 ZeroPage $65 2 3
 ZeroPage,X $75 2 4
 Absolute $6D 3 4
-Absolute,X $7D 3 4 CROSS_PAGE
-Absolute,Y $79 3 4 CROSS_PAGE
+Absolute,X $7D 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $79 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $61 2 6
-(Indirect),Y $71 2 5 CROSS_PAGE
+(Indirect),Y $71 2 5 CYCLE_CROSS_PAGE
 
 !AND
 Immediate $29 2 2
 ZeroPage $25 2 3
 ZeroPage,X $35 2 4
 Absolute $2D 3 4
-Absolute,X $3D 3 4 CROSS_PAGE
-Absolute,Y $39 3 4 CROSS_PAGE
+Absolute,X $3D 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $39 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $21 2 6
-(Indirect),Y $31 2 5 CROSS_PAGE
+(Indirect),Y $31 2 5 CYCLE_CROSS_PAGE
 
 !ASL
 Accumulator $0A 1 2
@@ -29,35 +29,35 @@ Absolute $0E 3 6
 Absolute,X $1E 3 7
 
 !BCC
-Relative $90 2 2 BRANCH
+Relative $90 2 2 CYCLE_BRANCH
 
 !BCS
-Relative $B0 2 2 BRANCH
+Relative $B0 2 2 CYCLE_BRANCH
 
 !BEQ
-Relative $F0 2 2 BRANCH
+Relative $F0 2 2 CYCLE_BRANCH
 
 !BIT
 ZeroPage $24 2 3
 Absolute $2C 3 4
 
 !BMI
-Relative $30 2 2 BRANCH
+Relative $30 2 2 CYCLE_BRANCH
 
 !BNE
-Relative $D0 2 2 BRANCH
+Relative $D0 2 2 CYCLE_BRANCH
 
 !BPL
-Relative $10 2 2 BRANCH
+Relative $10 2 2 CYCLE_BRANCH
 
 !BRK
 Implied $00 1 7
 
 !BVC
-Relative $50 2 2 BRANCH
+Relative $50 2 2 CYCLE_BRANCH
 
 !BVS
-Relative $70 2 2 BRANCH
+Relative $70 2 2 CYCLE_BRANCH
 
 !CLC
 Implied $18 1 2
@@ -76,10 +76,10 @@ Immediate $C9 2 2
 ZeroPage $C5 2 3
 ZeroPage,X $D5 2 4
 Absolute $CD 3 4
-Absolute,X $DD 3 4 CROSS_PAGE
-Absolute,Y $D9 3 4 CROSS_PAGE
+Absolute,X $DD 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $D9 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $C1 2 6
-(Indirect),Y $D1 2 5 CROSS_PAGE
+(Indirect),Y $D1 2 5 CYCLE_CROSS_PAGE
 
 !CPX
 Immediate $E0 2 2
@@ -108,10 +108,10 @@ Immediate $49 2 2
 ZeroPage $45 2 3
 ZeroPage,X $55 2 4
 Absolute $4D 3 4
-Absolute,X $5D 3 4 CROSS_PAGE
-Absolute,Y $59 3 4 CROSS_PAGE
+Absolute,X $5D 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $59 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $41 2 6
-(Indirect),Y $51 2 5 CROSS_PAGE
+(Indirect),Y $51 2 5 CYCLE_CROSS_PAGE
 
 !INC
 ZeroPage $E6 2 5
@@ -137,24 +137,24 @@ Immediate $A9 2 2
 ZeroPage $A5 2 3
 ZeroPage,X $B5 2 4
 Absolute $AD 3 4
-Absolute,X $BD 3 4 CROSS_PAGE
-Absolute,Y $B9 3 4 CROSS_PAGE
+Absolute,X $BD 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $B9 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $A1 2 6
-(Indirect),Y $B1 2 5 CROSS_PAGE
+(Indirect),Y $B1 2 5 CYCLE_CROSS_PAGE
 
 !LDX
 Immediate $A2 2 2
 ZeroPage $A6 2 3
 ZeroPage,Y $B6 2 4
 Absolute $AE 3 4
-Absolute,Y $BE 3 4 CROSS_PAGE
+Absolute,Y $BE 3 4 CYCLE_CROSS_PAGE
 
 !LDY
 Immediate $A0 2 2
 ZeroPage $A4 2 3
 ZeroPage,X $B4 2 4
 Absolute $AC 3 4
-Absolute,X $BC 3 4 CROSS_PAGE
+Absolute,X $BC 3 4 CYCLE_CROSS_PAGE
 
 !LSR
 Accumulator $4A 1 2
@@ -171,10 +171,10 @@ Immediate $09 2 2
 ZeroPage $05 2 3
 ZeroPage,X $15 2 4
 Absolute $0D 3 4
-Absolute,X $1D 3 4 CROSS_PAGE
-Absolute,Y $19 3 4 CROSS_PAGE
+Absolute,X $1D 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $19 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $01 2 6
-(Indirect),Y $11 2 5 CROSS_PAGE
+(Indirect),Y $11 2 5 CYCLE_CROSS_PAGE
 
 !PHA
 Implied $48 1 3
@@ -213,10 +213,10 @@ Immediate $E9 2 2
 ZeroPage $E5 2 3
 ZeroPage,X $F5 2 4
 Absolute $ED 3 4
-Absolute,X $FD 3 4 CROSS_PAGE
-Absolute,Y $F9 3 4 CROSS_PAGE
+Absolute,X $FD 3 4 CYCLE_CROSS_PAGE
+Absolute,Y $F9 3 4 CYCLE_CROSS_PAGE
 (Indirect,X) $E1 2 6
-(Indirect),Y $F1 2 5 CROSS_PAGE
+(Indirect),Y $F1 2 5 CYCLE_CROSS_PAGE
 
 !SEC
 Implied $38 1 2

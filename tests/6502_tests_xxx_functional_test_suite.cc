@@ -18,7 +18,7 @@ public:
 // This test never exits
 TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 {
-#if 1
+#if 0
 	// Given:
 	cpu.Reset(0x400);
 
@@ -26,7 +26,8 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	mem.LoadProgramFromFile("./tests/6502_functional_test.bin", 0x0000);
 
 	//Then:
-	cpu.Debug();
+	cpu.SetDebug(true);
+	cpu.Execute();
 #endif
 }
 
