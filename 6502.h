@@ -296,9 +296,6 @@ private:
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
-	void checkValidBCD(Byte);
-	Byte BCDDecode(Byte v);
-	Byte BCDEncode(Byte v);
 	void PrintCPUState();
 	void PushPS();
 	void PopPS();

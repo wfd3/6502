@@ -183,11 +183,13 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 }
 
 void CPU::PrintCPUState() {
-	printf( "| PC: %04x SP: %02x\n", PC, SP );
-	printf( "| C:%d Z:%d I:%d D:%d B:%d V:%d N:%d (PS: %0x)\n",
-		Flags.C, Flags.Z, Flags.I, Flags.D, Flags.B, Flags.V, Flags.N,
+	printf(" | PC: %04x SP: %02x\n", PC, SP );
+	printf(" | C:%d Z:%d I:%d D:%d B:%d U:%d V:%d N:%d (PS: %0x)\n",
+		Flags.C, Flags.Z, Flags.I, Flags.D, Flags.B, Flags._unused,
+		Flags.V, Flags.N,
 		PS);
-	printf( "| A: %02x X: %02x Y: %02x\n", A, X, Y );
+	printf(" | A: %02x X: %02x Y: %02x\n", A, X, Y );
+	printf(" | Cycle: %ul\n", Cycles); 
 }
 
 void CPU::debuggerPrompt() {

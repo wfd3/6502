@@ -85,8 +85,8 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 {
 	Byte UsedCycles, ExpectedCycles;
-
 	// Given:
+	constexpr unsigned long loops = 10;
 
 	// When:
 
@@ -94,7 +94,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 	cpu.PC = startAddress;
 
 	//Then:
-	for (Word cycles = 0; cycles < 1000; cycles++) 	{
+	for (unsigned long l = 0; l < sizeof(testProgram) * loops; l++) {
 		std::tie(UsedCycles, ExpectedCycles) =
 			cpu.TraceOneInstruction();
 		EXPECT_EQ(UsedCycles, ExpectedCycles);

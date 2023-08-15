@@ -10,64 +10,56 @@ CPU::CPU(Memory *m) {
 	mem = m;
 }
 
-// BCD functions.
+// BCD addition and substraction functions.
 // See:
 // https://www.electrical4u.com/bcd-or-binary-coded-decimal-bcd-conversion-addition-subtraction/
 
-void CPU::checkValidBCD(Byte a) {
-	// Check if each 4-bit 'digit' is greater than 9; throw CPU
-	// exception if so.
-	if ((a & 0x0f) > 9 || ((a & 0xf0) >> 4) > 9) {
-		Exception("Invalid BCD encoding: 0x%02x", a);
-	}
-}
-
-Byte CPU::BCDDecode(Byte v) {
-	checkValidBCD(v);
-	return (10 * (v >> 4)) + (v & 0x0f);
-}
-
-Byte CPU::BCDEncode(Byte v) {
-	Byte bcd = ((v / 10) << 4) + (v - ((v / 10) * 10));
-	checkValidBCD(bcd);
-	return bcd;
-}
-
 void CPU::bcdADC(Byte operand) {
-	Byte addend, answer, carry;
+	Byte addend, carry, a_low;
+	int answer;
 
-	operand = BCDDecode(operand);
-	addend  = BCDDecode(A);
-	carry   = Flags.C;
-	answer = addend + operand + carry;
+	addend = A;
+	carry = Flags.C;
+
+	// Low nibble first
+	a_low = (addend & 0x0f) + (operand & 0x0f) + carry;
+	if (a_low >= 0x0a) 
+		a_low = ((a_low + 0x06) & 0x0f) + 0x10;
+
+	answer = (addend & 0xf0) + (operand & 0xf0) + a_low;
+	if (answer >= 0xa0) 
+		answer += 0x60;
 	
-	if (answer >= 100) {	// Carry
-		answer -= 100;
-		Flags.C = 1;
-	} else
-		Flags.C = 0;
-
-	A = BCDEncode(answer);
-
-	SetFlagZ(A);
-	Flags.N = 0;
-	Flags.V = 0;		// TODO - Understand 6502 V & C flags in BCD
+	A = answer & 0xff;
+	
+	SetFlagN(answer);
+	SetFlagZ(answer);
+	Flags.C = (answer >= 0x100);
+	Flags.V = (answer < -128) || (answer > 127);
 }
 
 void CPU::bcdSBC(Byte subtrahend) {
-	Byte minuend, answer, carry;
+	SByte op_l;
+	int operand;
+	Byte carry;
 
-	subtrahend = BCDDecode(subtrahend);
-	minuend    = BCDDecode(A);
-	carry      = !Flags.C;
-	answer = minuend - subtrahend - carry;
-	A = BCDEncode(answer);
+	operand = A;
+	carry = (Flags.C == 0);
+
+	// Low nibble first
+	op_l = (operand & 0x0f) - (subtrahend & 0x0f) - carry;
+	if (op_l < 0) 
+		op_l = ((op_l - 0x06) & 0x0f) - 0x10;
+					
+	operand = (operand & 0xf0) - (subtrahend & 0xf0);
+	operand += op_l;
+	if (operand < 0) 
+		operand -= 0x60;
+
+	A = (Byte) operand & 0xff;
 
 	SetFlagZ(A);
-	Flags.C = (long)(minuend - subtrahend - carry) < 0;
-
-	Flags.V = 0;		// TODO - Understand 6502 V & C flags in BCD
-	Flags.N = 0;
+	Flags.C = (operand >= 0);
 }
 
 // A = A + operand + Flags.C
@@ -137,9 +129,9 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 // Set PC to @address if @condition is true
 void CPU::doBranch(bool condition, Word address, Word _PC,
 		   Byte &expectedCyclesToUse) {
+	(void) _PC;		// Avoid compiler warning;
+	
 	if (condition) {
-		addBacktrace(_PC);
-		
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;
 
@@ -181,8 +173,6 @@ void CPU::ins_bit(Byte opcode, Byte &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	SetFlagZ(A & data);
-	printf("A = %x, data = %x, (A & data) = %x\n",
-	       A, data, (A & data));
 	SetFlagN(data);
 	Flags.V = (data & (1 << 6)) != 0;
 }
@@ -220,7 +210,6 @@ void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
 
 	PC++;
 	PushWord(PC);
-	printf("* [%04x] BRK: setting return address to %04x\n", PC - 2, PC);	
 
 	addBacktrace(PC);
 
@@ -358,8 +347,8 @@ void CPU::ins_inc(Byte opcode, Byte &expectedCyclesToUse) {
 	data = ReadByte(address);
 	data++;
 	WriteByte(address, data);
-	Flags.Z = data == 0;
-	Flags.N = (data &NegativeBit) > 0;
+	SetFlagZ(data);
+	SetFlagN(data);
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
@@ -404,7 +393,6 @@ void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
 
 	newPC = ReadWord(PC);
 	PushWord(PC + 1);
-	printf("* JSR: setting return address to %04x\n", PC + 1);	
 	PC = newPC;
 	
 	Cycles++;
@@ -575,11 +563,9 @@ void CPU::ins_rti(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 
-	printf("* [%04x] RTS: returning to ", PC - 1);
 	removeBacktrace();
 	PopPS();
 	PC = PopWord();
-	printf("%04x\n", PC);
 	Cycles += 2;
 }
 
@@ -590,7 +576,6 @@ void CPU::ins_rts(Byte opcode, Byte &expectedCyclesToUse) {
 	removeBacktrace();
 	
 	PC = PopWord() + 1;
-	printf("* RTS: returning to %04x\n", PC);
 	Cycles += 3;	       
 }
 
