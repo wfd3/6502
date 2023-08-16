@@ -21,6 +21,16 @@ std::string stripSpaces(std::string s) {
 	return new_s;
 }
 
+bool cmpString(const std::string &s, const std::string &t) {
+
+	size_t t_len = t.length();
+
+	if (s.length() < t_len)
+		return false;
+	
+	return s.compare(0, t_len, t, 0, t_len) == 0;
+}
+
 void CPU::dumpstack() {
 	Byte p = INITIAL_SP;
 	Word a;
@@ -33,11 +43,6 @@ void CPU::dumpstack() {
 	}
 }
 	
-std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::TraceOneInstruction() {
-	CPU::disassemble(PC, 1);
-	return CPU::ExecuteOneInstruction();
-}
-
 static const std::string vformat(const char * const zcFormat, ...) {
 
     // initialize use of the variable argument array
@@ -59,6 +64,11 @@ static const std::string vformat(const char * const zcFormat, ...) {
     va_end(vaArgs);
 
     return std::string(zc.data(), iLen);
+}
+
+std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::TraceOneInstruction() {
+	CPU::disassemble(PC, 1);
+	return CPU::ExecuteOneInstruction();
 }
 
 std::string CPU::decodeArgs(Byte ins) {
@@ -116,8 +126,7 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 	Address_t savePC, returnPC;
 	Cycles_t saveCycles;
 	Byte opcode;
-//	bool PCIsEven;
-	std::string args, rts = "rts";
+	std::string args;
 
 	savePC = PC;
 	saveCycles = Cycles;
@@ -125,32 +134,11 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 
 	d = vformat("%04x: ", PC);
 
-//	PCIsEven = PC % 2 == 0;
 	opcode = ReadByteAtPC();
 
-	// TODO: I'm still not convinced this is correct.
-	//
-	// 14-Aug-23 -- Assume that, while debugging, the PC can
-	// not be at the start of an instruction sequence.  
-	//
-	// 11-Aug-23:
-	// 1- and 2- byte opcodes can appear on both even or
-	// odd addresses; opcodes with 3-byte formats
-	// (involving 16 bit addresses) must start on even
-	// addresses.
-	// 
-	// Interpret as '.byte' if:
-	//   0) Opcode doesn't exist, or
-	//   1) The last opcode has a byte after it (ie, RTS)
-	//   2) 3-Byte opcode starting on an even address
-	if ((CPU::InterpretNextOpcodeAsByte == true) ||
-	    (instructions.count(opcode) == 0)) {
-/*
-		    ||
-	    (instructions[opcode].bytes == 3 && PCIsEven)) {
-*/
-		
-		CPU::InterpretNextOpcodeAsByte = false;
+	// Assume that, while debugging, the PC can not be at the
+	// start of an instruction sequence.
+	if (instructions.count(opcode) == 0) {
 		d += vformat(".byte $%02x", opcode);
 	} else {
 		
@@ -159,9 +147,6 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 		args = decodeArgs(opcode);
 		if (!args.empty())
 			d += "     " + args;
-		if (instructions[opcode].name == rts) {
-			CPU::InterpretNextOpcodeAsByte = true;
-		}
 	}
 
 	returnPC = PC;
@@ -189,27 +174,12 @@ void CPU::PrintCPUState() {
 		Flags.V, Flags.N,
 		PS);
 	printf(" | A: %02x X: %02x Y: %02x\n", A, X, Y );
-	printf(" | Cycle: %ul\n", Cycles); 
+	printf(" | Cycle: %lu\n", Cycles); 
 }
 
 void CPU::debuggerPrompt() {
 
-	if (CPU::debug_alwaysShowPS)
-		CPU::PrintCPUState();
-
-	CPU::disassemble(PC, 1);
-
 	std::cout << ": ";
-}
-
-bool cmpString(const std::string &s, const std::string &t) {
-
-	size_t t_len = t.length();
-
-	if (s.length() < t_len)
-		return false;
-	
-	return s.compare(0, t_len, t, 0, t_len) == 0;
 }
 
 unsigned long CPU::debugPrompt() {
@@ -218,6 +188,12 @@ unsigned long CPU::debugPrompt() {
 	std::string command;
 
 	listPC = PC;
+
+	if (CPU::debug_alwaysShowPS)
+		CPU::PrintCPUState();
+
+	CPU::disassemble(PC, 1);
+
 	for (std::string line;
 	     CPU::debuggerPrompt(), std::getline(std::cin, command); ) {
 
@@ -259,6 +235,7 @@ unsigned long CPU::debugPrompt() {
 				"# continue|c" << std::endl <<
 				"# loop-detect|ld" << std::endl <<
 				"# backtrace|t" << std::endl <<
+				"# where|w" << std::endl <<
 				"# quit|q" << std::endl;
 			continue;
 		}
@@ -272,6 +249,13 @@ unsigned long CPU::debugPrompt() {
 		    cmpString(command, "co")) {
 			CPU::ToggleDebug();
 			return 1;
+		}
+
+		// where
+		if (cmpString(command, "where") ||
+		    cmpString(command, "w")) {
+			CPU::disassemble(PC, 1);
+			continue;
 		}
 
 		// psalways
@@ -586,4 +570,94 @@ void CPU::parseMemCommand(std::string s) {
 	}
 	
 	std::cout << "# Parse error" << std::endl;
+}
+
+void CPU::ToggleDebug() {
+	debugMode = !debugMode;
+	std::cout << "# Debug mode ";
+	if (debugMode)
+		std::cout << "enabled\n";
+	else
+		std::cout << "disabled\n";
+}
+
+void CPU::SetDebug(bool d) {
+	debugMode = d;
+	std::cout << "# Debug mode ";
+	if (debugMode)
+		std::cout << "enabled\n";
+	else
+		std::cout << "disabled\n";
+}
+
+// Breakpoints
+void CPU::listBreakpoints() {
+	std::vector<Word>::iterator i;
+	int c = 0;
+
+	printf("# Active breakpoints:\n");
+	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
+		printf("  %04x ", *i);
+		c++;
+		if (c == 4) {
+			c = 0;
+			printf("\n");
+		}
+	}
+
+	printf("\n");
+}
+
+bool CPU::isBreakpoint(Word _pc) {
+	std::vector<Word>::iterator i;
+
+	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
+		if (*i == _pc)
+			return true;
+	}
+	return false;
+}
+
+void CPU::deleteBreakpoint(Word bp) {
+	std::vector<Word>::iterator i;
+
+	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
+		if (*i == bp) {
+			breakpoints.erase(i);
+			printf("# Removed breakpoint at %04x\n", *i);
+			return;
+		}
+	}
+	printf("# No breakpoint set at %04x\n", bp);
+}
+
+void CPU::addBreakpoint(Word bp) {
+	if (isBreakpoint(bp)) {
+		printf("# Breakpoint already set at %04x\n", bp);
+		return;
+	}
+	breakpoints.push_back(bp);
+	printf("# Set breakpoint at %04x\n", bp);
+}
+
+// Backtrace
+void CPU::showBacktrace() {
+	std::vector<std::string>::iterator i = backtrace.begin();
+	unsigned int cnt = 0;
+
+	printf("# Backtrace: %ld entries\n", backtrace.size());
+	for ( ; i < backtrace.end(); i++ )
+		printf("#%02d:  %s\n", cnt++, (*i).c_str());
+
+}
+
+void CPU::addBacktrace(Word PC) {
+	std::string ins;
+	disassembleAt(PC, ins);
+	backtrace.push_back(ins);
+}
+
+void CPU::removeBacktrace() {
+	if (!backtrace.empty())
+		backtrace.pop_back();
 }

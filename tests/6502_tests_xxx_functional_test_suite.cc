@@ -15,19 +15,23 @@ public:
 	}
 };
 
-// This test never exits
+// This test takes time to run
 TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 {
-#if 0
+#if 1
 	// Given:
 	cpu.Reset(0x400);
+	cpu.setExitAddress(0x3469);
+	cpu.PC = 0x400;
 
 	// When:
 	mem.LoadProgramFromFile("./tests/6502_functional_test.bin", 0x0000);
 
 	//Then:
-	cpu.SetDebug(true);
+	printf("This test takes some time...\n");
 	cpu.Execute();
+
+	EXPECT_EQ(cpu.PC, 0x3469);
 #endif
 }
 

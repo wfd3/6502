@@ -6,19 +6,6 @@ CPU::instruction CPU::makeIns(const char *name, Byte addrmode, Byte bytes,
 	return ins;
 }
 
-void CPU::printInstruction(Byte opcode) {
-	if (instructions.count(opcode) == 0) {
-		printf("# Invalid opcode '%x'", opcode);
-		return;
-	}
-
-	printf("%s: opcode %x, bytes %d, cycles %d\n",
-	       instructions[opcode].name,
-	       opcode,
-	       instructions[opcode].bytes,
-	       instructions[opcode].cycles);
-}
-
 void CPU::setupInstructionMap() {
 
 	instructions[INS_BRK_IMP] = 

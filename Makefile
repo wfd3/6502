@@ -78,7 +78,7 @@ gtest_main.a : gtest-all.o gtest_main.o
 # Build the tests
 
 TESTS_DIR = ./tests
-TESTS_FILES = 6502.cc memory.cc debug.cc ins.cc \
+TESTS_FILES = 6502.cc memory.cc debug.cc instructions.cc opcode_map.cc \
 	$(TESTS_DIR)/6502_tests_adc.cc \
 	$(TESTS_DIR)/6502_tests_and.cc \
 	$(TESTS_DIR)/6502_tests_asl.cc \
@@ -105,7 +105,7 @@ TESTS_FILES = 6502.cc memory.cc debug.cc ins.cc \
 	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.cc
 
 
-TESTS_OBJS = 6502.o memory.o debug.o ins.o \
+TESTS_OBJS = 6502.o memory.o debug.o instructions.o opcode_map.o \
 	$(TESTS_DIR)/6502_tests_adc.o \
 	$(TESTS_DIR)/6502_tests_and.o \
 	$(TESTS_DIR)/6502_tests_asl.cc \

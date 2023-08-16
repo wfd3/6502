@@ -175,8 +175,6 @@ static const std::string vformat(const char * const zcFormat, ...) {
     return std::string(zc.data(), iLen);
 }
 
-//extern std::string vformat(const char * const, ...);
-
 void Memory::Hexdump(Address_t start, Address_t end) {
 
 	printf("# Memory Dump 0x%04lx:0x%04lx\n", start, end);

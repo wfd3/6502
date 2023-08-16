@@ -10,26 +10,24 @@
 
 #include "memory.h"
 
-using Byte = unsigned char;
+using Byte  = unsigned char;
 using SByte = signed char;
-using Word = unsigned int;
+using Word  = unsigned int;
 	
 class CPU {
 
 public:
-        CPU(Memory *);
+	using Cycles_t = unsigned long;
 
 	constexpr static unsigned int MAX_MEM = 64 * 1024;
-	
-	using Cycles_t = unsigned long;
-	
-	constexpr static Byte INITIAL_SP = 0xFF;
-	constexpr static Word INITIAL_PC = 0xFFFC;
-	constexpr static Word INT_VECTOR = 0xFFFE;
+	constexpr static Byte INITIAL_SP      = 0xFF;
+	constexpr static Word INITIAL_PC      = 0xFFFC;
+	constexpr static Word INT_VECTOR      = 0xFFFE;
 
-	Word PC;
-	Byte SP;
-	Byte A, X, Y;
+	Word PC;		// Program counter
+	Byte SP;		// Stack pointer
+	Byte A, X, Y;		// Registers
+	Cycles_t Cycles;	// Cycle counter
 	struct ProcessorStatusBits {
 		Byte C:1; 	// Carry (bit 0)
 		Byte Z:1;	// Zero (bit 1)
@@ -45,36 +43,92 @@ public:
 		struct ProcessorStatusBits Flags;
 	};
 
-	Cycles_t Cycles;
-
+        CPU(Memory *);
 	void Reset(Word);
 	void Execute();
 	void Debug();
-	Address_t disassemble(Address_t, unsigned long);
-	Address_t disassembleAt(Address_t dPC, std::string &d);
-	unsigned long debugPrompt();
 	std::tuple<Cycles_t, Cycles_t> ExecuteOneInstruction();
 	std::tuple<CPU::Cycles_t, CPU::Cycles_t> TraceOneInstruction();
 
-	void ToggleDebug() {
-		debugMode = !debugMode;
-		std::cout << "# Debug mode ";
-		if (debugMode)
-			std::cout << "enabled\n";
-		else
-			std::cout << "disabled\n";
-	}
+	void setExitAddress(Address_t);
+	void unsetExitAddress();
 
-	void SetDebug(bool d) {
-		debugMode = d;
-		std::cout << "# Debug mode ";
-		if (debugMode)
-			std::cout << "enabled\n";
-		else
-			std::cout << "disabled\n";
-	}
+	void ToggleDebug();
+	void SetDebug(bool);
 
-	// Opcodes
+private:
+	Memory *mem;
+
+	// Instruction map
+	typedef void (CPU::*opfn_t)(Byte, Byte &);
+	struct instruction {
+		const char *name;
+	        Byte addrmode;
+		Byte flags;
+		Byte bytes;
+		Byte cycles;
+		opfn_t opfn;
+	};
+	std::map<Byte, instruction> instructions;
+
+	CPU::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
+	void setupInstructionMap();
+
+	// CPU functions
+	void Exception(const char *, ...);
+	void SetFlagZ(Byte);
+	void SetFlagN(Byte);
+	bool isNegative(Byte);
+	void Push(Byte);
+	Byte Pop();
+	void PushWord(Word);
+	Word PopWord();
+	Word getAddress(Byte, Byte &);
+	Byte getData(Byte, Byte &);
+	Byte ReadByteAtPC();
+	Word ReadWordAtPC();
+	void WriteByte(Word, Byte);
+	Byte ReadByte(Word);
+	Word ReadWord(Word);
+	void doBranch(bool, Word, Word, Byte &);
+	void doADC(Byte);
+	void bcdADC(Byte);
+	void bcdSBC(Byte);
+	void PushPS();
+	void PopPS();
+
+	// Debugger
+	bool debugMode;
+	std::string debug_lastCmd;
+	bool debug_alwaysShowPS;
+	bool debug_loopDetection;
+	std::vector<Word> breakpoints;
+	Address_t _exitAddress;
+	bool _exitAddressSet;
+	std::vector<std::string> backtrace;
+
+	std::string decodeArgs(Byte opcode);
+	Address_t disassemble(Address_t, unsigned long);
+	Address_t disassembleAt(Address_t dPC, std::string &d);
+	unsigned long debugPrompt();
+	void dumpstack();
+	void PrintCPUState();
+	void parseMemCommand(std::string);
+	void debuggerPrompt();
+
+	void listBreakpoints();
+	bool isBreakpoint(Word);
+	void deleteBreakpoint(Word);
+	void addBreakpoint(Word);
+
+	bool isPCAtExitAddress();
+
+	void showBacktrace();
+	void addBacktrace(Word);
+	void removeBacktrace();
+
+public:
+	// Opcodes definitions
 	constexpr static Byte INS_BRK_IMP = 0x00;
 	constexpr static Byte INS_ORA_IDX = 0x01;
 	constexpr static Byte INS_ASL_ACC = 0x0a;
@@ -228,81 +282,37 @@ public:
 	constexpr static Byte INS_PLA_IMP = 0x68;
 
 private:
-
-	void Exception(const char *, ...);
-	void SetFlagsForRegister(Byte b);
-	void SetFlagsForCompare(Byte b, Byte v);
-	void SetFlagZ(Byte);
-	void SetFlagN(Byte);
-	void Push(Byte);
-	Byte Pop();
-	void PushWord(Word);
-	Word PopWord();
-	Word getAddress(Byte, Byte &);
-	Byte getData(Byte, Byte &);
-	Byte ReadByteAtPC();
-	Word ReadWordAtPC();
-
-	Memory *mem;
-
 	// Addressing modes
-	constexpr static unsigned long ADDR_MODE_IMM = 0;  // Immediate
-	constexpr static unsigned long ADDR_MODE_ZP  = 1;  // Zero Page
-	constexpr static unsigned long ADDR_MODE_ZPX = 2;  // Zero Page,X
-	constexpr static unsigned long ADDR_MODE_ZPY = 3;  // Zero Page,Y
-	constexpr static unsigned long ADDR_MODE_REL = 4;  // Relative
-	constexpr static unsigned long ADDR_MODE_ABS = 5;  // Absolute
-	constexpr static unsigned long ADDR_MODE_ABX = 6;  // Absolute,X
-	constexpr static unsigned long ADDR_MODE_ABY = 7;  // Absolute,y
-	constexpr static unsigned long ADDR_MODE_IND = 8;  // Indirect
-	constexpr static unsigned long ADDR_MODE_IDX = 9;  // Indexed Ind
-	constexpr static unsigned long ADDR_MODE_IDY = 10; // Indirect Idx
-	constexpr static unsigned long ADDR_MODE_IMP = 11; // Implied
-	constexpr static unsigned long ADDR_MODE_ACC = 12; // Accumulator
+	constexpr static Byte ADDR_MODE_IMM = 0;  // Immediate
+	constexpr static Byte ADDR_MODE_ZP  = 1;  // Zero Page
+	constexpr static Byte ADDR_MODE_ZPX = 2;  // Zero Page,X
+	constexpr static Byte ADDR_MODE_ZPY = 3;  // Zero Page,Y
+	constexpr static Byte ADDR_MODE_REL = 4;  // Relative
+	constexpr static Byte ADDR_MODE_ABS = 5;  // Absolute
+	constexpr static Byte ADDR_MODE_ABX = 6;  // Absolute,X
+	constexpr static Byte ADDR_MODE_ABY = 7;  // Absolute,y
+	constexpr static Byte ADDR_MODE_IND = 8;  // Indirect
+	constexpr static Byte ADDR_MODE_IDX = 9;  // Indexed Ind
+	constexpr static Byte ADDR_MODE_IDY = 10; // Indirect Idx
+	constexpr static Byte ADDR_MODE_IMP = 11; // Implied
+	constexpr static Byte ADDR_MODE_ACC = 12; // Accumulator
 
         // How the CPU should add cycle counts on branches and when
         // instructions fetch data across page boundries.
-	constexpr static unsigned long NONE             = 0;
-	constexpr static unsigned long CYCLE_BRANCH     = 1;
-	constexpr static unsigned long CYCLE_CROSS_PAGE = 2;
+	constexpr static Byte NONE             = 0;
+	constexpr static Byte CYCLE_BRANCH     = 1;
+	constexpr static Byte CYCLE_CROSS_PAGE = 2;
 
 	// Bits for PS byte
 	constexpr static Byte BreakBit    = 1 << 4;
 	constexpr static Byte UnusedBit   = 1 << 5;
 	constexpr static Byte NegativeBit = 1 << 7;
 
+	// 6502 stack is one page at 01ff down to 0100.  This is the
+	// stack frame for that page.
 	constexpr static Word STACK_FRAME = 0x0100;
 
-	// Instruction map
-	typedef void (CPU::*opfn_t)(Byte, Byte &);
-	struct instruction {
-		const char *name;
-	        Byte addrmode;
-		Byte flags;
-		Byte bytes;
-		Byte cycles;
-		opfn_t opfn;
-	};
-	std::map<Byte, instruction> instructions;
-
-	CPU::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
-	void setupInstructionMap();
-
-	void WriteByte(Word, Byte);
-	Byte ReadByte(Word);
-	Word ReadWord(Word);
-	void dumpstack();
-	void doBranch(bool, Word, Word, Byte &);
-	void doADC(Byte);
-	void bcdADC(Byte);
-	void bcdSBC(Byte);
-	void PrintCPUState();
-	void PushPS();
-	void PopPS();
-
-	std::string decodeArgs(Byte opcode);
-	void printInstruction(Byte opcode);
-
+	// Instruction functions
 	void ins_adc(Byte, Byte &);
 	void ins_and(Byte, Byte &);
 	void ins_asl(Byte, Byte &);
@@ -359,87 +369,4 @@ private:
 	void ins_txa(Byte, Byte &);
 	void ins_txs(Byte, Byte &);
 	void ins_tya(Byte, Byte &);
-
-	bool debugMode;
-	std::string debug_lastCmd;
-	bool debug_alwaysShowPS;
-	bool debug_loopDetection;
-	std::vector<Word> breakpoints;
-
-	void listBreakpoints() {
-		std::vector<Word>::iterator i;
-		int c = 0;
-
-		printf("# Active breakpoints:\n");
-		for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-			printf("  %04x ", *i);
-			c++;
-			if (c == 4) {
-				c = 0;
-				printf("\n");
-			}
-		}
-
-		printf("\n");
-	}
-
-	bool isBreakpoint(Word _pc) {
-		std::vector<Word>::iterator i;
-
-		for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-			if (*i == _pc)
-				return true;
-		}
-		return false;
-	}
-
-	void deleteBreakpoint(Word bp) {
-		std::vector<Word>::iterator i;
-
-		for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-			if (*i == bp) {
-				breakpoints.erase(i);
-				printf("# Removed breakpoint at %04x\n", *i);
-				return;
-			}
-		}
-		printf("# No breakpoint set at %04x\n", bp);
-	}
-
-	void addBreakpoint(Word bp) {
-		if (isBreakpoint(bp)) {
-			printf("# Breakpoint already set at %04x\n", bp);
-			return;
-		}
-		breakpoints.push_back(bp);
-		printf("# Set breakpoint at %04x\n", bp);
-	}
-				
-
-	void parseMemCommand(std::string);
-	void debuggerPrompt();
-	bool InterpretNextOpcodeAsByte;
-
-	std::vector<std::string> backtrace;
-
-	void showBacktrace() {
-		std::vector<std::string>::iterator i = backtrace.begin();
-		unsigned int cnt = 0;
-
-		printf("# Backtrace: %ld entries\n", backtrace.size());
-		for ( ; i < backtrace.end(); i++ )
-			printf("#%02d:  %s\n", cnt++, (*i).c_str());
-
-	}
-
-	void addBacktrace(Word PC) {
-		std::string ins;
-		disassembleAt(PC, ins);
-		backtrace.push_back(ins);
-	}
-
-	void removeBacktrace() {
-		if (!backtrace.empty())
-			backtrace.pop_back();
-	}
 };	
