@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -21,7 +21,7 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 	Byte ins = CPU::INS_LSR_ACC;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -43,7 +43,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 	Byte ins = CPU::INS_LSR_ZP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -66,7 +66,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 	Byte ins = CPU::INS_LSR_ZPX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -90,7 +90,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoltute) {
 	Byte ins = CPU::INS_LSR_ABS;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -114,7 +114,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoltuteX) {
 	Byte ins = CPU::INS_LSR_ABX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

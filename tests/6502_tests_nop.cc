@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 
@@ -21,7 +21,7 @@ TEST_F(MOS6502NOPTests, Nop) {
 	Byte ins = CPU::INS_NOP_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

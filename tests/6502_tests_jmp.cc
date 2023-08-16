@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -21,7 +21,7 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 	Byte ins = CPU::INS_JMP_ABS;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x21;
@@ -41,7 +41,7 @@ TEST_F(MOS6502JMPTests, JmpIndirect) {
 	Byte ins = CPU::INS_JMP_IND;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;

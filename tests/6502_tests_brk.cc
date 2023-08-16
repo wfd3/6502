@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -19,11 +19,11 @@ public:
 TEST_F(MOS6502BRKTests, BRKImplied) {
 	CPU::Cycles_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BRK_IMP;
-	Word pushed_PC = CPU::INITIAL_PC + 2;
+	Word pushed_PC = CPU::RESET_VECTOR + 2;
 	constexpr Word STACK_FRAME = 0x0100 | CPU::INITIAL_SP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem[0xFFFC] = ins;
 	mem[0xFFFE] = 0x00;
 	mem[0xFFFF] = 0x60;

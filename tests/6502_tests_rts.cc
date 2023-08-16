@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -21,7 +21,7 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 	Byte ins = CPU::INS_RTS_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem[0x01FF] = 0x20;
 	mem[0x01FE] = 0x00;
 	cpu.SP -= 2;

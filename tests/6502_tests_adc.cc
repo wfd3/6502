@@ -8,7 +8,7 @@ public:
 
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 
@@ -21,7 +21,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -46,7 +46,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ZP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -72,7 +72,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ZPX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -99,7 +99,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ABS;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -126,7 +126,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ABX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -154,7 +154,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundryAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ABX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -182,7 +182,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ABY;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -210,7 +210,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundryAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_ABY;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -238,7 +238,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_IDX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -267,7 +267,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_IDY;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -296,7 +296,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 	Byte ins = CPU::INS_ADC_IDY;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -325,7 +325,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -351,7 +351,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -377,7 +377,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -403,7 +403,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -429,7 +429,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -455,7 +455,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -482,7 +482,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -508,7 +508,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -534,7 +534,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -561,7 +561,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -588,7 +588,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -614,7 +614,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -641,7 +641,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -667,7 +667,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	// 99 + 99 + 1 = 98, C=1, N=1, V=1
@@ -696,7 +696,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -723,7 +723,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -750,7 +750,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -777,7 +777,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -804,7 +804,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -831,7 +831,7 @@ TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

@@ -207,7 +207,7 @@ void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
 	addBacktrace(PC);
 
 	PushPS();
-	PC = ReadWord(INT_VECTOR);
+	PC = ReadWord(INTERRUPT_VECTOR);
 	Flags.B = 1;
 	Flags.I = 1;
 	Cycles++;

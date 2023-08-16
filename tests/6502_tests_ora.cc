@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -21,7 +21,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 	Byte ins = CPU::INS_ORA_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -45,7 +45,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 	Byte ins = CPU::INS_ORA_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

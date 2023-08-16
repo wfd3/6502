@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -22,7 +22,7 @@ TEST_F(MOS6502RORROLTests, RolAccumulator) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -45,7 +45,7 @@ TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 	Byte data = 0b10000001;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -68,7 +68,7 @@ TEST_F(MOS6502RORROLTests, RolZeroPage) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -92,7 +92,7 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -117,7 +117,7 @@ TEST_F(MOS6502RORROLTests, RolAbsoltute) {
 	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -142,7 +142,7 @@ TEST_F(MOS6502RORROLTests, RolAbsoltuteX) {
 	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -169,7 +169,7 @@ TEST_F(MOS6502RORROLTests, RorAccumulator) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -192,7 +192,7 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 	Byte data = 0b10000001;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -215,7 +215,7 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 	Byte data = 0b10000000;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -239,7 +239,7 @@ TEST_F(MOS6502RORROLTests, RorZeroPage) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -263,7 +263,7 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -289,7 +289,7 @@ TEST_F(MOS6502RORROLTests, RorAbsoltute) {
 	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -314,7 +314,7 @@ TEST_F(MOS6502RORROLTests, RorAbsoltuteX) {
 	Byte data = 0b01010101;
 	
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

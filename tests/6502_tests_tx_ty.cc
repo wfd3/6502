@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -23,7 +23,7 @@ TEST_F(MOS6502TXTYTests, TAX) {
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
@@ -45,7 +45,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0x0;
@@ -67,7 +67,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0xFF;
@@ -92,7 +92,7 @@ TEST_F(MOS6502TXTYTests, TXA) {
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
@@ -114,7 +114,7 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.X = 0x0;
@@ -136,7 +136,7 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.X = 0xFF;
@@ -160,7 +160,7 @@ TEST_F(MOS6502TXTYTests, TAY) {
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
@@ -182,7 +182,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0x0;
@@ -204,7 +204,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0xFF;
@@ -228,7 +228,7 @@ TEST_F(MOS6502TXTYTests, TYA) {
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
@@ -250,7 +250,7 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.Y = 0x0;
@@ -272,7 +272,7 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.Y = 0xFF;
@@ -296,7 +296,7 @@ TEST_F(MOS6502TXTYTests, TSX) {
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.SP = 0x12;
@@ -318,7 +318,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.SP = 0x0;
@@ -340,7 +340,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.SP = 0xFF;
@@ -364,7 +364,7 @@ TEST_F(MOS6502TXTYTests, TXS) {
 	Byte ins = CPU::INS_TXS_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 	mem[0xFFFC] = ins;
 	cpu.SP = 0x12;

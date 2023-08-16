@@ -7,7 +7,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 
@@ -15,23 +15,29 @@ public:
 	}
 };
 
-// This test takes time to run
+// This test takes time to run.
+// If it completes, it passed.  If it drops into the debugger with a
+// Loop Detected notice, it's failed.
 TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 {
 #if 1
 	// Given:
-	cpu.Reset(0x400);
-	cpu.setExitAddress(0x3469);
-	cpu.PC = 0x400;
-
+	constexpr Word exitAddress = 0x3469;
 	// When:
 	mem.LoadProgramFromFile("./tests/6502_functional_test.bin", 0x0000);
+	cpu.setResetVector(0x0400);
+	cpu.exitReset();
+	cpu.setExitAddress(exitAddress);
+	cpu.toggleLoopDetection(); // Force break on 'jmp *'
 
 	//Then:
 	printf("This test takes some time...\n");
+
+// Uncomment to start in debugger
+//	cpu.SetDebug(true);
 	cpu.Execute();
 
-	EXPECT_EQ(cpu.PC, 0x3469);
+	EXPECT_EQ(cpu.PC, exitAddress);
 #endif
 }
 

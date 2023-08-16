@@ -13,16 +13,19 @@
 using Byte  = unsigned char;
 using SByte = signed char;
 using Word  = unsigned int;
+
+// https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
+// http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
 	
 class CPU {
 
 public:
 	using Cycles_t = unsigned long;
 
-	constexpr static unsigned int MAX_MEM = 64 * 1024;
-	constexpr static Byte INITIAL_SP      = 0xFF;
-	constexpr static Word INITIAL_PC      = 0xFFFC;
-	constexpr static Word INT_VECTOR      = 0xFFFE;
+	constexpr static unsigned int MAX_MEM  = 64 * 1024;
+	constexpr static Byte INITIAL_SP       = 0xFF;
+	constexpr static Word RESET_VECTOR     = 0xFFFC;
+	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
 
 	Word PC;		// Program counter
 	Byte SP;		// Stack pointer
@@ -45,8 +48,12 @@ public:
 
         CPU(Memory *);
 	void Reset(Word);
+	void exitReset();
+	void setResetVector(Word);
+	void setInterruptVector(Word);
 	void Execute();
 	void Debug();
+		
 	std::tuple<Cycles_t, Cycles_t> ExecuteOneInstruction();
 	std::tuple<CPU::Cycles_t, CPU::Cycles_t> TraceOneInstruction();
 
@@ -55,6 +62,7 @@ public:
 
 	void ToggleDebug();
 	void SetDebug(bool);
+	void toggleLoopDetection();		
 
 private:
 	Memory *mem;
@@ -89,6 +97,7 @@ private:
 	Word ReadWordAtPC();
 	void WriteByte(Word, Byte);
 	Byte ReadByte(Word);
+	void WriteWord(Word, Word);
 	Word ReadWord(Word);
 	void doBranch(bool, Word, Word, Byte &);
 	void doADC(Byte);

@@ -182,6 +182,10 @@ void CPU::debuggerPrompt() {
 	std::cout << ": ";
 }
 
+void CPU::toggleLoopDetection() {
+	CPU::debug_loopDetection = !CPU::debug_loopDetection;
+}
+
 unsigned long CPU::debugPrompt() {
 	unsigned long count = 1;
 	Address_t listPC;
@@ -274,7 +278,7 @@ unsigned long CPU::debugPrompt() {
 		// loop-detect
 		if (cmpString(command, "loop-detect") ||
 		    cmpString(command, "ld")) {
-			CPU::debug_loopDetection = !CPU::debug_loopDetection;
+			toggleLoopDetection();
 			std::cout << "# Loop detection ";
 			if (CPU::debug_loopDetection)
 				std::cout << "enabled" << std::endl;
@@ -335,8 +339,8 @@ unsigned long CPU::debugPrompt() {
 		}
 
 		if (cmpString(command, "reset")) {
-			CPU::Reset(CPU::INITIAL_PC);
 			mem->Init();
+			CPU::exitReset();
 			CPU::PrintCPUState();
 
 			continue;

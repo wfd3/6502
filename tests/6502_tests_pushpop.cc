@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -21,7 +21,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 	Byte ins = CPU::INS_PHA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -43,7 +43,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	Byte ins = CPU::INS_PLA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -68,7 +68,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 	Byte ins = CPU::INS_PHP_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -91,7 +91,7 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 	Byte ins = CPU::INS_PLP_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

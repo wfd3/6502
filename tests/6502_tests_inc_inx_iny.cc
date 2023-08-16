@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -22,7 +22,7 @@ TEST_F(MOS6502INCTests, IncZeroPage) {
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -46,7 +46,7 @@ TEST_F(MOS6502INCTests, IncZeroPageX) {
 	Byte ins = CPU::INS_INC_ZPX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -71,7 +71,7 @@ TEST_F(MOS6502INCTests, IncAbsolute) {
 	Byte ins = CPU::INS_INC_ABS;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -96,7 +96,7 @@ TEST_F(MOS6502INCTests, IncAbsoluteX) {
 	Byte ins = CPU::INS_INC_ABX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -122,7 +122,7 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsZeroFlag) {
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -146,7 +146,7 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsNegativeFlag) {
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -171,7 +171,7 @@ TEST_F(MOS6502INCTests, InxImplied) {
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -194,7 +194,7 @@ TEST_F(MOS6502INCTests, InxImpliedSetsZeroFlag) {
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -216,7 +216,7 @@ TEST_F(MOS6502INCTests, InxImpliedSetsNegativeFlag) {
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -239,7 +239,7 @@ TEST_F(MOS6502INCTests, InyImplied) {
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -262,7 +262,7 @@ TEST_F(MOS6502INCTests, InyImpliedSetsZeroFlag) {
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;
@@ -284,7 +284,7 @@ TEST_F(MOS6502INCTests, InyImpliedSetsNegativeFlag) {
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	mem.Init();
 
 	mem[0xFFFC] = ins;

@@ -8,7 +8,7 @@ public:
 	CPU cpu{&mem};
 
 	virtual void SetUp() {
-		cpu.Reset(CPU::INITIAL_PC);
+		cpu.exitReset();
 		mem.Init();
 	}
 	
@@ -21,7 +21,7 @@ TEST_F(MOS6502ANDTests, AndImmediate) {
 	Byte ins = CPU::INS_AND_IMM;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0F;
@@ -45,7 +45,7 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 	CPU::Cycles_t c = cpu.Cycles;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -68,7 +68,7 @@ TEST_F(MOS6502ANDTests, AndZeroPage) {
 	Byte ins = CPU::INS_AND_ZP;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -91,7 +91,7 @@ TEST_F(MOS6502ANDTests, AndZeroPageX) {
 	Byte ins = CPU::INS_AND_ZPX;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -115,7 +115,7 @@ TEST_F(MOS6502ANDTests, AndAbsolute) {
 	Byte ins = CPU::INS_AND_ABS;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -139,7 +139,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteX) {
 	Byte ins = CPU::INS_AND_ABX;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -164,7 +164,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteXCrossesPage) {
 	Byte ins = CPU::INS_AND_ABX;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xFF;
@@ -189,7 +189,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteY) {
 	Byte ins = CPU::INS_AND_ABY;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -214,7 +214,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteYCrossesPage) {
 	Byte ins = CPU::INS_AND_ABY;
 	
 	// Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xFF;
@@ -239,7 +239,7 @@ TEST_F(MOS6502ANDTests, AndIndirectX) {
 	Byte ins = CPU::INS_AND_IDX;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -265,7 +265,7 @@ TEST_F(MOS6502ANDTests, AndIndirectY) {
 	Byte ins = CPU::INS_AND_IDY;
 
 	//Given:
-	cpu.Reset(CPU::INITIAL_PC);
+	cpu.Reset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;

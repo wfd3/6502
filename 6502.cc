@@ -11,10 +11,18 @@
 
 CPU::CPU(Memory *m) {
 	mem = m;
+	CPU::setupInstructionMap();
 }
 
-void CPU::Reset(Word ResetVector) {
-	PC = ResetVector;
+void CPU::setResetVector(Word address) {
+	WriteWord(RESET_VECTOR, address);
+}
+
+void CPU::setInterruptVector(Word address) {
+	WriteWord(INTERRUPT_VECTOR, address);
+}
+
+void CPU::exitReset() {
 	SP = INITIAL_SP;
 	A = X = Y = 0;
 	PS = 0; //C = Z = I = D = B = V = N = 0;
@@ -23,7 +31,15 @@ void CPU::Reset(Word ResetVector) {
 	debug_alwaysShowPS = false;
 	debug_lastCmd = "";
 	_exitAddressSet = false;
-	CPU::setupInstructionMap();
+	PC = ReadWord(RESET_VECTOR);
+
+	Cycles = 7;		// Do this last
+
+}	
+
+void CPU::Reset(Word address) {
+	exitReset();
+	PC = address;
 }
 
 void CPU::Exception(const char *fmt_str, ...) {
@@ -79,6 +95,11 @@ void CPU::WriteByte(Word address, Byte value) {
 Word CPU::ReadWord(Word address) {
 	Word w = ReadByte(address) | (ReadByte(address + 1) << 8);
 	return w;
+}
+
+void CPU::WriteWord(Word address, Word word) {
+	WriteByte(address, word & 0xff);
+	WriteByte(address + 1, (word >> 8));
 }
 
 Word CPU::ReadWordAtPC() {
