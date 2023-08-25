@@ -43,12 +43,13 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # House-keeping build targets.
 
-all: runtests
+all: runtests bin
+
 6502_HEADERS = 6502.h memory.h 
 6502_FILES = 6502.cc debug.cc instructions.cc opcode_map.cc 
 6502_OBJS  = 6502.o debug.o instructions.o opcode_map.o
 
-bin   : $(BIN) 
+bin   : $(BINS) 
 tests : $(TESTS) 
 
 clean :

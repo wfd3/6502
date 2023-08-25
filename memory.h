@@ -65,15 +65,19 @@ public:
 	operator char() const {
 		return this->Read();
 	}
+
 	operator unsigned char() const {
 		return this->Read();
 	}
+
 	operator int() const {
 		return this->Read();
 	}
+
 	operator long() const {
 		return this->Read();
 	}
+	
 	operator unsigned long() const {
 		return this->Read();
 	}
@@ -394,14 +398,10 @@ public:
 		file.seekg(0, std::ios::beg);
 
 		if (fileSize == -1) {
-			printf("# Can't load file '%s': not found\n",
-			       filename);
-			return;
+			exception("Can't load file '%s': not found\n",
+				  filename);
 		}
 		
-		printf("# Load %ld bytes from file '%s' at %lx\n",
-		       (long) fileSize, filename, start);
-
 		// reserve capacity
 		std::vector<unsigned char> vec;
 		vec.reserve(fileSize);

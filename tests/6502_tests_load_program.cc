@@ -17,7 +17,7 @@ std::vector<Byte> testProgram = {
 
 static const unsigned long programLen = 12;
 constexpr Address_t startAddress = 0x4000;
-static const char *testProgramFile = "./binfile/simpleprg.bin";
+static const char *testProgramFile = "./binfiles/simpleprg.bin";
 
 class MOS6502LoadProgramTests : public testing::Test {
 public:	
