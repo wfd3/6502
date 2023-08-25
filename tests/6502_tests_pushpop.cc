@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,12 +17,12 @@ public:
 };
 
 TEST_F(MOS6502PushPopTests, PhaImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PHA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
@@ -39,12 +39,12 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 
 
 TEST_F(MOS6502PushPopTests, PlaImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PLA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -64,12 +64,12 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 }
 
 TEST_F(MOS6502PushPopTests, PhpImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PHP_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -87,12 +87,12 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 }
 
 TEST_F(MOS6502PushPopTests, PlpImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PLP_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0b01010101;;

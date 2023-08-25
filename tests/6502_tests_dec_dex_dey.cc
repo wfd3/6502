@@ -8,7 +8,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 
 	virtual void TearDown()	{
@@ -17,12 +17,12 @@ public:
 
 // DEC 
 TEST_F(MOS6502DECTests, DecZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEC_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -41,12 +41,12 @@ TEST_F(MOS6502DECTests, DecZeroPage) {
 }
 
 TEST_F(MOS6502DECTests, DecZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEC_ZPX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -66,12 +66,12 @@ TEST_F(MOS6502DECTests, DecZeroPageX) {
 }
 
 TEST_F(MOS6502DECTests, DecAbsolute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEC_ABS;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -91,12 +91,12 @@ TEST_F(MOS6502DECTests, DecAbsolute) {
 }
 
 TEST_F(MOS6502DECTests, DecAbsoluteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEC_ABX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -117,12 +117,12 @@ TEST_F(MOS6502DECTests, DecAbsoluteX) {
 }
 
 TEST_F(MOS6502DECTests, DecZeroPageSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEC_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -141,12 +141,12 @@ TEST_F(MOS6502DECTests, DecZeroPageSetsZeroFlag) {
 
 
 TEST_F(MOS6502DECTests, DecZeroPageSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEC_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -166,12 +166,12 @@ TEST_F(MOS6502DECTests, DecZeroPageSetsNegativeFlag) {
 
 // DEX
 TEST_F(MOS6502DECTests, DexImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.X = 10;
@@ -189,12 +189,12 @@ TEST_F(MOS6502DECTests, DexImmediate) {
 }
 
 TEST_F(MOS6502DECTests, DexImmediateSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.X = 1;
@@ -211,12 +211,12 @@ TEST_F(MOS6502DECTests, DexImmediateSetsZeroFlag) {
 }
 
 TEST_F(MOS6502DECTests, DexImmediateSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.X = 0;
@@ -234,12 +234,12 @@ TEST_F(MOS6502DECTests, DexImmediateSetsNegativeFlag) {
 
 // DEY
 TEST_F(MOS6502DECTests, DeyImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.Y = 10;
@@ -257,12 +257,12 @@ TEST_F(MOS6502DECTests, DeyImmediate) {
 }
 
 TEST_F(MOS6502DECTests, DeyImmediateSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.Y = 1;
@@ -279,12 +279,12 @@ TEST_F(MOS6502DECTests, DeyImmediateSetsZeroFlag) {
 }
 
 TEST_F(MOS6502DECTests, DeyImmediateSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_DEY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.Y = 0;

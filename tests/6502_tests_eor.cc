@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,12 +17,12 @@ public:
 };
 
 TEST_F(MOS6502EORTests, EorImmediate) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -40,12 +40,12 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 }
 
 TEST_F(MOS6502EORTests, EorZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -64,12 +64,12 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 }
 
 TEST_F(MOS6502EORTests, EorZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ZPX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -89,12 +89,12 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsolute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ABS;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -114,12 +114,12 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsoluteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ABX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -140,12 +140,12 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsoluteY) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ABY;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -166,12 +166,12 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 }
 
 TEST_F(MOS6502EORTests, EorIndirectX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IDX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -193,12 +193,12 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 }
 
 TEST_F(MOS6502EORTests, EorIndirectY) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IDY;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -221,12 +221,12 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 }
 
 TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0F;
@@ -244,12 +244,12 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 }
 
 TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0F;

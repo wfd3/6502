@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502JMPTests, JmpAbsolute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_JMP_ABS;
 
 	//Given:
@@ -37,7 +37,7 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 }
 
 TEST_F(MOS6502JMPTests, JmpIndirect) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_JMP_IND;
 
 	//Given:

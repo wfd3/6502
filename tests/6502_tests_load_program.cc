@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include "../6502.h"
 
-static Byte testProgram[] = {
-	0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x00, 0x40 };
+std::vector<Byte> testProgram = {
+	0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x00, 0x40
+};
+
 ///
 // Test Program
 //
@@ -15,7 +17,7 @@ static Byte testProgram[] = {
 
 static const unsigned long programLen = 12;
 constexpr Address_t startAddress = 0x4000;
-static const char *testProgramFile = "./tests/program.bin";
+static const char *testProgramFile = "./binfile/simpleprg.bin";
 
 class MOS6502LoadProgramTests : public testing::Test {
 public:	
@@ -24,7 +26,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 
 	virtual void TearDown() {
@@ -35,7 +37,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadProgram) {
 	// Given:
 
 	// When:
-	mem.LoadProgram(testProgram, startAddress, programLen);
+	mem.loadData(testProgram, startAddress);
 
 	//then:
 	for (Address_t i = 0; i < programLen; i++) 
@@ -51,7 +53,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 
 	// When:
 
-	mem.LoadProgram(testProgram, startAddress, programLen);
+	mem.loadData(testProgram, startAddress);
 	cpu.PC = startAddress;
 
 	//Then:
@@ -70,7 +72,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 
 	// When:
 
-	mem.LoadProgramFromFile(testProgramFile, startAddress);
+	mem.loadDataFromFile(testProgramFile, startAddress);
 	cpu.PC = startAddress;
 
 	//Then:
@@ -90,7 +92,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 
 	// When:
 
-	mem.LoadProgram(testProgram, startAddress, programLen);
+	mem.loadData(testProgram, startAddress);
 	cpu.PC = startAddress;
 
 	//Then:

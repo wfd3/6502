@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -19,12 +19,12 @@ public:
 // TAX
 
 TEST_F(MOS6502TXTYTests, TAX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
 	cpu.X = 0xAB;
@@ -41,12 +41,12 @@ TEST_F(MOS6502TXTYTests, TAX) {
 }
 
 TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x0;
 	cpu.X = 0xAB;
@@ -63,12 +63,12 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0xFF;
 	cpu.X = 0xAB;
@@ -88,12 +88,12 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 // TXA
 
 TEST_F(MOS6502TXTYTests, TXA) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
 	cpu.X = 0x0B;
@@ -110,12 +110,12 @@ TEST_F(MOS6502TXTYTests, TXA) {
 }
 
 TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.X = 0x0;
 	cpu.A = 0xAB;
@@ -132,12 +132,12 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.X = 0xFF;
 	cpu.A = 0xAB;
@@ -156,12 +156,12 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 // TAY
 
 TEST_F(MOS6502TXTYTests, TAY) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
 	cpu.Y = 0x0B;
@@ -178,12 +178,12 @@ TEST_F(MOS6502TXTYTests, TAY) {
 }
 
 TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x0;
 	cpu.Y = 0xAB;
@@ -200,12 +200,12 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0xFF;
 	cpu.Y = 0xAB;
@@ -224,12 +224,12 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 // TYA
 
 TEST_F(MOS6502TXTYTests, TYA) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
 	cpu.Y = 0x0B;
@@ -246,12 +246,12 @@ TEST_F(MOS6502TXTYTests, TYA) {
 }
 
 TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.Y = 0x0;
 	cpu.A = 0xAB;
@@ -268,12 +268,12 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.Y = 0xFF;
 	cpu.A = 0xAB;
@@ -292,12 +292,12 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 // TSX
 
 TEST_F(MOS6502TXTYTests, TSX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.SP = 0x12;
 	cpu.X = 0x52;
@@ -314,12 +314,12 @@ TEST_F(MOS6502TXTYTests, TSX) {
 }
 
 TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.SP = 0x0;
 	cpu.X = 0xAB;
@@ -336,12 +336,12 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.SP = 0xFF;
 	cpu.X = 0xAB;
@@ -360,12 +360,12 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 // TXS
 
 TEST_F(MOS6502TXTYTests, TXS) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXS_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 	mem[0xFFFC] = ins;
 	cpu.SP = 0x12;
 	cpu.X = 0x52;

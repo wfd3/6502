@@ -6,12 +6,16 @@
 #include <memory>
 #include <cstdarg>
 
+#include <unistd.h>
+
 #include "6502.h"
 
 
 CPU::CPU(Memory *m) {
 	mem = m;
 	CPU::setupInstructionMap();
+	overrideResetVector = false;
+	pendingReset = true;
 }
 
 void CPU::setResetVector(Word address) {
@@ -31,15 +35,32 @@ void CPU::exitReset() {
 	debug_alwaysShowPS = false;
 	debug_lastCmd = "";
 	_exitAddressSet = false;
-	PC = ReadWord(RESET_VECTOR);
+	if (overrideResetVector) {
+		PC = pendingResetPC;
+	} else {
+		PC = ReadWord(RESET_VECTOR);
+	}
+	pendingReset = false;
+	overrideResetVector = false;
 
-	Cycles = 7;		// Do this last
-
+	// Do this last incase anything above ever changes Cycles by
+	// side-effect.
+	Cycles = 7;		
 }	
 
+// This is only intended for testing, not for emulation.
+// TODO: Change this function name and update all the 6502 tests.
 void CPU::Reset(Word address) {
+	// TODO: these should be lock-protected.
+	pendingReset = true;
+	overrideResetVector = true;
+	pendingResetPC = address;
 	exitReset();
-	PC = address;
+}
+
+void CPU::Reset() {
+	// TODO: This should be atomic.
+	pendingReset = true;
 }
 
 void CPU::Exception(const char *fmt_str, ...) {
@@ -82,13 +103,13 @@ void CPU::SetFlagZ(Byte val) {
 }
 
 Byte CPU::ReadByte(Word address) {
-	Byte data = mem->ReadByte(address);
+	Byte data = mem->Read(address);
 	Cycles++;
 	return data;
 }
 
 void CPU::WriteByte(Word address, Byte value) {
-	mem->WriteByte(address, value);
+	mem->Write(address, value);
 	Cycles++;
 }
 
@@ -257,7 +278,7 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 	case ADDR_MODE_ACC:
 		return 0;
 
-	// Immediate mode (tested)
+	// Immediate mode
 	case ADDR_MODE_IMM:
 		data = ReadByteAtPC();
 		break;
@@ -284,18 +305,20 @@ void CPU::unsetExitAddress() {
 	_exitAddressSet = false;
 }
 
-std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
+std::tuple<Byte, Byte> CPU::ExecuteOneInstruction() {
 	Byte opcode;
-	Cycles_t startCycles = Cycles;
+	Cycles_t startCycles;
 	Byte expectedCyclesToUse;
 	Word startPC;
 	opfn_t op;
 
 	startPC = PC;
-	opcode = ReadByteAtPC();
+	startCycles = Cycles;
 
+	opcode = ReadByteAtPC();
 	if (instructions.count(opcode) == 0) {
-		Exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC - 1);
+		PC--;
+		Exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC);
 	}
 
 	expectedCyclesToUse = instructions[opcode].cycles;
@@ -303,11 +326,19 @@ std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::ExecuteOneInstruction() {
 
 	(this->*op)(opcode, expectedCyclesToUse);
 
-	if (CPU::debug_loopDetection && startPC == PC) {
+	if (debug_loopDetection && startPC == PC) {
 		printf("# Loop detected, forcing break at %04x\n", PC);
-		CPU::addBreakpoint(PC);
+		//CPU::addBreakpoint(PC);
+		debugMode = true;
 	}
 
+	// If the CPU was reset, startCycles could be wrong.  Check and reset.
+	if (startCycles > Cycles)
+		startCycles = Cycles;
+
+	if (pendingReset)
+		exitReset();
+	
 	return std::make_tuple(Cycles - startCycles, expectedCyclesToUse);
 }
 

@@ -8,11 +8,85 @@
 #include <iostream>
 #include <vector>
 
+#include <unistd.h>
+
 #include "memory.h"
 
 using Byte  = unsigned char;
 using SByte = signed char;
 using Word  = unsigned int;
+using Address_t = unsigned int;
+
+class Cycles_t {
+public:
+	Cycles_t() {
+		_c = 0;
+		emulateTimings = true;
+	}
+
+	unsigned long get() {
+		return _c;
+	}
+
+	void operator=(const unsigned long c) {
+		_c = c;
+	}
+	
+	bool operator==(const Cycles_t &rhs) {
+		return _c == rhs._c;
+	}
+	
+	Cycles_t& operator++(int) {
+		_c++;
+		if (emulateTimings)
+			usleep(1);
+		return *this;
+	}
+
+	Cycles_t& operator+=(int i) {
+		_c += i;
+		if (emulateTimings)
+			usleep(i);
+		return *this;
+	}
+
+	Byte operator-(Cycles_t const& c) {
+		if (c._c > _c)
+			return 0;
+		return _c - c._c;
+	}
+
+	Cycles_t operator+(Cycles_t const& c) {
+		Cycles_t res;
+		res = _c + c._c;
+		return res;
+	}
+
+	bool operator>(const Cycles_t &c)  {
+		return _c > c._c;
+	}
+
+	bool operator>(unsigned char c) const {
+		return _c > c;
+	}
+
+	bool operator<(const Cycles_t &c) {
+		return _c < c._c;
+	}
+
+	void enableTimingEmulation() {
+		emulateTimings = true;
+	}
+	
+	void disableTimingEmulation() {
+		emulateTimings = false;
+	}
+	
+private:
+	unsigned long _c;
+	bool emulateTimings;
+};
+
 
 // https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
 // http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
@@ -20,9 +94,8 @@ using Word  = unsigned int;
 class CPU {
 
 public:
-	using Cycles_t = unsigned long;
 
-	constexpr static unsigned int MAX_MEM  = 64 * 1024;
+	constexpr static unsigned int MAX_MEM  = 0xFFFF;
 	constexpr static Byte INITIAL_SP       = 0xFF;
 	constexpr static Word RESET_VECTOR     = 0xFFFC;
 	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
@@ -48,24 +121,35 @@ public:
 
         CPU(Memory *);
 	void Reset(Word);
+	void Reset();
 	void exitReset();
 	void setResetVector(Word);
 	void setInterruptVector(Word);
 	void Execute();
 	void Debug();
 		
-	std::tuple<Cycles_t, Cycles_t> ExecuteOneInstruction();
-	std::tuple<CPU::Cycles_t, CPU::Cycles_t> TraceOneInstruction();
+	std::tuple<Byte, Byte> ExecuteOneInstruction();
+	std::tuple<Byte, Byte> TraceOneInstruction();
 
 	void setExitAddress(Address_t);
 	void unsetExitAddress();
 
 	void ToggleDebug();
 	void SetDebug(bool);
-	void toggleLoopDetection();		
+	void toggleLoopDetection();
+	bool isDebugEnabled() {
+		return debugMode;
+	}
+
+	void setPendingReset() {
+		pendingReset = true;
+	}
 
 private:
 	Memory *mem;
+	bool pendingReset;
+	bool overrideResetVector;
+	Word pendingResetPC;
 
 	// Instruction map
 	typedef void (CPU::*opfn_t)(Byte, Byte &);

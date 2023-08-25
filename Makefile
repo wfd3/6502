@@ -31,7 +31,10 @@ CXXFLAGS += -g -Wall -Wextra -pthread -std=gnu++23
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = 6502_tests
+TESTS = 6502_tests memory_tests
+
+# All binaries produced by this Makefile
+BINS = apple1
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -41,14 +44,15 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 # House-keeping build targets.
 
 all: runtests
+6502_HEADERS = 6502.h memory.h 
+6502_FILES = 6502.cc debug.cc instructions.cc opcode_map.cc 
+6502_OBJS  = 6502.o debug.o instructions.o opcode_map.o
 
-RUN6502_FILES = 6502.cc 6502.h memory.cc memory.h debug.cc run6502.cc ins.cc
-RUN6502_OBJS  = 6502.o memory.o debug.o run6502.o ins.o
-
+bin   : $(BIN) 
 tests : $(TESTS) 
 
 clean :
-	rm -f $(TESTS) gtest.a gtest_main.a *.o *~
+	rm -f $(TESTS) $(BINS) gtest.a gtest_main.a *.o *~
 	rm -f $(TESTS_DIR)/*.o $(TESTS_DIR)/*~
 
 # Builds gtest.a and gtest_main.a.
@@ -78,8 +82,8 @@ gtest_main.a : gtest-all.o gtest_main.o
 # Build the tests
 
 TESTS_DIR = ./tests
-TESTS_FILES = 6502.cc memory.cc debug.cc instructions.cc opcode_map.cc \
-	$(TESTS_DIR)/6502_tests_adc.cc \
+6502_TESTS_FILES = $(6502_FILES) \
+	$(TESTS_DIR)/6502_tests_adc.cc\
 	$(TESTS_DIR)/6502_tests_and.cc \
 	$(TESTS_DIR)/6502_tests_asl.cc \
 	$(TESTS_DIR)/6502_tests_bit.cc \
@@ -104,8 +108,7 @@ TESTS_FILES = 6502.cc memory.cc debug.cc instructions.cc opcode_map.cc \
 	$(TESTS_DIR)/6502_tests_tx_ty.cc \
 	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.cc
 
-
-TESTS_OBJS = 6502.o memory.o debug.o instructions.o opcode_map.o \
+6502_TESTS_OBJS = $(6502_OBJS) \
 	$(TESTS_DIR)/6502_tests_adc.o \
 	$(TESTS_DIR)/6502_tests_and.o \
 	$(TESTS_DIR)/6502_tests_asl.cc \
@@ -131,15 +134,29 @@ TESTS_OBJS = 6502.o memory.o debug.o instructions.o opcode_map.o \
 	$(TESTS_DIR)/6502_tests_tx_ty.o \
 	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.o
 
-%.o: %.cc 6502.h memory.h $(GTEST_HEADERS) 
+MEMORY_TEST_FILES = $(MEMORY_FILES) \
+	$(TESTS_DIR)/memory_tests.c
+
+MEMORY_TEST_OBJS  = \
+	$(TESTS_DIR)/memory_tests.o
+
+%.o: %.cc $(6502_HEADERS) $(GTEST_HEADERS) 
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
 
-6502_tests : $(TESTS_OBJS) gtest_main.a
+6502_tests : $(6502_TESTS_OBJS) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
+memory_tests : $(MEMORY_TEST_OBJS) gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-run6502 : $(RUN6502_OBJS) 
+apple1 : apple1.o $(6502_OBJS) 
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS)  $^ -o $@
 
-runtests: 6502_tests
+runmemtests: memory_tests
+	./memory_tests
+
+run6502tests: 6502_tests
 	./6502_tests
+
+runtests: runmemtests run6502tests
+

@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502BRKTests, BRKImplied) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BRK_IMP;
 	Word pushed_PC = CPU::RESET_VECTOR + 2;
 	constexpr Word STACK_FRAME = 0x0100 | CPU::INITIAL_SP;

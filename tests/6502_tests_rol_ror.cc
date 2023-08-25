@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,13 +17,13 @@ public:
 };
 
 TEST_F(MOS6502RORROLTests, RolAccumulator) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -40,13 +40,13 @@ TEST_F(MOS6502RORROLTests, RolAccumulator) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -63,13 +63,13 @@ TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 }
 
 TEST_F(MOS6502RORROLTests, RolZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -87,13 +87,13 @@ TEST_F(MOS6502RORROLTests, RolZeroPage) {
 }
 
 TEST_F(MOS6502RORROLTests, RolZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ZPX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -112,13 +112,13 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAbsoltute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ABS;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -137,13 +137,13 @@ TEST_F(MOS6502RORROLTests, RolAbsoltute) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAbsoltuteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ABX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -164,13 +164,13 @@ TEST_F(MOS6502RORROLTests, RolAbsoltuteX) {
 
 // ROR
 TEST_F(MOS6502RORROLTests, RorAccumulator) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -187,13 +187,13 @@ TEST_F(MOS6502RORROLTests, RorAccumulator) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -210,13 +210,13 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ACC;
 	Byte data = 0b10000000;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -234,13 +234,13 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 }
 
 TEST_F(MOS6502RORROLTests, RorZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -258,13 +258,13 @@ TEST_F(MOS6502RORROLTests, RorZeroPage) {
 }
 
 TEST_F(MOS6502RORROLTests, RorZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ZPX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -284,13 +284,13 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 
 //HERE
 TEST_F(MOS6502RORROLTests, RorAbsoltute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ABS;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -309,13 +309,13 @@ TEST_F(MOS6502RORROLTests, RorAbsoltute) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAbsoltuteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ABX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;

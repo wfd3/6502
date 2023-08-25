@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,13 +17,13 @@ public:
 };
 
 TEST_F(MOS6502ASLTests, AslAccumulator) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -41,13 +41,13 @@ TEST_F(MOS6502ASLTests, AslAccumulator) {
 }
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -65,13 +65,13 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
 }
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ACC;
 	Byte data = 0b01000001;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -89,13 +89,13 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
 }
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ACC;
 	Byte data = 0b00000000;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
@@ -113,13 +113,13 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
 }
 
 TEST_F(MOS6502ASLTests, AslZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0001;
@@ -138,13 +138,13 @@ TEST_F(MOS6502ASLTests, AslZeroPage) {
 }
 
 TEST_F(MOS6502ASLTests, AslZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ZPX;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0001;
@@ -164,13 +164,13 @@ TEST_F(MOS6502ASLTests, AslZeroPageX) {
 }
 
 TEST_F(MOS6502ASLTests, AslAbsolute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ABX;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -190,13 +190,13 @@ TEST_F(MOS6502ASLTests, AslAbsolute) {
 }
 
 TEST_F(MOS6502ASLTests, AslAbsoluteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ASL_ABX;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;

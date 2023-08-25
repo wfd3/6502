@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 
 	virtual void TearDown()	{
@@ -17,12 +17,12 @@ public:
 };
 
 TEST_F(MOS6502BITTests, BitAbsolute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ABS;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -42,12 +42,12 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -66,12 +66,12 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -90,12 +90,12 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -114,12 +114,12 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;

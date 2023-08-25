@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,11 +17,11 @@ public:
 };
 
 TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLC_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;
@@ -36,11 +36,11 @@ TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 }
 
 TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SEC_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;
@@ -55,11 +55,11 @@ TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 }
 
 TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLD_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;
@@ -74,11 +74,11 @@ TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 }
 
 TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SED_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;
@@ -93,11 +93,11 @@ TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 }
 
 TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLI_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;
@@ -112,11 +112,11 @@ TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 }
 
 TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SEI_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;
@@ -132,11 +132,11 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 
 
 TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLV_IMP;
 
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	// Given:
 	mem[0xFFFC] = ins;

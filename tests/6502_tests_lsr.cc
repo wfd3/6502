@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -17,12 +17,11 @@ public:
 };
 
 TEST_F(MOS6502LSRTests, LsrAccumulator) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ACC;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
 
 	mem[0xFFFC] = ins;
 	cpu.A = 0b01010101;
@@ -39,12 +38,11 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -62,12 +60,11 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ZPX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -86,12 +83,11 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoltute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ABS;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -110,12 +106,11 @@ TEST_F(MOS6502LSRTests, LsrAbsoltute) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoltuteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ABX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;

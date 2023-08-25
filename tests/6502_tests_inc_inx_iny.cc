@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -18,12 +18,12 @@ public:
 
 // DEC 
 TEST_F(MOS6502INCTests, IncZeroPage) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -42,12 +42,12 @@ TEST_F(MOS6502INCTests, IncZeroPage) {
 }
 
 TEST_F(MOS6502INCTests, IncZeroPageX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZPX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -67,12 +67,12 @@ TEST_F(MOS6502INCTests, IncZeroPageX) {
 }
 
 TEST_F(MOS6502INCTests, IncAbsolute) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ABS;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -92,12 +92,12 @@ TEST_F(MOS6502INCTests, IncAbsolute) {
 }
 
 TEST_F(MOS6502INCTests, IncAbsoluteX) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ABX;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -118,12 +118,12 @@ TEST_F(MOS6502INCTests, IncAbsoluteX) {
 }
 
 TEST_F(MOS6502INCTests, IncZeroPageSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -142,12 +142,12 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsZeroFlag) {
 
 
 TEST_F(MOS6502INCTests, IncZeroPageSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -167,12 +167,12 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsNegativeFlag) {
 
 // INX
 TEST_F(MOS6502INCTests, InxImplied) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.X = 0x09;
@@ -190,12 +190,12 @@ TEST_F(MOS6502INCTests, InxImplied) {
 }
 
 TEST_F(MOS6502INCTests, InxImpliedSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.X = 0xff;
@@ -212,12 +212,12 @@ TEST_F(MOS6502INCTests, InxImpliedSetsZeroFlag) {
 }
 
 TEST_F(MOS6502INCTests, InxImpliedSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.X = 127;
@@ -235,12 +235,12 @@ TEST_F(MOS6502INCTests, InxImpliedSetsNegativeFlag) {
 
 // INY
 TEST_F(MOS6502INCTests, InyImplied) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.Y = 0x09;
@@ -258,12 +258,12 @@ TEST_F(MOS6502INCTests, InyImplied) {
 }
 
 TEST_F(MOS6502INCTests, InyImpliedSetsZeroFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.Y = 0xff;
@@ -280,12 +280,12 @@ TEST_F(MOS6502INCTests, InyImpliedSetsZeroFlag) {
 }
 
 TEST_F(MOS6502INCTests, InyImpliedSetsNegativeFlag) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
-	mem.Init();
+	
 
 	mem[0xFFFC] = ins;
 	cpu.Y = 127;

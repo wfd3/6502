@@ -10,6 +10,9 @@
 
 #include "6502.h"
 
+///////////
+// Helper functions
+
 std::string stripSpaces(std::string s) {
 	std::string::iterator it;
 	std::string new_s;
@@ -38,7 +41,7 @@ void CPU::dumpstack() {
 	printf("# Stack dump [SP = %02x]:\n", SP);
 	while (p != SP) {
 		a = STACK_FRAME | p;
-		printf("# [%04x] %02x\n", a, mem->ReadByte(a));
+		printf("# [%04x] %02x\n", a, mem->Read(a));
 		p--;
 	}
 }
@@ -66,7 +69,7 @@ static const std::string vformat(const char * const zcFormat, ...) {
     return std::string(zc.data(), iLen);
 }
 
-std::tuple<CPU::Cycles_t, CPU::Cycles_t> CPU::TraceOneInstruction() {
+std::tuple<Byte, Byte> CPU::TraceOneInstruction() {
 	CPU::disassemble(PC, 1);
 	return CPU::ExecuteOneInstruction();
 }
@@ -162,7 +165,7 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 	do {
 		dPC = CPU::disassembleAt(dPC, out);
 		std::cout << out << std::endl;
-	} while (--cnt);
+	} while (--cnt && dPC < MAX_MEM);
 	
 	return dPC;
 }
@@ -174,7 +177,7 @@ void CPU::PrintCPUState() {
 		Flags.V, Flags.N,
 		PS);
 	printf(" | A: %02x X: %02x Y: %02x\n", A, X, Y );
-	printf(" | Cycle: %lu\n", Cycles); 
+	printf(" | Cycle: %lu\n", Cycles.get()); 
 }
 
 void CPU::debuggerPrompt() {
@@ -182,8 +185,59 @@ void CPU::debuggerPrompt() {
 	std::cout << ": ";
 }
 
-void CPU::toggleLoopDetection() {
-	CPU::debug_loopDetection = !CPU::debug_loopDetection;
+void CPU::parseMemCommand(std::string s) {
+	unsigned int addr1, addr2, value;
+	int e;
+	
+	s = stripSpaces(s);
+
+	// mem:mem=val
+	e = sscanf(s.c_str(), "%x:%x=%x",
+		   (unsigned int *) &addr1,
+		   (unsigned int *) &addr2,
+		   (unsigned int *) &value);
+	if (e == 3) { 
+		for (Address_t a = addr1; a <= addr2; a++)
+			mem->Write(a, (Byte) value);
+
+		return;
+	}
+	
+	// mem:mem
+	e = sscanf(s.c_str(), "%x:%x",
+		   (unsigned int *) &addr1,
+		   (unsigned int *) &addr2);
+	if (e == 2) { 
+		mem->hexdump(addr1, addr2);
+
+		return;
+	}
+	
+	// mem=mem
+	e = sscanf(s.c_str(), "%x=%x",
+		   (unsigned int *) &addr1,
+		   (unsigned int *) &value);
+	if (e == 2) { 
+		Byte oldval = mem->Read(addr1);
+		mem->Write(addr1, (Byte) value);
+		std::cout << vformat("# [%04x] %02x -> %02x",
+				     addr1, oldval, (Byte) value) 
+			  << std::endl;
+
+		return;
+	}
+	
+	// mem
+	e = sscanf(s.c_str(), "%x",
+		   (unsigned int *) &addr1);
+	if (e == 1) { 
+		std::cout << vformat("[%04x] %02x", addr1, mem->Read(addr1))
+			  << std::endl;
+
+		return;
+	}
+	
+	std::cout << "# Parse error" << std::endl;
 }
 
 unsigned long CPU::debugPrompt() {
@@ -223,7 +277,7 @@ unsigned long CPU::debugPrompt() {
 				"# help|h" << std::endl <<
 				"# <number>" << std::endl <<
 				"# list|l <x>" << std::endl <<
-				"# run|r <x>" << std::endl <<
+				"# run <x>" << std::endl <<
 				"# <number>" << std::endl <<
 				"# stack|s" << std::endl <<
 				"# break|b <address>" << std::endl <<
@@ -326,8 +380,7 @@ unsigned long CPU::debugPrompt() {
 		}
 
 		// list instructions
-		if (cmpString(command, "run") ||
-		    cmpString(command, "r")) {
+		if (cmpString(command, "run")) {
 			unsigned int instructions;
 			if (cmpString(command,"run"))
 				command.erase(0, 3);
@@ -339,7 +392,6 @@ unsigned long CPU::debugPrompt() {
 		}
 
 		if (cmpString(command, "reset")) {
-			mem->Init();
 			CPU::exitReset();
 			CPU::PrintCPUState();
 
@@ -384,8 +436,12 @@ unsigned long CPU::debugPrompt() {
 			unsigned int value;
 			char *r;
 
-			command.erase(0, 3);
+			if (cmpString(command, "register"))
+				command.erase(0, 8);
+			else
+				command.erase(0, 3);
 			s = stripSpaces(command);
+			printf("%s\n", s.c_str());
 			if (sscanf(s.c_str(),
 				   "%m[aAxXtYsSpPcC]=%x", &r, &value) != 2) {
 				std::cout << "# Parse error" << std::endl;
@@ -406,6 +462,8 @@ unsigned long CPU::debugPrompt() {
 				PC = (Word) value;
 			else if (reg == "SP")
 				SP = (Byte) value;
+			else if (reg == "PS")
+				PS = (Byte) value;
 			else
 				std::cout << "# No register '" << r << "'"
 					  << std::endl;
@@ -521,61 +579,6 @@ void CPU::Debug() {
 	}
 }
 
-void CPU::parseMemCommand(std::string s) {
-	unsigned int addr1, addr2, value;
-	int e;
-	
-	s = stripSpaces(s);
-
-	// mem:mem=val
-	e = sscanf(s.c_str(), "%x:%x=%x",
-		   (unsigned int *) &addr1,
-		   (unsigned int *) &addr2,
-		   (unsigned int *) &value);
-	if (e == 3) { 
-		for (Address_t a = addr1; a <= addr2; a++)
-			mem->WriteByte(a, (Byte) value);
-
-		return;
-	}
-	
-	// mem:mem
-	e = sscanf(s.c_str(), "%x:%x",
-		   (unsigned int *) &addr1,
-		   (unsigned int *) &addr2);
-	if (e == 2) { 
-		mem->Hexdump(addr1, addr2);
-
-		return;
-	}
-	
-	// mem=mem
-	e = sscanf(s.c_str(), "%x=%x",
-		   (unsigned int *) &addr1,
-		   (unsigned int *) &value);
-	if (e == 2) { 
-		Byte oldval = mem->ReadByte(addr1);
-		mem->WriteByte(addr1, (Byte) value);
-		std::cout << vformat("# [%04x] %02x -> %02x",
-				     addr1, oldval, (Byte) value) 
-			  << std::endl;
-
-		return;
-	}
-	
-	// mem
-	e = sscanf(s.c_str(), "%x",
-		   (unsigned int *) &addr1);
-	if (e == 1) { 
-		std::cout << vformat("[%04x] %02x", addr1, mem->ReadByte(addr1))
-			  << std::endl;
-
-		return;
-	}
-	
-	std::cout << "# Parse error" << std::endl;
-}
-
 void CPU::ToggleDebug() {
 	debugMode = !debugMode;
 	std::cout << "# Debug mode ";
@@ -664,4 +667,9 @@ void CPU::addBacktrace(Word PC) {
 void CPU::removeBacktrace() {
 	if (!backtrace.empty())
 		backtrace.pop_back();
+}
+
+// Loop detection
+void CPU::toggleLoopDetection() {
+	CPU::debug_loopDetection = !CPU::debug_loopDetection;
 }

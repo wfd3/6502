@@ -9,7 +9,7 @@ public:
 
 	virtual void SetUp() {
 		cpu.exitReset();
-		mem.Init();
+		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -19,7 +19,7 @@ public:
 };
 
 void MOS6502BranchTests::BranchesWhenFlagSet(Word saddr, Byte rel, Byte ins) {
-	CPU::Cycles_t UsedCycles, ExpectedCycles;
+	Byte UsedCycles, ExpectedCycles;
 
 	//Given:
 	mem[saddr]   = ins;
