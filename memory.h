@@ -28,7 +28,7 @@
 #include <stdexcept>
 
 /////////
-// Memory element class
+// Memory element base class
 class Element {
 public:
 	enum Type {RAM, ROM, MIO, UNMAPPED};
@@ -115,7 +115,7 @@ protected:
 	Type _type;
 };
 
-
+// RAM element
 class RAM : public Element {
 public:
 	RAM () {
@@ -138,6 +138,7 @@ private:
 	unsigned char _byte;
 };
 
+// ROM elemenet
 class ROM : public Element {
 public:
 	
@@ -172,7 +173,7 @@ public:
 		_type = Element::MIO;
 	}
 	
-	void setMIO(readfn_t readfn, writefn_t writefn) {
+	void setMIO(readfn_t readfn = NULL, writefn_t writefn = NULL) {
 		_readfn = readfn;
 		_writefn = writefn;
 	}
@@ -361,7 +362,6 @@ public:
 		auto range_end = it;
 
 		printf("Memory map:\n");
-		unsigned long mappedBytes = 0;
 
 		while (it != _mem.end()) {
 			auto next_it = std::next(it);
@@ -386,14 +386,13 @@ public:
 
 			it = next_it;
 		}
-		mappedBytes =
+		unsigned long mappedBytes = 
 			std::count_if(_mem.begin(), _mem.end(), [](Element *e) {
 				return e->getType() != Element::UNMAPPED;
 			});
 				
 		printf("Total bytes mapped: %ld\n", mappedBytes); 
 	}
-
 
 
 	// Loading data into memory
@@ -484,7 +483,7 @@ private:
 	std::vector<bool> _watch; // Vector of watched addresses.
 
 	void boundsCheck(unsigned long address) {
-		if (address > _endAddress) 
+		if (!boundsCheckNoThrow(address))
 			exception("Address 0x%04x out of range", address);
 	}
 
