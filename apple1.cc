@@ -1,7 +1,19 @@
 // Emulated Apple 1
 //
-// 23 Aug 2023
+// Copyright (C) 2023 Walt Drummond
 //
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 #include <csignal>
@@ -90,12 +102,12 @@ unsigned char kbdcr_read() {
 	int byteswaiting;
 
 	ioctl(STDIN, FIONREAD, &byteswaiting);
+
 #ifdef DEBUG
 	byteswaiting = 1;
 #endif
-
 	// This value will get LDA's into A, setting the processor
-	// status bits in the process..  Apple 1 expect that the
+	// status bits in the process.  Apple 1 expect that the
 	// Negative Flag will be set if there are characters pending
 	// read from the keyboard.
 	if (byteswaiting > 0) 
