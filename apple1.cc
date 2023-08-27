@@ -150,28 +150,28 @@ int main () {
 	signal(SIGQUIT, signalHandler);
 	signal(SIGUSR1, signalHandler);
 
-	printf("Setting up memory map\n");
 	mem.mapRAM(0, 0xd00f);
-
 	// Keyboard and display memory-mapped IO
 	mem.mapMIO(0xd010, kbdread, NULL);
 	mem.mapMIO(0xd011, kbdcr_read, NULL);
 	mem.mapMIO(0xd012, dspread, dspwrite);
 	mem.mapMIO(0xd013, NULL, NULL);
-
 	mem.mapRAM(0xf014, 0xffff);
 
-	// Build in the ASCII character program at address 0
+	// And load WozMon and Applesoft Basic
+	printf("# Loading wozmon at %04lx\n", wozmonAddress);
+	mem.loadDataFromFile("./binfiles/wozmon.bin", wozmonAddress);
+	printf("# Loading Applesoft Basic I at %04lx\n", basicAddress);
+	mem.loadDataFromFile("./binfiles/applesoft-lite-0.4-ram.bin",
+			     basicAddress);
+
+	printf("# Loading Apple I sample program at 0\n");
 	std::vector<unsigned char> wozProg =
 		{0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02,
 		 0x00};
-	printf("# Loading wozmon at address 0\n");
 	mem.loadData(wozProg, 0);
 
-	// And load WozMon and Applesoft Basic
-	mem.loadDataFromFile("./binfiles/wozmon.bin", wozmonAddress);
-	mem.loadDataFromFile("./binfiles/applesoft-lite-0.4-ram.bin",
-			     basicAddress);
+	printf("\n");
 
 	// Reset the CPU, jump to Wozmon
 	cpu.setResetVector(wozmonAddress);
