@@ -37,6 +37,11 @@ TEST_F(MemoryTests, WriteInBoundsDoesntThrowException) {
 	EXPECT_NO_THROW({mem[0x1000] = 10; });
 }
 
+TEST_F(MemoryTests, InsaneMemorySizeThrowsException) {
+	std::vector<unsigned long> v;
+	EXPECT_THROW({Memory mem(v.max_size() + 100); }, Memory::Exception);
+}
+
 TEST_F(MemoryTests, WriteOutOfBoundsThrowsOutOfRangeException) {
 	Memory mem(0x1000);
 

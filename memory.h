@@ -231,6 +231,10 @@ public:
 		_endAddress = endAddress;
 		auto _size = _endAddress + 1;
 
+		if (_size > _mem.max_size()) {
+			exception("End address %04lx exceeds host system "
+				  "memory limits", endAddress);
+		}
 		_mem.reserve(_size);
 		_watch.reserve(_size);
 
