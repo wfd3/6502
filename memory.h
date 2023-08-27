@@ -199,6 +199,7 @@ private:
 	writefn_t _writefn;
 };
 
+// An unmapped address; there should only be one of these.
 class Unmapped : public Element {
 public:
 	Unmapped() { _type = Element::UNMAPPED; }
