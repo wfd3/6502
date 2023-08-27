@@ -392,10 +392,10 @@ unsigned long CPU::debugPrompt() {
 		}
 
 		if (cmpString(command, "reset")) {
-			CPU::exitReset();
-			CPU::PrintCPUState();
-
-			continue;
+			printf("# Resetting 6502\n");
+			CPU::SetDebug(false);
+			CPU::Reset();
+			return 1;
 		}
 		
 		// reset list PC
