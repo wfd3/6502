@@ -40,29 +40,57 @@ TEST_F(MemoryTests, WriteInBoundsDoesntThrowException) {
 	EXPECT_NO_THROW({mem[0x1000] = 10; });
 }
 
-#if 0
 TEST_F(MemoryTests, InsaneMemorySizeThrowsMemoryException) {
-	std::vector<Address, Cell> v;
-	EXPECT_THROW({Memory<Address,Cell> mem(v.max_size() + 100); },
-		     Memory<Address,Cell>::Exception);
+	std::vector<unsigned long> v;
+	size_t bignum = v.max_size();
+	bool caughtMemoryException = false;
+	
+	try {
+		Memory<Address, Cell> mem(bignum + 100);
+	}
+	catch(Memory<Address, Cell>::Exception &e) {
+		caughtMemoryException = true;
+	}
+	catch(...) {
+	}
+
+	EXPECT_TRUE(caughtMemoryException);
 }
 
 TEST_F(MemoryTests, MapBeyondEndAddressThrowsMemoryException) {
 	Memory<Address, Cell> mem(0x10);
+	bool caughtMemoryException = false;
 
-	EXPECT_THROW({mem.mapRAM(0, 0x1000); },
-		     Memory<Address,Cell>::Exception);
+	try {
+		mem.mapRAM(0, 0x1000); 
+	}
+	catch (Memory<Address, Cell>::Exception &e) {
+		caughtMemoryException = true;
+	}
+	catch (...) {
+	}
+
+	EXPECT_TRUE(caughtMemoryException);
 }
 
 TEST_F(MemoryTests, WriteOutOfBoundsThrowsOuMemoryException) {
 	Memory<Address, Cell> mem(0x1000);
+	bool caughtMemoryException = false;
 
 	mem.mapRAM(0, 0x1000);
 	EXPECT_EQ(mem.size(), 0x1000+1);
-	EXPECT_THROW({mem[0x1001] = 10; },
-		     Memory<Address, Cell>::Exception);
+
+	try {
+		mem[0x1001] = 10;
+	}
+	catch(Memory<Address, Cell>::Exception &e) {
+		caughtMemoryException = true;
+	}
+	catch(...) {
+	}
+
+	EXPECT_TRUE(caughtMemoryException);
 }
-#endif
 TEST_F(MemoryTests,CanLoadDataIntoMemory) {
 	Memory<Address, Cell> mem(0x1000);
 	std::vector<unsigned char> data;
