@@ -25,7 +25,7 @@
 
 #include "6502.h"
 
-CPU::CPU(Memory *m) {
+CPU::CPU(Memory<Address_t, Byte> *m) {
 	mem = m;
 	CPU::setupInstructionMap();
 	overrideResetVector = false;

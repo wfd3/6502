@@ -29,37 +29,33 @@
 
 /////////
 // Memory element base class
+template<class Cell>
 class Element {
 public:
 	enum Type {RAM, ROM, MIO, UNMAPPED};
 
 	virtual ~Element() { }
 
-	virtual Element& operator=(const char b) {
+	virtual Element<Cell>& operator=(const Cell b) {
 		this->Write(b);
 		return *this;
 	}	
 
-	virtual unsigned char Read() const = 0;
+	virtual Cell Read() const = 0;
 
-	virtual void Write(const unsigned char b) = 0;
+	virtual void Write(const Cell b) = 0;
 
-	virtual Element& operator=(const unsigned char b) {
-		this->Write(b);
-		return *this;
-	}
-
-	virtual Element& operator=(const int i) {
+	virtual Element<Cell>& operator=(const int i) {
 		this->Write(i & 0xff);
 		return *this;
 	}
 
-	virtual Element& operator=(const long unsigned int i) {
+	virtual Element<Cell>& operator=(const long unsigned int i) {
 		this->Write(i & 0xff);
 		return *this;
 	}
 
-	virtual bool operator==(const Element &e) const {
+	virtual bool operator==(const Element<Cell> &e) const {
 		return Read() == e.Read();
 	}
 
@@ -116,61 +112,67 @@ protected:
 };
 
 // RAM element
-class RAM : public Element {
+template<class Cell>
+class RAM : public Element<Cell> {
 public:
 	RAM () {
-		_type = Element::RAM;
+		this->_type = Element<Cell>::RAM;
 	}
-	RAM& operator=(const int i) {
+
+	RAM<Cell>& operator=(const int i) {
 		Write(i);
 		return *this;
 	}
 
-	unsigned char Read() const {
-		return _byte;
+	Cell Read() const {
+		return _cell;
 	}
 
-	void Write(const unsigned char b) {
-		_byte = b;
+	void Write(const Cell b) {
+		_cell = b;
 	}
 
 private:
-	unsigned char _byte;
+	Cell _cell;
 };
 
 // ROM elemenet
-class ROM : public Element {
+template<class Cell>
+class ROM : public Element<Cell> {
 public:
 	
-	ROM(unsigned char value) {
-		_byte = value;
-		_type = Element::ROM;
+	ROM(Cell value) {
+		_cell = value;
+		this->_type = Element<Cell>::ROM;
 	}
 
-	unsigned char Read() const {
-		return _byte;
+	Cell Read() const {
+		return _cell;
 	}
 
-	void Write(const unsigned char  b) {
+	void Write(const Cell  b) {
 		(void) b;	// Suppress -Wall warning
 		;
 	}
 
 private:
-	unsigned char _byte;
+	Cell _cell;
 };
 
 // Memory mapped devices, ie. a keyboard and termial.
-class MIO : public Element {
+template<class Cell>
+class MIO : public Element<Cell> {
 public:
-	using readfn_t  = unsigned char (*)(void);
-	using writefn_t = void (*)(unsigned char);
+	using readfn_t  = Cell (*)(void);
+	using writefn_t = void (*)(Cell);
 
-	MIO() { _type = Element::MIO; }
+	MIO() {
+		this-> _type = Element<Cell>::MIO;
+	}
 
 	MIO(readfn_t readfn, writefn_t writefn) {
 		setMIO(readfn, writefn);
-		_type = Element::MIO;
+		this->_type = Element<Cell>::MIO;
 	}
 	
 	void setMIO(readfn_t readfn = NULL, writefn_t writefn = NULL) {
@@ -178,18 +180,18 @@ public:
 		_writefn = writefn;
 	}
 
-	void Write(const unsigned char b) {
+	void Write(const Cell b) {
 		if (_writefn) 
 			_writefn(b);
 	}
 
-	unsigned char Read() const {
+	Cell Read() const {
 		if (_readfn) 
 			return _readfn();
 		return 0;
 	}
 
-	MIO& operator=(const int i) {
+	MIO<Cell>& operator=(const int i) {
 		this->Write(i & 0xff);
 		return *this;
 	}
@@ -200,20 +202,23 @@ private:
 };
 
 // An unmapped address; there should only be one of these.
-class Unmapped : public Element {
+template<class Cell>
+class Unmapped : public Element<Cell> {
 public:
-	Unmapped() { _type = Element::UNMAPPED; }
+	Unmapped() {
+		this->_type = Element<Cell>::UNMAPPED;
+	}
 
-	void Write(const unsigned char b) {
+	void Write(const Cell b) {
 		(void) b;	// Suppress -Wall warnings
 		;
 	}
 
-	unsigned char Read() const {
+	Cell Read() const {
 		return 0;
 	}
 
-	Unmapped& operator=(const int i) {
+	Unmapped<Cell>& operator=(const int i) {
 		(void) i;	// Suppress -Wall warning
 		return *this;
 	}
@@ -224,10 +229,11 @@ private:
 	
 /////////
 // memory class
+template<class Address = unsigned long, class Cell = unsigned char>
 class Memory {
 public:
 
-	Memory(const size_t endAddress) {
+	Memory(const Address endAddress) {
 		_endAddress = endAddress;
 		auto _size = _endAddress + 1;
 
@@ -242,32 +248,32 @@ public:
 		_watch.assign(_size, false);
 	}
 
-	unsigned long size() {
+	size_t size() {
 		return _mem.size();
 	}
 
-	unsigned char Read(const unsigned long address) {
+	Cell Read(const Address address) {
 		boundsCheck(address);
 		return _mem.at(address)->Read();
 	}
 
-	void Write(const unsigned long address, const unsigned char byte) {
+	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
 			printf("# mem[%04lx] %02x -> %02x\n",
-			       address, _mem[address]->Read(), byte);
+			       address, _mem[address]->Read(), l);
 		}
 		
-		_mem.at(address)->Write(byte);
+		_mem.at(address)->Write(l);
 	}
 	
-	Element& operator[](const size_t address) {
+	Element<Cell>& operator[](Address address) {
 		boundsCheck(address);
 		auto &e = _mem.at(address);
 		return *e;
 	}
 
-	bool mapRAM(const unsigned long start, const unsigned long end) {
+	bool mapRAM(const Address start, const Address end) {
 		boundsCheck(end);
 		if (addressRangeOverlapsExistingMap(start, end)) {
 			exception("Address range %lx:%lx overlaps with "
@@ -278,13 +284,13 @@ public:
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = _mem.begin() + end;
 		for (auto it = startIdx; it <= endIdx; it++) {
-			(*it) = new ::RAM;
+			(*it) = new ::RAM<Cell>;
 		}
 
 		return true;
 	}
 
-	bool mapROM(const unsigned long start,
+	bool mapROM(const Address start,
 		    std::vector<unsigned char> &rom) {
 		boundsCheck(start + rom.size());
 		if (addressRangeOverlapsExistingMap(start, start+rom.size())) {
@@ -298,14 +304,14 @@ public:
 		unsigned long i = 0;
 
 		for (auto it = startIdx; it <= endIdx; it++, i++)
-			(*it) = new ::ROM(rom[i]);
+			(*it) = new ::ROM<Cell>(rom[i]);
 
 		return true;
 	}
 	
-	bool mapMIO(const unsigned long address,
-		    const ::MIO::readfn_t readfn,
-		    const ::MIO::writefn_t writefn) {
+	bool mapMIO(const Address address,
+		    const ::MIO<Cell>::readfn_t readfn,
+		    const ::MIO<Cell>::writefn_t writefn) {
 
 		boundsCheck(address);
 		if (addressRangeOverlapsExistingMap(address, address)) {
@@ -314,19 +320,20 @@ public:
 			return false;
 		}
 
-		_mem[address] = new ::MIO(readfn, writefn);
+		_mem[address] = new ::MIO<Cell>(readfn, writefn);
 		return true;
 	}
 
-	bool isAddressMapped(unsigned long address) {
+	bool isAddressMapped(const Address address) {
 		return isAddressMapped(_mem[address]);
 	}
 
-	bool isAddressMapped(Element *e) {
+	bool isAddressMapped(Element<Cell> *e) {
 		return e != &_unmapped;
 	}
 
-	void hexdump(unsigned long start, size_t end) {
+	// TODO: Remove for() loops by address
+	void hexdump(const Address start, Address end) {
 
 		printf("# Memory Dump 0x%04lx:0x%04lx\n", start, end);
 
@@ -347,7 +354,7 @@ public:
 					ascii += ' ';
 					continue;
 				}
-				unsigned char c = _mem[i + j]->Read();
+				Cell c = _mem[i + j]->Read();
 				hexdump += vformat("%02x ", c);
 				if (isprint(c))
 					ascii += c;
@@ -358,7 +365,7 @@ public:
 		}
 	}
 
-	void printMap() {
+	void printMap() const {
 
 		printf("Memory size: %ld bytes\n", _mem.size());
 
@@ -392,8 +399,9 @@ public:
 			it = next_it;
 		}
 		unsigned long mappedBytes = 
-			std::count_if(_mem.begin(), _mem.end(), [](Element *e) {
-				return e->getType() != Element::UNMAPPED;
+			std::count_if(_mem.begin(), _mem.end(),
+				      [](Element<Cell> *e) {
+			    return e->getType() != Element<Cell>::UNMAPPED;
 			});
 				
 		printf("Total bytes mapped: %ld\n", mappedBytes); 
@@ -402,7 +410,7 @@ public:
 
 	// Loading data into memory
 
-	void loadDataFromFile(const char *filename, unsigned long start) {
+	void loadDataFromFile(const char *filename, Address start) {
 
 		std::ifstream file(filename, std::ios::binary);
 
@@ -420,7 +428,7 @@ public:
 		}
 		
 		// reserve capacity
-		std::vector<unsigned char> vec;
+		std::vector<Cell> vec;
 		vec.reserve(fileSize);
 		
 		// read the data:
@@ -430,8 +438,8 @@ public:
 		loadData(vec, start);
 	}
 	
-	void loadData(std::vector<unsigned char> &data,
-		      unsigned long startAddress) {
+	void loadData(std::vector<Cell> &data,
+		      Address startAddress) {
 		
 		if (startAddress > _endAddress)
 			exception("Data load address is not a valid "
@@ -441,29 +449,30 @@ public:
 				  "address 0x%04x (data length %d bytes)",
 				  startAddress, data.size());
 
+		// TODO: iterator
 		for (size_t i = 0; i < data.size(); i++) 
 			_mem[startAddress + i]->Write(data[i]);
 	}
 
 	// watch memory address
 	
-	void enableWatch(unsigned long address) {
+	void enableWatch(const Address address) {
 		_watch[address] = true;
 	}
 
-	bool watching(unsigned long address) {
+	bool watching(const Address address) const {
 		return _watch[address];
 	}
 
 	void listWatch() {
 		printf("# Watch list\n");
 
-		for(unsigned long addr = 0; addr <= _watch.size(); addr++) 
+		for(Address addr = 0; addr <= _watch.size(); addr++) 
 			if (_watch[addr])
 				printf("# e%04lx\n", addr);
 	}
 
-	void clearWatch(unsigned long address) {
+	void clearWatch(Address address) {
 		_watch[address] = false;
 	}
 
@@ -481,23 +490,22 @@ public:
 
 private:
 
-	unsigned long _endAddress; // Last address
-	::Unmapped _unmapped;	   // Default memory element 
+	Address _endAddress; // Last address
+	::Unmapped<Cell> _unmapped;	   // Default memory element 
 
-	std::vector<Element *> _mem;
+	std::vector<Element<Cell> *> _mem;
 	std::vector<bool> _watch; // Vector of watched addresses.
 
-	void boundsCheck(unsigned long address) {
+	void boundsCheck(Address address) {
 		if (!boundsCheckNoThrow(address))
 			exception("Address 0x%04x out of range", address);
 	}
 
-	bool boundsCheckNoThrow(unsigned long address) {
+	bool boundsCheckNoThrow(Address address) {
 		return (address <= _endAddress);
 	}
 
-	bool addressRangeOverlapsExistingMap(unsigned long start,
-					     unsigned long end) {
+	bool addressRangeOverlapsExistingMap(Address start, Address end) {
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = _mem.begin() + end;
 		for (auto it = startIdx; it <= endIdx; it++) {

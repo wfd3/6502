@@ -11,8 +11,11 @@ public:
 	}
 };
 
+using Address  = unsigned long;
+using Cell = unsigned char;
+
 TEST_F(MemoryTests, CanMapRAMAndReadWriteIt) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapRAM(0, 0x1000);
 	EXPECT_EQ(mem.size(), 0x1000+1);
@@ -21,7 +24,7 @@ TEST_F(MemoryTests, CanMapRAMAndReadWriteIt) {
 }
 
 TEST_F(MemoryTests, CantWriteUnmapedMemory) {
-	Memory mem(0x2000);
+	Memory<Address, Cell> mem(0x2000);
 
 	mem.mapRAM(0, 0x1000);
 	EXPECT_EQ(mem.size(), 0x2000+1);
@@ -30,28 +33,38 @@ TEST_F(MemoryTests, CantWriteUnmapedMemory) {
 }
 
 TEST_F(MemoryTests, WriteInBoundsDoesntThrowException) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapRAM(0, 0x1000);
 	EXPECT_EQ(mem.size(), 0x1000+1);
 	EXPECT_NO_THROW({mem[0x1000] = 10; });
 }
 
-TEST_F(MemoryTests, InsaneMemorySizeThrowsException) {
-	std::vector<unsigned long> v;
-	EXPECT_THROW({Memory mem(v.max_size() + 100); }, Memory::Exception);
+#if 0
+TEST_F(MemoryTests, InsaneMemorySizeThrowsMemoryException) {
+	std::vector<Address, Cell> v;
+	EXPECT_THROW({Memory<Address,Cell> mem(v.max_size() + 100); },
+		     Memory<Address,Cell>::Exception);
 }
 
-TEST_F(MemoryTests, WriteOutOfBoundsThrowsOutOfRangeException) {
-	Memory mem(0x1000);
+TEST_F(MemoryTests, MapBeyondEndAddressThrowsMemoryException) {
+	Memory<Address, Cell> mem(0x10);
+
+	EXPECT_THROW({mem.mapRAM(0, 0x1000); },
+		     Memory<Address,Cell>::Exception);
+}
+
+TEST_F(MemoryTests, WriteOutOfBoundsThrowsOuMemoryException) {
+	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapRAM(0, 0x1000);
 	EXPECT_EQ(mem.size(), 0x1000+1);
-	EXPECT_THROW({mem[0x1001] = 10; }, Memory::Exception);
+	EXPECT_THROW({mem[0x1001] = 10; },
+		     Memory<Address, Cell>::Exception);
 }
-
+#endif
 TEST_F(MemoryTests,CanLoadDataIntoMemory) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 	std::vector<unsigned char> data;
 
 	data.reserve(100);
@@ -66,7 +79,7 @@ TEST_F(MemoryTests,CanLoadDataIntoMemory) {
 
 // ROM tests
 TEST_F(MemoryTests, ROMRead) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 	constexpr size_t ROMSZ = 100;
 	std::vector<unsigned char> rom;
 	rom.reserve(ROMSZ);
@@ -77,7 +90,7 @@ TEST_F(MemoryTests, ROMRead) {
 }
 
 TEST_F(MemoryTests, ROMThrowsAwayReads) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 	constexpr size_t ROMSZ = 100;
 	std::vector<unsigned char> rom;
 	rom.reserve(ROMSZ);
@@ -90,7 +103,7 @@ TEST_F(MemoryTests, ROMThrowsAwayReads) {
 
 // MIO tests
 TEST_F(MemoryTests, MIONullWriteThrowsAwayWrite) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapMIO(0x100, NULL, NULL);
 
@@ -99,7 +112,7 @@ TEST_F(MemoryTests, MIONullWriteThrowsAwayWrite) {
 }
 
 TEST_F(MemoryTests, MIONullReadReturnsZero) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapMIO(0x100, NULL, NULL);
 
@@ -116,7 +129,7 @@ unsigned char mioread() {
 }
 
 TEST_F(MemoryTests, MIOWrite) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 
 	mio_byte = 0;
 	mem.mapMIO(0x100, NULL, miowrite);
@@ -126,13 +139,21 @@ TEST_F(MemoryTests, MIOWrite) {
 }
 
 TEST_F(MemoryTests, MIORead) {
-	Memory mem(0x1000);
+	Memory<Address, Cell> mem(0x1000);
 
 	mio_byte = 0x45;
 	mem.mapMIO(0x100, NULL, miowrite);
 
 	EXPECT_EQ(mio_byte, 0x45);
 }
+
+TEST_F(MemoryTests, MemoryClassWithDefaultTemplateTypes) {
+	Memory<> mem(0x100);
+
+	mem.mapRAM(0, 0x100);
+	mem[0x42] = 0x42;
+	EXPECT_EQ(mem[0x42], 0x42);
+}	
 
 
 

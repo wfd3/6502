@@ -4,7 +4,7 @@
 class MOS6502PushPopTests : public testing::Test {
 public:
 
-	Memory mem{CPU::MAX_MEM};
+	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
 	CPU cpu{&mem};
 
 	virtual void SetUp() {

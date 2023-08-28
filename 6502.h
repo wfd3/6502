@@ -29,10 +29,11 @@
 
 #include "memory.h"
 
-using Byte  = unsigned char;
-using SByte = signed char;
-using Word  = unsigned int;
+using Byte      = unsigned char;
+using SByte     = signed char;
+using Word      = unsigned int;
 using Address_t = unsigned int;
+using cMemory   = Memory<Address_t, Byte>;
 
 class Cycles_t {
 public:
@@ -136,7 +137,7 @@ public:
 		struct ProcessorStatusBits Flags;
 	};
 
-        CPU(Memory *);
+        CPU(cMemory *);
 	void Reset(Word);
 	void Reset();
 	void exitReset();
@@ -163,7 +164,7 @@ public:
 	}
 
 private:
-	Memory *mem;
+	cMemory *mem;
 	bool pendingReset;
 	bool overrideResetVector;
 	Word pendingResetPC;
