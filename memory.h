@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# pragma once
+#pragma once
 
 #include <vector>
 #include <algorithm>
@@ -260,7 +260,7 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			printf("# mem[%04lx] %02x -> %02x\n",
+			printf("# mem[%04x] %02x -> %02x\n",
 			       address, _mem[address]->Read(), l);
 		}
 		
@@ -291,9 +291,11 @@ public:
 	}
 
 	bool mapROM(const Address start,
-		    std::vector<unsigned char> &rom) {
+		    const std::vector<unsigned char> &rom,
+		    const bool overwriteExistingElements = false) {
 		boundsCheck(start + rom.size());
-		if (addressRangeOverlapsExistingMap(start, start+rom.size())) {
+		if (!overwriteExistingElements &&
+		    addressRangeOverlapsExistingMap(start, start+rom.size())) {
 			exception("Address range %lx:%lx overlaps with "
 				  " existing map", start, start + rom.size());
 			return false;
@@ -303,23 +305,30 @@ public:
 		auto endIdx   = _mem.begin() + rom.size();
 		unsigned long i = 0;
 
-		for (auto it = startIdx; it <= endIdx; it++, i++)
+		for (auto it = startIdx; it <= endIdx; it++, i++) {
+			if ((*it) != &_unmapped)
+				delete (*it);
 			(*it) = new ::ROM<Cell>(rom[i]);
+		}
 
 		return true;
 	}
 	
 	bool mapMIO(const Address address,
 		    const ::MIO<Cell>::readfn_t readfn,
-		    const ::MIO<Cell>::writefn_t writefn) {
+		    const ::MIO<Cell>::writefn_t writefn,
+		    const bool overwriteExistingElements = false) {
 
 		boundsCheck(address);
-		if (addressRangeOverlapsExistingMap(address, address)) {
+		if (!overwriteExistingElements &&
+		    addressRangeOverlapsExistingMap(address, address)) {
 			exception("Address %lx overlaps with existing map",
 				  address);
 			return false;
 		}
 
+		if (_mem[address] != &_unmapped)
+			delete _mem[address];
 		_mem[address] = new ::MIO<Cell>(readfn, writefn);
 		return true;
 	}
@@ -450,8 +459,16 @@ public:
 				  startAddress, data.size());
 
 		// TODO: iterator
-		for (size_t i = 0; i < data.size(); i++) 
-			_mem[startAddress + i]->Write(data[i]);
+		// TODO: Make sure we're only loading data into RAM
+		for (Address a = startAddress, i = 0; i < data.size();
+		     a++, i++)  {
+			
+			if (_mem[a]->getType() != Element<Cell>::RAM) {
+					exception("Data attempted to load on non-RAM memory location at address %x\n", startAddress + i);
+			}
+
+			_mem[a]->Write(data[i]);
+		}
 	}
 
 	// watch memory address
