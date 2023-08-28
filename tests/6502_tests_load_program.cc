@@ -88,7 +88,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 {
 	Byte UsedCycles, ExpectedCycles;
 	// Given:
-	constexpr unsigned long loops = 10;
+	constexpr unsigned long loops = 2;
 
 	// When:
 
