@@ -576,6 +576,9 @@ unsigned long CPU::debugPrompt() {
 void CPU::Debug() {
 	unsigned long count = 1;
 
+	if (debugEntryFunc)
+		debugEntryFunc();
+
 	std::cout << "Debugger starting at PC " << vformat("0x%04x", PC)
 		  << std::endl;
 
@@ -586,7 +589,7 @@ void CPU::Debug() {
 
 		if (!CPU::debugMode) {
 			printf("# Exiting debugger\n");
-			return;
+			break;
 		}
 		
 		while (count--) {
@@ -595,6 +598,9 @@ void CPU::Debug() {
 				CPU::disassemble(PC, 1);
 		}
 	}
+
+	if (debugExitFunc)
+		debugExitFunc();
 }
 
 void CPU::ToggleDebug() {

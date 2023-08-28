@@ -163,6 +163,14 @@ public:
 		pendingReset = true;
 	}
 
+	typedef void (*debugEntryExitFn_t)(void);
+	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = NULL,
+				   debugEntryExitFn_t exitfn = NULL) {
+
+		debugEntryFunc = entryfn;
+		debugExitFunc = exitfn;
+	}
+
 private:
 	cMemory *mem;
 	bool pendingReset;
@@ -210,6 +218,7 @@ private:
 
 	// Debugger
 	bool debugMode;
+	debugEntryExitFn_t debugEntryFunc, debugExitFunc;
 	std::string debug_lastCmd;
 	bool debug_alwaysShowPS;
 	bool debug_loopDetection;

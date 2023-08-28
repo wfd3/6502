@@ -30,6 +30,8 @@ CPU::CPU(Memory<Address_t, Byte> *m) {
 	CPU::setupInstructionMap();
 	overrideResetVector = false;
 	pendingReset = true;
+	debugEntryFunc = NULL;
+	debugExitFunc = NULL;
 }
 
 void CPU::setResetVector(Word address) {
@@ -362,7 +364,7 @@ void CPU::Execute() {
 		if (CPU::debugMode || CPU::isBreakpoint(PC))
 			CPU::Debug();
 		else if (CPU::isPCAtExitAddress())
-			return;
+			break;
 		else
 			CPU::ExecuteOneInstruction();
 	}
