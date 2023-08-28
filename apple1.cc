@@ -98,63 +98,68 @@ unsigned char dspread() {
 	return 0x7f;
 }
 
+bool kbdCharPending = false;
+char kbdCharacter = 0;
+
 unsigned char kbdcr_read() {
 	int byteswaiting;
 
+	if (kbdCharPending)
+		return kbdCharacter;
+
 	ioctl(STDIN, FIONREAD, &byteswaiting);
+	if (byteswaiting == 0)
+		return 0;
 
-#ifdef DEBUG
-	byteswaiting = 1;
-#endif
-	// This value will get LDA's into A, setting the processor
-	// status bits in the process.  Apple 1 expect that the
-	// Negative Flag will be set if there are characters pending
-	// read from the keyboard.
-	if (byteswaiting > 0) 
-		byteswaiting = 0x80;
-
-	return byteswaiting;
-}
-
-unsigned char kbdread() {
-	char c = 0;
-
-#ifdef DEBUG
-	// 'Stuff' keypresses into wozmon.  Don't forget 0x0d at the
-	// end of keys[]
-	static unsigned int i = 0;
-	static char keys[] = { '6', '0','0', '0', 'R', 0x0d };
-	                  // {'F', 'F', '0', '0', 0x0d};
-
-	c = keys[i++];
-
-	if (i > (sizeof(keys) / sizeof(keys[0])))
-	    i = 0;
-#else
-	// Applesoft Basic does a blind read on the keyboard to check for ^C.
-	// That forces us to check for a pending character to protect from a
-	// blocking read.  That's probably a good thing to do anyway.
-	if (kbdcr_read())
-		read(0, &c, 1);
-#endif
+	read(STDIN, &kbdCharacter, 1);
 
 	// Map modern ascii to Apple 1 keycodes
-	switch (c) {
+	switch (kbdCharacter) {
 	case '\n':
-		c = 0x0d;
+		kbdCharacter = 0x0d;
 		break;
-	case 0x7f:		// backspace
-		c = '_';
+ 	case 0x7f:		         // backspace
+		kbdCharacter = '_';
 		break;
-	case 0x02:		// Ctrl-B
-		c = 0x03;	// Fake out a ^C
+	case 0x02:			 // Ctrl-B
+		kbdCharacter = 0x03; // Fake out a ^C
 		break;
 	default:
-		c = toupper(c);
+		kbdCharacter = toupper(kbdCharacter);
 		break;
 	}
 
-	return c | 0x80;	// set hi bit;
+
+	// This value will get LDA's into A, setting the processor
+	// status bits in the process.  Apple 1 expect that the
+	// Negative Flag will be set if there are characters pending
+	// read from the keyboard, hence the bitwise or with 0x80.
+	
+	kbdCharacter |= 0x80;
+	kbdCharPending = true;
+		
+	return kbdCharacter;
+}
+
+unsigned char kbdread() {
+	if (!kbdCharPending) {
+		kbdcr_read();
+		// If there's a pending character here, return it but do not
+		// toggle the kbdCharPending flag.
+		//
+		// Applesoft Basic lite does a blind, unchecked read
+		// on the keyboard port looking for a ^C.  If it sees
+		// one, it then does a read on the keyboard control
+		// register, followed by a read of the keyboard port,
+		// expecting to get the same ^C.  We need this
+		// logic to allow that behavior to happen w/out blocking.
+		if (kbdCharPending)
+			return kbdCharacter;
+		return 0;
+	}
+	
+	kbdCharPending = false;
+	return kbdCharacter;
 }
 
 int main () {
