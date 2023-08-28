@@ -1,0 +1,5 @@
+#
+6502_functional_test.bin   - load at 0x000
+Apple-1_Integer_Basic.bin  - load at 0xE000
+applesoft-lite-0.4.ram.bin - load at 0x6000
+wozmon.bin                 - load at 0xFF00
