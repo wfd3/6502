@@ -277,10 +277,6 @@ int main () {
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(disable_raw_mode, enable_raw_mode);
 
-	// Tell the emulator how to read and write to the console.  For this
-	// simple example we'll just use wrappers around printf and read.
-	cpu.setConsoleIO(consoleRead, consoleWrite);
-		
 	// Set the reset vector to point at wozmon, exit the CPU from reset
 	cpu.setResetVector(wozmonAddress);
 	cpu.exitReset();
