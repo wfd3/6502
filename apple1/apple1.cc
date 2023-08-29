@@ -222,14 +222,6 @@ unsigned char kbdread() {
 	return kbdCharacter;
 }
 
-void consoleWrite(std::string &s) {
-	std::cout << s << std::end;
-}
-
-void consoleRead(std::string &s) {
-	s << std::cin;
-}
-
 // Let's pretend to be an Apple1
 int main () {
 	// register signal SIGINT and signal handler  
