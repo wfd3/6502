@@ -239,6 +239,7 @@ int main () {
 	mem.mapMIO(DISPLAY,    dspread, dspwrite, true );
 	mem.mapMIO(DISPLAYCR,  NULL, NULL, true);
 
+	printf("A Very Simple Apple I\n");
 	// Load Wozmon, Apple Basic, Applesoft Basic Lite and the
 	// Apple 1 sample program
 	printf("# Loading Apple I sample program at %04x\n",
@@ -264,13 +265,11 @@ int main () {
 	printf("#       ^B is ^C\n"); // todo
 	printf("\n");
 
-
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(disable_raw_mode, enable_raw_mode);
 
-	// Set the reset vector to point at wozmon, exit the CPU from reset
-	cpu.setResetVector(wozmonAddress);
+	// Exit the CPU from reset
 	cpu.exitReset();
 
 	enable_raw_mode();	// Set the keyboard non-blocking
