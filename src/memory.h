@@ -344,7 +344,7 @@ public:
 	// TODO: Remove for() loops by address
 	void hexdump(const Address start, Address end) {
 
-		printf("# Memory Dump 0x%04lx:0x%04lx\n", start, end);
+		printf("# Memory Dump 0x%04x:0x%04x\n", start, end);
 
 		if (start > end || end > _endAddress) {
 			printf("# -- Invalid memory range\n");
@@ -486,7 +486,7 @@ public:
 
 		for(Address addr = 0; addr <= _watch.size(); addr++) 
 			if (_watch[addr])
-				printf("# e%04lx\n", addr);
+				printf("# e%04x\n", addr);
 	}
 
 	void clearWatch(Address address) {
