@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../6502.h"
+#include <6502.h>
 
 std::vector<Byte> testProgram = {
 	0xA9, 0xFF, 0x85, 0x90, 0x8D, 0x00, 0x80, 0x49, 0xCC, 0x4C, 0x00, 0x40
@@ -17,7 +17,7 @@ std::vector<Byte> testProgram = {
 
 static const unsigned long programLen = 12;
 constexpr Address_t startAddress = 0x4000;
-static const char *testProgramFile = "./binfiles/simpleprg.bin";
+static const char *testProgramFile = "../binfiles/simpleprg.bin";
 
 class MOS6502LoadProgramTests : public testing::Test {
 public:	

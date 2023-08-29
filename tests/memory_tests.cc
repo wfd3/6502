@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../memory.h"
+#include <memory.h>
 
 class MemoryTests : public testing::Test {
 public:

@@ -23,8 +23,8 @@
 #include <termio.h>
 #include <unistd.h>
 
-#include "./memory.h"
-#include "./6502.h"
+#include <6502.h>
+#include <memory.h>
 
 // Uncomment to load Apple INTEGER BASIC
 //#define APPLE_INTEGER_BASIC
@@ -37,11 +37,27 @@
 	"at the same time"
 #endif
 
-// Load addresses for various built in programs
-constexpr Address_t apple1SampleAddress        = 0x0000;
+// Load addresses and data locations for various built in programs
 constexpr Address_t wozmonAddress              = 0xff00;
+static const char *WOZMON_FILE =
+	"../binfiles/wozmon.bin";
+
+#ifdef APPLE_INTEGER_BASIC
 constexpr Address_t appleBasicAddress          = 0xe000;
+static const char *APPLESOFT_BASIC_FILE =
+	"../binfiles/Apple-1_Integer_BASIC.bin";
+#endif
+
+#ifdef APPLESOFT_BASIC_LITE
 constexpr Address_t applesoftBasicLiteAddress  = 0x6000;
+static const char *APPLE_INTEGER_BASIC_FILE =
+	"../binfiles/applesoft-lite-0.4-ram.bin";
+#endif
+
+// bytecode for the sample program from the Apple 1 Manual
+constexpr Address_t apple1SampleAddress        = 0x0000;
+std::vector<unsigned char> apple1SampleProg =
+             {0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00};
 
 // Memory-mapped IO address for Keyboard and display
 constexpr Word KEYBOARD   = 0xd010;
@@ -61,10 +77,6 @@ constexpr char CTRLD= 0x04;
 // Keyboard input 'queue'
 bool kbdCharPending = false;
 char kbdCharacter = 0;
-
-// bytecode for the sample program from the Apple 1 Manual
-std::vector<unsigned char> apple1SampleProg =
-             {0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00};
 
 // Create the memory and CPU
 Memory mem(CPU::MAX_MEM);
@@ -210,6 +222,14 @@ unsigned char kbdread() {
 	return kbdCharacter;
 }
 
+void consoleWrite(std::string &s) {
+	std::cout << s << std::end;
+}
+
+void consoleRead(std::string &s) {
+	s << std::cin;
+}
+
 // Let's pretend to be an Apple1
 int main () {
 	// register signal SIGINT and signal handler  
@@ -234,18 +254,17 @@ int main () {
 	mem.loadData(apple1SampleProg, apple1SampleAddress);
 
 	printf("# Loading wozmon at %04x\n", wozmonAddress);
-	mem.loadDataFromFile("./binfiles/wozmon.bin", wozmonAddress);
+	mem.loadDataFromFile(WOZMON_FILE, wozmonAddress);
 
 #ifdef APPLE_INTEGER_BASIC
 	printf("# Loading Apple Integer Basic at %04x\n", appleBasicAddress);
-	mem.loadDataFromFile("./binfiles/Apple-1_Integer_BASIC.bin",
-			     appleBasicAddress);
+	mem.loadDataFromFile(APPLESOFT_BASIC_FILE, appleBasicAddress);
 #endif
 
 #ifdef APPLESOFT_BASIC_LITE
 	printf("# Loading Applesoft Basic Lite at %04x\n",
 	       applesoftBasicLiteAddress);
-	mem.loadDataFromFile("./binfiles/applesoft-lite-0.4-ram.bin",
+	mem.loadDataFromFile(APPLE_INTEGER_BASIC_FILE,
 			     applesoftBasicLiteAddress);
 #endif
 
@@ -257,6 +276,10 @@ int main () {
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(disable_raw_mode, enable_raw_mode);
+
+	// Tell the emulator how to read and write to the console.  For this
+	// simple example we'll just use wrappers around printf and read.
+	cpu.setConsoleIO(consoleRead, consoleWrite);
 		
 	// Set the reset vector to point at wozmon, exit the CPU from reset
 	cpu.setResetVector(wozmonAddress);

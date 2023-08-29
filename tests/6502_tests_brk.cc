@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../6502.h"
+#include <6502.h>
 
 class MOS6502BRKTests : public testing::Test {
 public:

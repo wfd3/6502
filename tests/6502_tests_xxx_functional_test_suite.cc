@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
-#include "../6502.h"
+#include <6502.h>
+
+static const char *fileName = "../binfiles/6502_functional_test.bin";
 
 class MOS6502XXXFunctionalTestSuite : public testing::Test {
 public:	
@@ -27,7 +29,7 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	constexpr Word exitAddress = 0x3469;
 
 	// When:
-	mem.loadDataFromFile("./binfiles/6502_functional_test.bin", 0x0000);
+	mem.loadDataFromFile(fileName, 0x0000);
 	cpu.setResetVector(0x0400);
 	cpu.exitReset();
 	cpu.setExitAddress(exitAddress);
