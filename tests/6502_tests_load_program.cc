@@ -59,7 +59,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
 		std::tie(UsedCycles, ExpectedCycles) =
-			cpu.ExecuteOneInstruction();
+			cpu.executeOneInstruction();
 		EXPECT_EQ(UsedCycles, ExpectedCycles);
 	}
 }
@@ -78,7 +78,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
 		std::tie(UsedCycles, ExpectedCycles) =
-			cpu.ExecuteOneInstruction();
+			cpu.executeOneInstruction();
 		EXPECT_EQ(UsedCycles, ExpectedCycles);
 	}
 }
@@ -98,7 +98,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 	//Then:
 	for (unsigned long l = 0; l < sizeof(testProgram) * loops; l++) {
 		std::tie(UsedCycles, ExpectedCycles) =
-			cpu.TraceOneInstruction();
+			cpu.traceOneInstruction();
 		EXPECT_EQ(UsedCycles, ExpectedCycles);
 	}
 }

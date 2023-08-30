@@ -32,7 +32,7 @@ TEST_F(MOS6502RTITests, RtiImplied) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0xAAFF);

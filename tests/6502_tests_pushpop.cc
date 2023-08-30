@@ -29,7 +29,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(mem[0X01FF], 0x52);
@@ -53,7 +53,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x52);
@@ -78,7 +78,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(mem[0x01FF], 0b01110101);
@@ -101,7 +101,7 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PS, 0b01000101);

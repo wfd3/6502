@@ -30,7 +30,7 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -54,7 +54,7 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -79,7 +79,7 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -104,7 +104,7 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -130,7 +130,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -156,7 +156,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -183,7 +183,7 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -211,7 +211,7 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -234,7 +234,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x00);
@@ -257,7 +257,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0xFF);

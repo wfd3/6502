@@ -52,18 +52,6 @@ bool cmpString(const std::string &s, const std::string &t) {
 	return s.compare(0, t_len, t, 0, t_len) == 0;
 }
 
-void CPU::dumpstack() {
-	Byte p = INITIAL_SP;
-	Word a;
-
-	printf("# Stack dump [SP = %02x]:\n", SP);
-	while (p != SP) {
-		a = STACK_FRAME | p;
-		printf("# [%04x] %02x\n", a, mem->Read(a));
-		p--;
-	}
-}
-	
 static const std::string vformat(const char * const zcFormat, ...) {
 
     // initialize use of the variable argument array
@@ -87,9 +75,22 @@ static const std::string vformat(const char * const zcFormat, ...) {
     return std::string(zc.data(), iLen);
 }
 
-std::tuple<Byte, Byte> CPU::TraceOneInstruction() {
-	CPU::disassemble(PC, 1);
-	return CPU::ExecuteOneInstruction();
+void CPU::dumpStack() {
+	Byte p = INITIAL_SP;
+	Word a;
+
+	printf("# Stack dump [SP = %02x]:\n", SP);
+	while (p != SP) {
+		a = STACK_FRAME | p;
+		printf("# [%04x] %02x\n", a, mem->Read(a));
+		p--;
+	}
+}
+	
+
+std::tuple<Byte, Byte> CPU::traceOneInstruction() {
+	disassemble(PC, 1);
+	return executeOneInstruction();
 }
 
 std::string CPU::decodeArgs(Byte ins) {
@@ -104,38 +105,38 @@ std::string CPU::decodeArgs(Byte ins) {
 	case ADDR_MODE_ACC:
 		return "A";
 	case ADDR_MODE_IMM: 
-		return vformat("#$%02x", ReadByteAtPC());
+		return vformat("#$%02x", readByteAtPC());
 	case ADDR_MODE_ZP:
-		return vformat("$%02x", ReadByteAtPC());
+		return vformat("$%02x", readByteAtPC());
 	case ADDR_MODE_ZPX:
-		byteval = ReadByteAtPC();
+		byteval = readByteAtPC();
 		return vformat("$%02x,X  [address %04x]", byteval, byteval + X);
 	case ADDR_MODE_ZPY:
-		byteval = ReadByteAtPC();
+		byteval = readByteAtPC();
 		return vformat("$%02x,Y  [address %04x]", byteval, byteval + Y);
 	case ADDR_MODE_REL:
-		rel = SByte(ReadByteAtPC());
+		rel = SByte(readByteAtPC());
 		return vformat("$%04x", PC + rel);
 	case ADDR_MODE_ABS:
-		return vformat("$%04x", ReadWordAtPC());
+		return vformat("$%04x", readWordAtPC());
 	case ADDR_MODE_ABX:
-		wordval = ReadWordAtPC();
+		wordval = readWordAtPC();
 		return vformat("$%04x,X  [address %04x]", wordval, wordval + X);
 	case ADDR_MODE_ABY:
-		wordval = ReadWordAtPC();
+		wordval = readWordAtPC();
 		return vformat("$%04x,Y  [address %04x]", wordval, wordval + Y);
 	case ADDR_MODE_IND:
-		return vformat("($%04x)", ReadWordAtPC());
+		return vformat("($%04x)", readWordAtPC());
 	case ADDR_MODE_IDX:
-		byteval = ReadByteAtPC();
+		byteval = readByteAtPC();
 		wordval = byteval + X;
 		if (wordval > 0xFF)
 			wordval -= 0xFF;
-		wordval = ReadWord(wordval);
+		wordval = readWord(wordval);
 		return vformat("($%02x,X)  [address %04lx]", byteval, wordval);
 	case ADDR_MODE_IDY:
-		byteval = ReadByteAtPC();
-		wordval = ReadWord(byteval);
+		byteval = readByteAtPC();
+		wordval = readWord(byteval);
 		wordval += Y;
 		return vformat("($%02x),Y  [address %04lx]", byteval, wordval);
 	}
@@ -155,7 +156,7 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 
 	d = vformat("%04x: ", PC);
 
-	opcode = ReadByteAtPC();
+	opcode = readByteAtPC();
 
 	// Assume that, while debugging, the PC can not be at the
 	// start of an instruction sequence.
@@ -181,14 +182,14 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 	std::string out;
 	
 	do {
-		dPC = CPU::disassembleAt(dPC, out);
+		dPC = disassembleAt(dPC, out);
 		std::cout << out << std::endl;
 	} while (--cnt && dPC < MAX_MEM);
 	
 	return dPC;
 }
 
-void CPU::PrintCPUState() {
+void CPU::printCPUState() {
 	printf(" | PC: %04x SP: %02x\n", PC, SP );
 	printf(" | C:%d Z:%d I:%d D:%d B:%d U:%d V:%d N:%d (PS: %0x)\n",
 		Flags.C, Flags.Z, Flags.I, Flags.D, Flags.B, Flags._unused,
@@ -265,13 +266,13 @@ unsigned long CPU::debugPrompt() {
 
 	listPC = PC;
 
-	if (CPU::debug_alwaysShowPS)
-		CPU::PrintCPUState();
+	if (debug_alwaysShowPS)
+		printCPUState();
 
-	CPU::disassemble(PC, 1);
+	disassemble(PC, 1);
 
 	for (std::string line;
-	     CPU::debuggerPrompt(), std::getline(std::cin, command); ) {
+	     debuggerPrompt(), std::getline(std::cin, command); ) {
 
 		if (command.empty() && debug_lastCmd.empty()) // Blank input
 			continue;
@@ -323,23 +324,23 @@ unsigned long CPU::debugPrompt() {
 
 		if (cmpString(command, "continue") ||
 		    cmpString(command, "co")) {
-			CPU::ToggleDebug();
+			toggleDebug();
 			return 1;
 		}
 
 		// where
 		if (cmpString(command, "where") ||
 		    cmpString(command, "w")) {
-			CPU::disassemble(PC, 1);
+			disassemble(PC, 1);
 			continue;
 		}
 
 		// psalways
 		if (cmpString(command, "psalways") ||
 		    cmpString(command, "a")) {
-			CPU::debug_alwaysShowPS = !CPU::debug_alwaysShowPS;
+			debug_alwaysShowPS = !debug_alwaysShowPS;
 			std::cout << "# Processor status auto-display ";
-			if (CPU::debug_alwaysShowPS)
+			if (debug_alwaysShowPS)
 				std::cout << "enabled" << std::endl;
 			else 
 				std::cout << "disabled" << std::endl;
@@ -352,7 +353,7 @@ unsigned long CPU::debugPrompt() {
 		    cmpString(command, "ld")) {
 			toggleLoopDetection();
 			std::cout << "# Loop detection ";
-			if (CPU::debug_loopDetection)
+			if (debug_loopDetection)
 				std::cout << "enabled" << std::endl;
 			else 
 				std::cout << "disabled" << std::endl;
@@ -363,7 +364,7 @@ unsigned long CPU::debugPrompt() {
 		// cpu | ps
 		if (cmpString(command, "processor-state") ||
 		    cmpString(command, "ps")) {
-			CPU::PrintCPUState(); 
+			printCPUState(); 
 
 			continue;
 		}
@@ -371,14 +372,14 @@ unsigned long CPU::debugPrompt() {
 		// stack
 		if (cmpString(command, "stack") ||
 		    cmpString(command, "s")) {
-			CPU::dumpstack();
+			dumpStack();
 			continue;
 		}
 
 		// backtrace
 		if (cmpString(command, "backtrace") ||
 		    cmpString(command, "t")) {
-			CPU::showBacktrace();
+			showBacktrace();
 			continue;
 		}
 
@@ -392,7 +393,7 @@ unsigned long CPU::debugPrompt() {
 				command.erase(0, 1);
 			if (sscanf(command.c_str(), "%d", &instructions) != 1)
 				instructions = 10;
-			listPC = CPU::disassemble(listPC, instructions);
+			listPC = disassemble(listPC, instructions);
 
 			continue;
 		}
@@ -411,8 +412,8 @@ unsigned long CPU::debugPrompt() {
 
 		if (cmpString(command, "reset")) {
 			printf("# Resetting 6502\n");
-			CPU::SetDebug(false);
-			CPU::Reset();
+			setDebug(false);
+			Reset();
 			return 1;
 		}
 		
@@ -442,7 +443,7 @@ unsigned long CPU::debugPrompt() {
 				command.erase(0, 4);
 			else
 				command.erase(0, 2);
-			CPU::parseMemCommand(command);
+			parseMemCommand(command);
 
 			continue;
 		}
@@ -542,12 +543,12 @@ unsigned long CPU::debugPrompt() {
 				command.erase(0,1);
 				if (sscanf(command.c_str(), "%lx", &addr)==1) {
 					printf("doing it\n");
-					CPU::deleteBreakpoint(addr);
+					deleteBreakpoint(addr);
 				}
 			} else if (sscanf(command.c_str(), "%lx", &addr) == 1)
-				CPU::addBreakpoint((Address_t) addr);
+				addBreakpoint((Address_t) addr);
 			else
-				CPU::listBreakpoints();
+				listBreakpoints();
 
 			continue;
 		}
@@ -573,7 +574,7 @@ unsigned long CPU::debugPrompt() {
 	return 1;
 }
 
-void CPU::Debug() {
+void CPU::debug() {
 	unsigned long count = 1;
 
 	if (debugEntryFunc)
@@ -582,20 +583,20 @@ void CPU::Debug() {
 	std::cout << "Debugger starting at PC " << vformat("0x%04x", PC)
 		  << std::endl;
 
-	CPU::debugMode = true;
+	debugMode = true;
 
 	while (1) {
-		count = CPU::debugPrompt();
+		count = debugPrompt();
 
-		if (!CPU::debugMode) {
+		if (!debugMode) {
 			printf("# Exiting debugger\n");
 			break;
 		}
 		
 		while (count--) {
-			CPU::ExecuteOneInstruction();
+			executeOneInstruction();
 			if (count)
-				CPU::disassemble(PC, 1);
+				disassemble(PC, 1);
 		}
 	}
 
@@ -603,7 +604,7 @@ void CPU::Debug() {
 		debugExitFunc();
 }
 
-void CPU::ToggleDebug() {
+void CPU::toggleDebug() {
 	debugMode = !debugMode;
 	std::cout << "# Debug mode ";
 	if (debugMode)
@@ -612,7 +613,7 @@ void CPU::ToggleDebug() {
 		std::cout << "disabled\n";
 }
 
-void CPU::SetDebug(bool d) {
+void CPU::setDebug(bool d) {
 	debugMode = d;
 	std::cout << "# Debug mode ";
 	if (debugMode)
@@ -691,9 +692,4 @@ void CPU::addBacktrace(Word PC) {
 void CPU::removeBacktrace() {
 	if (!backtrace.empty())
 		backtrace.pop_back();
-}
-
-// Loop detection
-void CPU::toggleLoopDetection() {
-	CPU::debug_loopDetection = !CPU::debug_loopDetection;
 }

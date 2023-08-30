@@ -41,7 +41,7 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 
 // Uncomment to start in debugger
 //	cpu.SetDebug(true);
-	cpu.Execute();
+	cpu.execute();
 
 	EXPECT_EQ(cpu.PC, exitAddress);
 #endif

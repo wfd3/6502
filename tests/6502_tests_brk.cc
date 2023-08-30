@@ -29,7 +29,7 @@ TEST_F(MOS6502BRKTests, BRKImplied) {
 	mem[0xFFFF] = 0x60;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x6000);

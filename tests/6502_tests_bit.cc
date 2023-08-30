@@ -32,7 +32,7 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -56,7 +56,7 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -80,7 +80,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -104,7 +104,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -128,7 +128,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);

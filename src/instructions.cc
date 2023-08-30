@@ -40,8 +40,8 @@ void CPU::bcdADC(Byte operand) {
 	
 	A = answer & 0xff;
 	
-	SetFlagN(answer);
-	SetFlagZ(answer);
+	setFlagN(answer);
+	setFlagZ(answer);
 	Flags.C = (answer >= 0x100);
 	Flags.V = (answer < -128) || (answer > 127);
 }
@@ -66,7 +66,7 @@ void CPU::bcdSBC(Byte subtrahend) {
 
 	A = (Byte) operand & 0xff;
 
-	SetFlagZ(A);
+	setFlagZ(A);
 	Flags.C = (operand >= 0);
 }
 
@@ -78,8 +78,8 @@ void CPU::doADC(Byte operand) {
 	same_sign = isNegative(A) == isNegative(operand);
 	result = A + operand + Flags.C;
 	A = result & 0xff;
-	SetFlagZ(A);
-	SetFlagN(A);
+	setFlagZ(A);
+	setFlagN(A);
 	Flags.C = result > 0xff;
 	Flags.V = same_sign && (isNegative(A) != isNegative(operand));
 }
@@ -103,8 +103,8 @@ void CPU::ins_and(Byte opcode, Byte &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	A &= data;
-	SetFlagZ(A);
-	SetFlagN(A);
+	setFlagZ(A);
+	setFlagN(A);
 }
 
 void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
@@ -115,18 +115,18 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
-		data = ReadByte(address);
+		data = readByte(address);
 	}
 
 	Flags.C = isNegative(data);
 	data = data << 1;
-	SetFlagN(data);
-	SetFlagZ(data);
+	setFlagN(data);
+	setFlagZ(data);
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		A = data;
 	} else {
-		WriteByte(address, data);
+		writeByte(address, data);
 	}
 	
 	Cycles++;
@@ -180,8 +180,8 @@ void CPU::ins_bit(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(opcode, expectedCyclesToUse);
-	SetFlagZ(A & data);
-	SetFlagN(data);
+	setFlagZ(A & data);
+	setFlagN(data);
 	Flags.V = (data & (1 << 6)) != 0;
 }
 
@@ -217,12 +217,12 @@ void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 
 	PC++;
-	PushWord(PC);
+	pushWord(PC);
 
 	addBacktrace(PC);
 
-	PushPS();
-	PC = ReadWord(INTERRUPT_VECTOR);
+	pushPS();
+	PC = readWord(INTERRUPT_VECTOR);
 	Flags.B = 1;
 	Flags.I = 1;
 	Cycles++;
@@ -309,11 +309,11 @@ void CPU::ins_dec(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
 	address = getAddress(opcode, expectedCyclesToUse);
-	data = ReadByte(address);
+	data = readByte(address);
 	data--;
-	WriteByte(address, data);
-	SetFlagZ(data);
-	SetFlagN(data);
+	writeByte(address, data);
+	setFlagZ(data);
+	setFlagN(data);
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
@@ -324,8 +324,8 @@ void CPU::ins_dex(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	X--;
-	SetFlagN(X);
-	SetFlagZ(X);
+	setFlagN(X);
+	setFlagZ(X);
 	Cycles++;
 }
 
@@ -334,8 +334,8 @@ void CPU::ins_dey(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	Y--;
-	SetFlagN(Y);
-	SetFlagZ(Y);
+	setFlagN(Y);
+	setFlagZ(Y);
 	Cycles++;
 }
 
@@ -344,8 +344,8 @@ void CPU::ins_eor(Byte opcode, Byte &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	A ^= data;
-	SetFlagZ(A);
-	SetFlagN(A);
+	setFlagZ(A);
+	setFlagN(A);
 }
 
 void CPU::ins_inc(Byte opcode, Byte &expectedCyclesToUse) {
@@ -353,11 +353,11 @@ void CPU::ins_inc(Byte opcode, Byte &expectedCyclesToUse) {
 	Byte data;
 
 	address = getAddress(opcode, expectedCyclesToUse);
-	data = ReadByte(address);
+	data = readByte(address);
 	data++;
-	WriteByte(address, data);
-	SetFlagZ(data);
-	SetFlagN(data);
+	writeByte(address, data);
+	setFlagZ(data);
+	setFlagN(data);
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
@@ -368,8 +368,8 @@ void CPU::ins_inx(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	X++;
-	SetFlagZ(X);
-	SetFlagN(X);
+	setFlagZ(X);
+	setFlagN(X);
 	Cycles++;
 }
 
@@ -378,8 +378,8 @@ void CPU::ins_iny(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	Y++;
-	SetFlagZ(Y);
-	SetFlagN(Y);
+	setFlagZ(Y);
+	setFlagN(Y);
 	Cycles++;
 }
 
@@ -392,7 +392,7 @@ void CPU::ins_jmp(Byte opcode, Byte &expectedCyclesToUse) {
 		address = getAddress(opcode, expectedCyclesToUse);
 	}
 
-	PC = ReadWord(address);
+	PC = readWord(address);
 }
 
 void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
@@ -400,8 +400,8 @@ void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
 	
 	addBacktrace(PC - 1);
 
-	newPC = ReadWord(PC);
-	PushWord(PC + 1);
+	newPC = readWord(PC);
+	pushWord(PC + 1);
 	PC = newPC;
 	
 	Cycles++;
@@ -412,20 +412,20 @@ void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
 
 void CPU::ins_lda(Byte opcode, Byte &expectedCyclesToUse) {
 	A = getData(opcode, expectedCyclesToUse);
-	SetFlagZ(A);
-	SetFlagN(A);
+	setFlagZ(A);
+	setFlagN(A);
 }
 
 void CPU::ins_ldx(Byte opcode, Byte &expectedCyclesToUse) {
 	X = getData(opcode, expectedCyclesToUse);
-	SetFlagZ(X);
-	SetFlagN(X);
+	setFlagZ(X);
+	setFlagN(X);
 }
 
 void CPU::ins_ldy(Byte opcode, Byte &expectedCyclesToUse) {
 	Y = getData(opcode, expectedCyclesToUse);
-	SetFlagZ(Y);
-	SetFlagN(Y);
+	setFlagZ(Y);
+	setFlagN(Y);
 }
 
 void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
@@ -436,18 +436,18 @@ void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
-		data = ReadByte(address);
+		data = readByte(address);
 	}
 
 	Flags.C = (data & 1);
 	data = data >> 1;
-	SetFlagZ(data);
-	SetFlagN(data);
+	setFlagZ(data);
+	setFlagN(data);
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
-		WriteByte(address, data);
+		writeByte(address, data);
 
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
@@ -468,15 +468,15 @@ void CPU::ins_ora(Byte opcode, Byte &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	A |= data;
-	SetFlagN(A);
-	SetFlagZ(A);
+	setFlagN(A);
+	setFlagZ(A);
 }
 
 void CPU::ins_pha(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
-	Push(A);
+	push(A);
 	Cycles++;		// Single byte instruction
 }
 
@@ -484,9 +484,9 @@ void CPU::ins_pla(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
-	A = Pop();
-	SetFlagN(A);
-	SetFlagZ(A);
+	A = pop();
+	setFlagN(A);
+	setFlagZ(A);
 	Cycles += 2;      
 }
 
@@ -494,14 +494,14 @@ void CPU::ins_php(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 
-	PushPS();
+	pushPS();
 	Cycles++;		// Single byte instruction
 }
 void CPU::ins_plp(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)opcode;		// Suppress '-Wununsed' warnings
 	(void)expectedCyclesToUse;
 	
-	PopPS();
+	popPS();
 	Cycles += 2;
 }
 void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
@@ -512,7 +512,7 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
-		data = ReadByte(address);
+		data = readByte(address);
 	}
 
 	carry = Flags.C;
@@ -520,13 +520,13 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 
 	data = (data << 1) | carry;
 
-	SetFlagZ(data);
-	SetFlagN(data);
+	setFlagZ(data);
+	setFlagN(data);
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
-		WriteByte(address, data);
+		writeByte(address, data);
 
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
@@ -541,21 +541,21 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
-		data = ReadByte(address);
+		data = readByte(address);
 	}
 
 	zero = data & 1;
 	data = data >> 1;
 	if (Flags.C)
 		data |= NegativeBit;
-	SetFlagN(data);
-	SetFlagZ(data);
+	setFlagN(data);
+	setFlagZ(data);
 	Flags.C = zero;
 
 	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
-		WriteByte(address, data);
+		writeByte(address, data);
 
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
@@ -567,8 +567,8 @@ void CPU::ins_rti(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 
 	removeBacktrace();
-	PopPS();
-	PC = PopWord();
+	popPS();
+	PC = popWord();
 	Cycles += 2;
 }
 
@@ -578,7 +578,7 @@ void CPU::ins_rts(Byte opcode, Byte &expectedCyclesToUse) {
 
 	removeBacktrace();
 	
-	PC = PopWord() + 1;
+	PC = popWord() + 1;
 	Cycles += 3;	       
 }
 
@@ -619,17 +619,17 @@ void CPU::ins_sei(Byte opcode, Byte &expectedCyclesToUse) {
 
 void CPU::ins_sta(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(opcode, expectedCyclesToUse);
-	WriteByte(address, A);
+	writeByte(address, A);
 }
 
 void CPU::ins_stx(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(opcode, expectedCyclesToUse);
-	WriteByte(address, X);
+	writeByte(address, X);
 }
 
 void CPU::ins_sty(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address = getAddress(opcode, expectedCyclesToUse);
-	WriteByte(address, Y);
+	writeByte(address, Y);
 }
 
 void CPU::ins_tax(Byte opcode, Byte &expectedCyclesToUse) {
@@ -637,8 +637,8 @@ void CPU::ins_tax(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	X = A;
-	SetFlagZ(X);
-	SetFlagN(X);
+	setFlagZ(X);
+	setFlagN(X);
 	Cycles++;
 }
 
@@ -647,8 +647,8 @@ void CPU::ins_tay(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	Y = A;
-	SetFlagZ(Y);
-	SetFlagN(Y);
+	setFlagZ(Y);
+	setFlagN(Y);
 	Cycles++;
 }
 
@@ -657,8 +657,8 @@ void CPU::ins_tsx(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	X = SP;
-	SetFlagZ(X);
-	SetFlagN(X);
+	setFlagZ(X);
+	setFlagN(X);
 	Cycles++;
 }
 
@@ -667,8 +667,8 @@ void CPU::ins_txa(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	A = X;
-	SetFlagZ(A);
-	SetFlagN(A);
+	setFlagZ(A);
+	setFlagN(A);
 	Cycles++;
 }
 
@@ -685,7 +685,7 @@ void CPU::ins_tya(Byte opcode, Byte &expectedCyclesToUse) {
 	(void)expectedCyclesToUse;
 	
 	A = Y;
-	SetFlagZ(A);
-	SetFlagN(A);
+	setFlagZ(A);
+	setFlagN(A);
 	Cycles++;
 }

@@ -90,7 +90,7 @@ void signalHandler( int signum ) {
 		break;
 
 	case SIGUSR1:		// Toggle the 6502 emulator's debugger
-		cpu.SetDebug(true);
+		cpu.setDebug(true);
 		break;
 
 	case SIGINT:
@@ -182,7 +182,7 @@ unsigned char kbdcr_read() {
 		cpu.setPendingReset();
 		return 0;
 	case CTRLD:		     
-		cpu.SetDebug(true);
+		cpu.setDebug(true);
 		return 0;
 	default:
 		kbdCharacter = toupper(kbdCharacter);
@@ -273,7 +273,7 @@ int main () {
 	cpu.exitReset();
 
 	enable_raw_mode();	// Set the keyboard non-blocking
-	cpu.Execute();		// Start the CPU running
+	cpu.execute();		// Start the CPU running
 	disable_raw_mode();	// Set the keyboard blocking
 
 	return 0;

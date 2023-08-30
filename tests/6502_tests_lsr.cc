@@ -28,7 +28,7 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -50,7 +50,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -73,7 +73,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -96,7 +96,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoltute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -120,7 +120,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoltuteX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);

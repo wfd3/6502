@@ -29,7 +29,7 @@ void MOS6502LDTests::TestLD(Byte ins, Byte &reg) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(reg, 0x0F);
@@ -47,7 +47,7 @@ void MOS6502LDTests::TestST(Byte ins, Word addr, Byte &reg) {
 
 	// When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	//Then:
 	EXPECT_EQ(mem[addr], reg);

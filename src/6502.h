@@ -113,7 +113,7 @@ class CPU {
 
 public:
 
-	constexpr static unsigned int MAX_MEM  = 0xFFFF;
+	constexpr static Word MAX_MEM          = 0xFFFF;
 	constexpr static Byte INITIAL_SP       = 0xFF;
 	constexpr static Word RESET_VECTOR     = 0xFFFC;
 	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
@@ -143,18 +143,13 @@ public:
 	void exitReset();
 	void setResetVector(Word);
 	void setInterruptVector(Word);
-	void Execute();
-	void Debug();
+	void execute();
+	void debug();
+	void setDebug(bool);
 		
-	std::tuple<Byte, Byte> ExecuteOneInstruction();
-	std::tuple<Byte, Byte> TraceOneInstruction();
+	std::tuple<Byte, Byte> executeOneInstruction();
+	std::tuple<Byte, Byte> traceOneInstruction();
 
-	void setExitAddress(Address_t);
-	void unsetExitAddress();
-
-	void ToggleDebug();
-	void SetDebug(bool);
-	void toggleLoopDetection();
 	bool isDebugEnabled() {
 		return debugMode;
 	}
@@ -169,6 +164,19 @@ public:
 
 		debugEntryFunc = entryfn;
 		debugExitFunc = exitfn;
+	}
+
+	void toggleLoopDetection() {
+		debug_loopDetection = !debug_loopDetection;
+	}
+
+	void setExitAddress(Address_t _pc) {
+		_exitAddress = _pc;
+		_exitAddressSet = true;
+	}
+
+	void unsetExitAddress() {
+		_exitAddressSet = false;
 	}
 
 private:
@@ -193,35 +201,37 @@ private:
 	void setupInstructionMap();
 
 	// CPU functions
-	void Exception(const char *, ...);
-	void SetFlagZ(Byte);
-	void SetFlagN(Byte);
+	void exception(const char *, ...);
+	void setFlagZ(Byte);
+	void setFlagN(Byte);
 	bool isNegative(Byte);
-	void Push(Byte);
-	Byte Pop();
-	void PushWord(Word);
-	Word PopWord();
+	void push(Byte);
+	Byte pop();
+	void pushWord(Word);
+	Word popWord();
 	Word getAddress(Byte, Byte &);
 	Byte getData(Byte, Byte &);
-	Byte ReadByteAtPC();
-	Word ReadWordAtPC();
-	void WriteByte(Word, Byte);
-	Byte ReadByte(Word);
-	void WriteWord(Word, Word);
-	Word ReadWord(Word);
+	Byte readByteAtPC();
+	Word readWordAtPC();
+	void writeByte(Word, Byte);
+	Byte readByte(Word);
+	void writeWord(Word, Word);
+	Word readWord(Word);
 	void doBranch(bool, Word, Word, Byte &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
-	void PushPS();
-	void PopPS();
+	void pushPS();
+	void popPS();
 
 	// Debugger
 	bool debugMode;
+	void toggleDebug();
+
 	debugEntryExitFn_t debugEntryFunc, debugExitFunc;
 	std::string debug_lastCmd;
 	bool debug_alwaysShowPS;
-	bool debug_loopDetection;
+
 	std::vector<Word> breakpoints;
 	Address_t _exitAddress;
 	bool _exitAddressSet;
@@ -231,17 +241,21 @@ private:
 	Address_t disassemble(Address_t, unsigned long);
 	Address_t disassembleAt(Address_t dPC, std::string &d);
 	unsigned long debugPrompt();
-	void dumpstack();
-	void PrintCPUState();
+	void dumpStack();
+	void printCPUState();
 	void parseMemCommand(std::string);
 	void debuggerPrompt();
+
+	bool debug_loopDetection;
 
 	void listBreakpoints();
 	bool isBreakpoint(Word);
 	void deleteBreakpoint(Word);
 	void addBreakpoint(Word);
 
-	bool isPCAtExitAddress();
+	bool isPCAtExitAddress() {
+		return _exitAddressSet && (PC == _exitAddress);
+	}
 
 	void showBacktrace();
 	void addBacktrace(Word);

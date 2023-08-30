@@ -30,7 +30,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x0F);
@@ -54,7 +54,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0xFF);

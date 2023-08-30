@@ -31,7 +31,7 @@ TEST_F(MOS6502TXTYTests, TAX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -53,7 +53,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -75,7 +75,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -100,7 +100,7 @@ TEST_F(MOS6502TXTYTests, TXA) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -122,7 +122,7 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -144,7 +144,7 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -168,7 +168,7 @@ TEST_F(MOS6502TXTYTests, TAY) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -190,7 +190,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -212,7 +212,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -236,7 +236,7 @@ TEST_F(MOS6502TXTYTests, TYA) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -258,7 +258,7 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -280,7 +280,7 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -304,7 +304,7 @@ TEST_F(MOS6502TXTYTests, TSX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -326,7 +326,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -348,7 +348,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -372,7 +372,7 @@ TEST_F(MOS6502TXTYTests, TXS) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -381,4 +381,3 @@ TEST_F(MOS6502TXTYTests, TXS) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-// TXA

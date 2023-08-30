@@ -26,7 +26,7 @@ TEST_F(MOS6502NOPTests, Nop) {
 	mem[0xFFFC] = ins;
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(UsedCycles, ExpectedCycles);

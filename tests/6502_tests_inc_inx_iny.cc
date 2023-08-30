@@ -31,7 +31,7 @@ TEST_F(MOS6502INCTests, IncZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -56,7 +56,7 @@ TEST_F(MOS6502INCTests, IncZeroPageX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -81,7 +81,7 @@ TEST_F(MOS6502INCTests, IncAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -107,7 +107,7 @@ TEST_F(MOS6502INCTests, IncAbsoluteX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -131,7 +131,7 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -155,7 +155,7 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -179,7 +179,7 @@ TEST_F(MOS6502INCTests, InxImplied) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -202,7 +202,7 @@ TEST_F(MOS6502INCTests, InxImpliedSetsZeroFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -224,7 +224,7 @@ TEST_F(MOS6502INCTests, InxImpliedSetsNegativeFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -247,7 +247,7 @@ TEST_F(MOS6502INCTests, InyImplied) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -270,7 +270,7 @@ TEST_F(MOS6502INCTests, InyImpliedSetsZeroFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -292,7 +292,7 @@ TEST_F(MOS6502INCTests, InyImpliedSetsNegativeFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);

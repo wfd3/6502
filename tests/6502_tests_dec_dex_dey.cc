@@ -30,7 +30,7 @@ TEST_F(MOS6502DECTests, DecZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -55,7 +55,7 @@ TEST_F(MOS6502DECTests, DecZeroPageX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -80,7 +80,7 @@ TEST_F(MOS6502DECTests, DecAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -106,7 +106,7 @@ TEST_F(MOS6502DECTests, DecAbsoluteX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -130,7 +130,7 @@ TEST_F(MOS6502DECTests, DecZeroPageSetsZeroFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -154,7 +154,7 @@ TEST_F(MOS6502DECTests, DecZeroPageSetsNegativeFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -178,7 +178,7 @@ TEST_F(MOS6502DECTests, DexImmediate) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -201,7 +201,7 @@ TEST_F(MOS6502DECTests, DexImmediateSetsZeroFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -223,7 +223,7 @@ TEST_F(MOS6502DECTests, DexImmediateSetsNegativeFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -246,7 +246,7 @@ TEST_F(MOS6502DECTests, DeyImmediate) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -269,7 +269,7 @@ TEST_F(MOS6502DECTests, DeyImmediateSetsZeroFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -291,7 +291,7 @@ TEST_F(MOS6502DECTests, DeyImmediateSetsNegativeFlag) {
 	
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);

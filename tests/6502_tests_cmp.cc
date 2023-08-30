@@ -30,7 +30,7 @@ TEST_F(MOS6502CMPTests, CmpImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -53,7 +53,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsCFlagFalse) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -76,7 +76,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -99,7 +99,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsNFlagTrue) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -123,7 +123,7 @@ TEST_F(MOS6502CMPTests, CmpZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -148,7 +148,7 @@ TEST_F(MOS6502CMPTests, CmpZeroPageX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -173,7 +173,7 @@ TEST_F(MOS6502CMPTests, CmpAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -199,7 +199,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -225,7 +225,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteXCrossesPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -251,7 +251,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteY) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -277,7 +277,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteYCrossesPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -304,7 +304,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectX) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -331,7 +331,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectY) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -358,7 +358,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectYCrossesPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -382,7 +382,7 @@ TEST_F(MOS6502CMPTests, CpxImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -405,7 +405,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsCFlagFalse) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -428,7 +428,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -451,7 +451,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsNFlagTrue) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -475,7 +475,7 @@ TEST_F(MOS6502CMPTests, CpxZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -500,7 +500,7 @@ TEST_F(MOS6502CMPTests, CpxAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -524,7 +524,7 @@ TEST_F(MOS6502CMPTests, CpyImmediate) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -547,7 +547,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsCFlagFalse) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -570,7 +570,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -593,7 +593,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsNFlagTrue) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -617,7 +617,7 @@ TEST_F(MOS6502CMPTests, CpyZeroPage) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -642,7 +642,7 @@ TEST_F(MOS6502CMPTests, CpyAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);

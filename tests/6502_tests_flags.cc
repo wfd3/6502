@@ -29,7 +29,7 @@ TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.C , 0);
@@ -48,7 +48,7 @@ TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.C , 1);
@@ -67,7 +67,7 @@ TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.D , 0);
@@ -86,7 +86,7 @@ TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.D , 1);
@@ -105,7 +105,7 @@ TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.I , 0);
@@ -124,7 +124,7 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.I , 1);
@@ -144,7 +144,7 @@ TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.V , 0);

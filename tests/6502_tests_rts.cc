@@ -29,7 +29,7 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 	mem[0xFFFC] = ins;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x2000 + 1);

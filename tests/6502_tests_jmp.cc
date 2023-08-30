@@ -29,7 +29,7 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4321);
@@ -51,7 +51,7 @@ TEST_F(MOS6502JMPTests, JmpIndirect) {
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.ExecuteOneInstruction();
+		cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4321);

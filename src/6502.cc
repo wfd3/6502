@@ -35,11 +35,11 @@ CPU::CPU(Memory<Address_t, Byte> *m) {
 }
 
 void CPU::setResetVector(Word address) {
-	WriteWord(RESET_VECTOR, address);
+	writeWord(RESET_VECTOR, address);
 }
 
 void CPU::setInterruptVector(Word address) {
-	WriteWord(INTERRUPT_VECTOR, address);
+	writeWord(INTERRUPT_VECTOR, address);
 }
 
 void CPU::exitReset() {
@@ -54,7 +54,7 @@ void CPU::exitReset() {
 	if (overrideResetVector) {
 		PC = pendingResetPC;
 	} else {
-		PC = ReadWord(RESET_VECTOR);
+		PC = readWord(RESET_VECTOR);
 	}
 	pendingReset = false;
 	overrideResetVector = false;
@@ -79,7 +79,7 @@ void CPU::Reset() {
 	pendingReset = true;
 }
 
-void CPU::Exception(const char *fmt_str, ...) {
+void CPU::exception(const char *fmt_str, ...) {
 	va_list args;
 	int final_n, n = 256;
 	std::unique_ptr<char[]> formatted;
@@ -103,92 +103,92 @@ void CPU::Exception(const char *fmt_str, ...) {
 	printf("CPU Exception: %s\n", formatted.get());
 	printf("Entering debugger\n");
 	debugMode = true;
-	Debug();
+	debug();
 }
 
 bool CPU::isNegative(Byte val) {
 	return (val & NegativeBit);
 }
 
-void CPU::SetFlagN(Byte val) {
+void CPU::setFlagN(Byte val) {
 	Flags.N = (val & NegativeBit) != 0;
 }
 
-void CPU::SetFlagZ(Byte val) {
+void CPU::setFlagZ(Byte val) {
 	Flags.Z = (val == 0);
 }
 
-Byte CPU::ReadByte(Word address) {
+Byte CPU::readByte(Word address) {
 	Byte data = mem->Read(address);
 	Cycles++;
 	return data;
 }
 
-void CPU::WriteByte(Word address, Byte value) {
+void CPU::writeByte(Word address, Byte value) {
 	mem->Write(address, value);
 	Cycles++;
 }
 
-Word CPU::ReadWord(Word address) {
-	Word w = ReadByte(address) | (ReadByte(address + 1) << 8);
+Word CPU::readWord(Word address) {
+	Word w = readByte(address) | (readByte(address + 1) << 8);
 	return w;
 }
 
-void CPU::WriteWord(Word address, Word word) {
-	WriteByte(address, word & 0xff);
-	WriteByte(address + 1, (word >> 8));
+void CPU::writeWord(Word address, Word word) {
+	writeByte(address, word & 0xff);
+	writeByte(address + 1, (word >> 8));
 }
 
-Word CPU::ReadWordAtPC() {
-	Word w = ReadByteAtPC() | (ReadByteAtPC() << 8);
+Word CPU::readWordAtPC() {
+	Word w = readByteAtPC() | (readByteAtPC() << 8);
 	return w;
 }
 
-Byte CPU::ReadByteAtPC() {
-	Byte opcode = ReadByte(PC);
+Byte CPU::readByteAtPC() {
+	Byte opcode = readByte(PC);
 	PC++;
 	return opcode;
 }
 
-void CPU::PushWord(Word value) {
+void CPU::pushWord(Word value) {
 	Byte b;
 
 	b = (Byte) (value >> 8); // value high
-	Push(b);
+	push(b);
 
 	b = (Byte) value & 0xff; // value low
-	Push(b);
+	push(b);
 }
 
-Word CPU::PopWord() {
+Word CPU::popWord() {
 	Word w;
 
 	// Low byte then high byte
-	w = Pop() | (Pop() << 8);
+	w = pop() | (pop() << 8);
 	return w;
 }
 
-void CPU::Push(Byte value) {
+void CPU::push(Byte value) {
 	Word SPAddress = STACK_FRAME + SP;
-	WriteByte(SPAddress, value);
+	writeByte(SPAddress, value);
 	SP--;
 }
 
-Byte CPU::Pop() {
+Byte CPU::pop() {
 	Word SPAddress;
 	SP++;
 	SPAddress = STACK_FRAME + SP;
-	return ReadByte(SPAddress);
+	return readByte(SPAddress);
 }
 
-void CPU::PushPS() {
+void CPU::pushPS() {
 	// PHP silently sets the Unused flag (bit 5) and the Break
 	// flag (bit 4)
-	Push(PS | UnusedBit | BreakBit);
+	push(PS | UnusedBit | BreakBit);
 }
 
-void CPU::PopPS() {
-	PS = Pop();
+void CPU::popPS() {
+	PS = pop();
 	Flags.B = false;
 	Flags._unused = false;
 }
@@ -205,37 +205,37 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 
         // ZeroPage mode
 	case ADDR_MODE_ZP:
-		address = ReadByteAtPC();
+		address = readByteAtPC();
 		break;
 
 	// ZeroPage,X 
 	case ADDR_MODE_ZPX:
-		zpaddr = ReadByteAtPC() + X;
+		zpaddr = readByteAtPC() + X;
 		address = zpaddr;
 		Cycles++;
 		break;
 
         // ZeroPage,Y 
 	case ADDR_MODE_ZPY:
-		zpaddr = ReadByteAtPC() + Y;
+		zpaddr = readByteAtPC() + Y;
 		address = zpaddr;
 		Cycles++;
 		break;
 
 	// Relative
 	case ADDR_MODE_REL:
-		rel = SByte(ReadByteAtPC());
+		rel = SByte(readByteAtPC());
 		address = PC + rel;
 		break;
 
 	// Absolute
 	case ADDR_MODE_ABS:
-		address = ReadWordAtPC();
+		address = readWordAtPC();
 		break;
 
 	// Absolute,X 
 	case ADDR_MODE_ABX:
-		address = ReadWordAtPC();
+		address = readWordAtPC();
 		// Add a cycle if a page boundry is crossed
 		if ((flags == CYCLE_CROSS_PAGE) && ((address + X) >> 8) !=
 		    (address >> 8)) {
@@ -247,7 +247,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 
 	// Absolute,Y 
 	case ADDR_MODE_ABY:
-		address = ReadWordAtPC();
+		address = readWordAtPC();
 		// Add a cycle if a page boundry is crossed
 		if ((flags == CYCLE_CROSS_PAGE) && ((address + Y) >> 8) !=
 		    (address >> 8)) {
@@ -259,25 +259,25 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 
 	// Indirect 
 	case ADDR_MODE_IND:
-		address = ReadWordAtPC();
+		address = readWordAtPC();
 		break;
 
         // (Indirect,X) or Indexed Indirect
 	case ADDR_MODE_IDX:	
-		zpaddr = ReadByteAtPC() + X;
-		address = ReadWord(zpaddr);
+		zpaddr = readByteAtPC() + X;
+		address = readWord(zpaddr);
 		Cycles++;
 		break;
 
 	// (Indirect),Y or Indirect Indexed
 	case ADDR_MODE_IDY:
-		address = ReadByteAtPC();
-		address = ReadWord(address);
+		address = readByteAtPC();
+		address = readWord(address);
 		address += Y;
 		break;
 
 	default:
-		Exception("Invalid addressing mode: 0x%ld\n",
+		exception("Invalid addressing mode: 0x%ld\n",
 			  instructions[opcode].addrmode);
 		break;
 	}
@@ -296,32 +296,19 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 
 	// Immediate mode
 	case ADDR_MODE_IMM:
-		data = ReadByteAtPC();
+		data = readByteAtPC();
 		break;
 
 	default:
 		address = getAddress(opcode, expectedCycles);
-		data = ReadByte(address);
+		data = readByte(address);
 		break;
 	}
 
 	return data;
 }
 
-bool CPU::isPCAtExitAddress() {
-	return _exitAddressSet && (PC == _exitAddress);
-}
-
-void CPU::setExitAddress(Address_t _pc) {
-	_exitAddress = _pc;
-	_exitAddressSet = true;
-}
-
-void CPU::unsetExitAddress() {
-	_exitAddressSet = false;
-}
-
-std::tuple<Byte, Byte> CPU::ExecuteOneInstruction() {
+std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	Byte opcode;
 	Cycles_t startCycles;
 	Byte expectedCyclesToUse;
@@ -331,10 +318,10 @@ std::tuple<Byte, Byte> CPU::ExecuteOneInstruction() {
 	startPC = PC;
 	startCycles = Cycles;
 
-	opcode = ReadByteAtPC();
+	opcode = readByteAtPC();
 	if (instructions.count(opcode) == 0) {
 		PC--;
-		Exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC);
+		exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC);
 	}
 
 	expectedCyclesToUse = instructions[opcode].cycles;
@@ -358,15 +345,15 @@ std::tuple<Byte, Byte> CPU::ExecuteOneInstruction() {
 	return std::make_tuple(Cycles - startCycles, expectedCyclesToUse);
 }
 
-void CPU::Execute() {
+void CPU::execute() {
 
 	while (1) {
 		if (CPU::debugMode || CPU::isBreakpoint(PC))
-			CPU::Debug();
+			CPU::debug();
 		else if (CPU::isPCAtExitAddress())
 			break;
 		else
-			CPU::ExecuteOneInstruction();
+			CPU::executeOneInstruction();
 	}
 }
 

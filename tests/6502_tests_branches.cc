@@ -28,7 +28,7 @@ void MOS6502BranchTests::BranchesWhenFlagSet(Word saddr, Byte rel, Byte ins) {
 	Word result = (saddr + 2) + SByte(rel);
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.ExecuteOneInstruction();
+	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
 
 	// Then:
 	EXPECT_EQ(cpu.PC, result);
