@@ -138,7 +138,7 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // Set PC to @address if @condition is true
-void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
+void CPU::doBranch(bool condition,  Byte &expectedCyclesToUse) {
 	if (condition) {
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;
