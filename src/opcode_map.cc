@@ -24,6 +24,17 @@ CPU::instruction CPU::makeIns(const char *name, Byte addrmode, Byte bytes,
 	return ins;
 }
 
+// The instructions.Flags field provides information about any special
+// handling the current instruction requires.  For the 6502, the flags
+// are:
+//  - CYCLE_BRANCH    : Add a cycle if conditional branch is taken (all
+//                      conditional branches.
+//  - CYCLE_CROSS_PAGE: Add two cycles if an instruction causes a read from
+//                      an address on an adjacent page, specifically indexed
+//                      addressing modes.
+//
+// See http://www.6502.org/users/obelisk/6502/addressing.html for more
+// information.
 void CPU::setupInstructionMap() {
 
 	instructions[INS_BRK_IMP] = 

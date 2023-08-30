@@ -18,10 +18,27 @@
 
 #include "6502.h"
 
+//////////
+// Helper functions
+
+// Set PC to @address if @condition is true
+void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
+	if (condition) {
+		Cycles++;	// Branch taken
+		expectedCyclesToUse++;
+
+		if ((PC >> 8) != (address >> 8)) { // Crossed page boundry
+			Cycles += 2;
+			expectedCyclesToUse += 2;
+		}
+
+		PC = address;
+	}
+}
+
 // BCD addition and substraction functions.
 // See:
 // https://www.electrical4u.com/bcd-or-binary-coded-decimal-bcd-conversion-addition-subtraction/
-
 void CPU::bcdADC(Byte operand) {
 	Byte addend, carry, a_low;
 	int answer;
@@ -135,21 +152,6 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	Cycles++;
 	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
-}
-
-// Set PC to @address if @condition is true
-void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
-	if (condition) {
-		Cycles++;	// Branch taken
-		expectedCyclesToUse++;
-
-		if ((PC >> 8) != (address >> 8)) { // Crossed page boundry
-			Cycles += 2;
-			expectedCyclesToUse += 2;
-		}
-
-		PC = address;
-	}
 }
 
 // BCC

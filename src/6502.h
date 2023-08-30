@@ -24,8 +24,7 @@
 #include <vector>
 #include <chrono>
 #include <thread>
-
-//#include <unistd.h>
+#include <atomic>
 
 #include "memory.h"
 
@@ -55,22 +54,14 @@ public:
 	}
 	
 	Cycles_t& operator++(int) {
-		#if 0
-		_c++;
-		if (_emulateTimings) {
-		 	auto millisecond = std::chrono::milliseconds(1);
-			std::this_thread::sleep_for(millisecond);
-		}
-		#endif
-		operator+=(1);
-		return *this;
+		return operator+=(1);
 	}
 
 	Cycles_t& operator+=(int i) {
 		_c += i;
 		if (_emulateTimings) {
-			auto milliseconds = std::chrono::milliseconds(i);
-			std::this_thread::sleep_for(milliseconds);
+			std::chrono::microseconds delay(i);
+			std::this_thread::sleep_for(delay);
 		}
 		return *this;
 	}
@@ -144,26 +135,32 @@ public:
 		struct ProcessorStatusBits Flags;
 	};
 
+	// CPU Setup & reset
         CPU(cMemory *);
 	void Reset(Word);
 	void Reset();
 	void exitReset();
 	void setResetVector(Word);
 	void setInterruptVector(Word);
-	void execute();
-	void debug();
-	void setDebug(bool);
-		
+	void setPendingReset() { pendingReset = true; }
+	void unsetExitAddress() { _exitAddressSet = false; }
+	void setExitAddress(Address_t _pc) {
+		_exitAddress = _pc;
+		_exitAddressSet = true;
+	}
+	void toggleLoopDetection() {
+		debug_loopDetection = !debug_loopDetection;
+	}
+
+	// Execution
 	std::tuple<Byte, Byte> executeOneInstruction();
+	void execute();
+
+	// Debugging
+	void setDebug(bool);
+	bool isDebugEnabled() { return debugMode; }
+	void debug();
 	std::tuple<Byte, Byte> traceOneInstruction();
-
-	bool isDebugEnabled() {
-		return debugMode;
-	}
-
-	void setPendingReset() {
-		pendingReset = true;
-	}
 
 	typedef void (*debugEntryExitFn_t)(void);
 	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = NULL,
@@ -173,24 +170,18 @@ public:
 		debugExitFunc = exitfn;
 	}
 
-	void toggleLoopDetection() {
-		debug_loopDetection = !debug_loopDetection;
-	}
-
-	void setExitAddress(Address_t _pc) {
-		_exitAddress = _pc;
-		_exitAddressSet = true;
-	}
-
-	void unsetExitAddress() {
-		_exitAddressSet = false;
-	}
-
 private:
+
+	// Setup & reset
 	cMemory *mem;
-	bool pendingReset;
+	std::atomic_bool pendingReset;
 	bool overrideResetVector;
 	Word pendingResetPC;
+	Address_t _exitAddress;
+	bool _exitAddressSet;
+	bool isPCAtExitAddress() {
+		return _exitAddressSet && (PC == _exitAddress);
+	}
 
 	// Instruction map
 	typedef void (CPU::*opfn_t)(Byte, Byte &);
@@ -209,41 +200,45 @@ private:
 
 	// CPU functions
 	void exception(const std::string &);
+	// Flags
 	void setFlagZ(Byte);
 	void setFlagN(Byte);
 	bool isNegative(Byte);
+
+	// Stack operations
 	void push(Byte);
 	Byte pop();
 	void pushWord(Word);
 	Word popWord();
-	Word getAddress(Byte, Byte &);
-	Byte getData(Byte, Byte &);
+	void pushPS();
+	void popPS();
+
+	// Memory access	
 	Byte readByteAtPC();
 	Word readWordAtPC();
 	void writeByte(Word, Byte);
 	Byte readByte(Word);
 	void writeWord(Word, Word);
 	Word readWord(Word);
+
+	// Address decoding
+	Word getAddress(Byte, Byte &);
+	Byte getData(Byte, Byte &);
+
+	// Helper functions
 	void doBranch(bool, Word, Byte &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
-	void pushPS();
-	void popPS();
 
 	// Debugger
 	bool debugMode;
-	void toggleDebug();
-
 	debugEntryExitFn_t debugEntryFunc, debugExitFunc;
 	std::string debug_lastCmd;
 	bool debug_alwaysShowPS;
+	bool debug_loopDetection;
 
-	std::vector<Word> breakpoints;
-	Address_t _exitAddress;
-	bool _exitAddressSet;
-	std::vector<std::string> backtrace;
-
+	void toggleDebug();
 	std::string decodeArgs(Byte opcode);
 	Address_t disassemble(Address_t, unsigned long);
 	Address_t disassembleAt(Address_t dPC, std::string &d);
@@ -253,23 +248,21 @@ private:
 	void parseMemCommand(std::string);
 	void debuggerPrompt();
 
-	bool debug_loopDetection;
-
+	// Breakpoints
+	std::vector<Word> breakpoints;
 	void listBreakpoints();
 	bool isBreakpoint(Word);
 	void deleteBreakpoint(Word);
 	void addBreakpoint(Word);
 
-	bool isPCAtExitAddress() {
-		return _exitAddressSet && (PC == _exitAddress);
-	}
-
+	// Backtrace
+	std::vector<std::string> backtrace;
 	void showBacktrace();
 	void addBacktrace(Word);
 	void removeBacktrace();
 
 public:
-	// Opcodes definitions
+	// 6502 Opcode definitions
 	constexpr static Byte INS_BRK_IMP = 0x00;
 	constexpr static Byte INS_ORA_IDX = 0x01;
 	constexpr static Byte INS_ASL_ACC = 0x0a;
@@ -453,7 +446,7 @@ private:
 	// stack frame for that page.
 	constexpr static Word STACK_FRAME = 0x0100;
 
-	// Instruction functions
+	// Instruction implementations
 	void ins_adc(Byte, Byte &);
 	void ins_and(Byte, Byte &);
 	void ins_asl(Byte, Byte &);

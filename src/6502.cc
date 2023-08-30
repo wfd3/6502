@@ -23,8 +23,10 @@
 
 #include <unistd.h>
 
-#include "6502.h"
+#include <6502.h>
 
+//////////
+// CPU Setup and reset
 CPU::CPU(Memory<Address_t, Byte> *m) {
 	mem = m;
 	CPU::setupInstructionMap();
@@ -59,7 +61,7 @@ void CPU::exitReset() {
 	pendingReset = false;
 	overrideResetVector = false;
 
-	// Do this last incase anything above ever changes Cycles by
+	// Do this last in case anything above ever changes Cycles by
 	// side-effect.
 	Cycles = 7;		
 }	
@@ -75,7 +77,6 @@ void CPU::Reset(Word address) {
 }
 
 void CPU::Reset() {
-	// TODO: This should be atomic.
 	pendingReset = true;
 }
 
@@ -86,6 +87,8 @@ void CPU::exception(const std::string &message) {
 	debug();
 }
 
+//////////
+// Flags
 bool CPU::isNegative(Byte val) {
 	return (val & NegativeBit);
 }
@@ -98,6 +101,8 @@ void CPU::setFlagZ(Byte val) {
 	Flags.Z = (val == 0);
 }
 
+//////////
+// Memory access
 Byte CPU::readByte(Word address) {
 	Byte data = mem->Read(address);
 	Cycles++;
@@ -130,24 +135,8 @@ Byte CPU::readByteAtPC() {
 	return opcode;
 }
 
-void CPU::pushWord(Word value) {
-	Byte b;
-
-	b = (Byte) (value >> 8); // value high
-	push(b);
-
-	b = (Byte) value & 0xff; // value low
-	push(b);
-}
-
-Word CPU::popWord() {
-	Word w;
-
-	// Low byte then high byte
-	w = pop() | (pop() << 8);
-	return w;
-}
-
+//////////
+// Stack operations
 void CPU::push(Byte value) {
 	Word SPAddress = STACK_FRAME + SP;
 	writeByte(SPAddress, value);
@@ -159,6 +148,17 @@ Byte CPU::pop() {
 	SP++;
 	SPAddress = STACK_FRAME + SP;
 	return readByte(SPAddress);
+}
+
+void CPU::pushWord(Word value) {
+	push((Byte) (value >> 8)); // value high
+	push((Byte) value & 0xff); // value low
+}
+
+Word CPU::popWord() {
+	// Low byte then high byte
+	Word w = pop() | (pop() << 8);
+	return w;
 }
 
 void CPU::pushPS() {
@@ -173,6 +173,8 @@ void CPU::popPS() {
 	Flags._unused = false;
 }
 
+//////////
+// Address decoding
 Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	Word address;
 	Byte zpaddr;
@@ -292,6 +294,8 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 	return data;
 }
 
+//////////
+// Instruction execution
 std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	Byte opcode;
 	Cycles_t startCycles;

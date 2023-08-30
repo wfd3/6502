@@ -5,7 +5,7 @@ CXX=g++
 CPPFLAGS += 
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -std=gnu++23
+CXXFLAGS += -g -Wall -Wextra -std=gnu++23 -I.
 
 all: lib6502.a
 
