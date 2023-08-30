@@ -290,9 +290,12 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 	Word address;
 
 	switch (instructions[opcode].addrmode) {
+
+	// Implied and Accumulator
 	case ADDR_MODE_IMP:
 	case ADDR_MODE_ACC:
-		return 0;
+		data = 0;
+		break;
 
 	// Immediate mode
 	case ADDR_MODE_IMM:
@@ -330,23 +333,19 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	(this->*op)(opcode, expectedCyclesToUse);
 
 	if (debug_loopDetection && startPC == PC) {
-		printf("# Loop detected, forcing break at %04x\n", PC);
-		//CPU::addBreakpoint(PC);
+		printf("# Loop detected at %04x, entering debugger\n", PC);
 		debugMode = true;
 	}
 
-	// If the CPU was reset, startCycles could be wrong.  Check and reset.
-	if (startCycles > Cycles)
-		startCycles = Cycles;
-
-	if (pendingReset)
+	if (pendingReset) {
 		exitReset();
+		startCycles = Cycles; // startCycles is wrong, reset it.
+	}
 	
 	return std::make_tuple(Cycles - startCycles, expectedCyclesToUse);
 }
 
 void CPU::execute() {
-
 	while (1) {
 		if (CPU::debugMode || CPU::isBreakpoint(PC))
 			CPU::debug();
