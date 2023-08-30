@@ -36,14 +36,14 @@ public:
 
 	virtual ~Element() { }
 
+	virtual Cell Read() const = 0;
+
+	virtual void Write(const Cell b) = 0;
+
 	virtual Element<Cell>& operator=(const Cell b) {
 		this->Write(b);
 		return *this;
 	}	
-
-	virtual Cell Read() const = 0;
-
-	virtual void Write(const Cell b) = 0;
 
 	virtual Element<Cell>& operator=(const int i) {
 		this->Write(i & 0xff);
@@ -119,6 +119,16 @@ public:
 		this->_type = Element<Cell>::RAM;
 	}
 
+	RAM<Cell>& operator=(const Cell i) {
+		Write(i);
+		return *this;
+	}
+
+	RAM<Cell>& operator=(const long unsigned int i) {
+		Write(i);
+		return *this;
+	}
+
 	RAM<Cell>& operator=(const int i) {
 		Write(i);
 		return *this;
@@ -153,6 +163,21 @@ public:
 	void Write(const Cell  b) {
 		(void) b;	// Suppress -Wall warning
 		;
+	}
+
+	ROM<Cell>& operator=(const Cell i) {
+		Write(i);
+		return *this;
+	}
+
+	ROM<Cell>& operator=(const long unsigned int i) {
+		Write(i);
+		return *this;
+	}
+
+	ROM<Cell>& operator=(const int i) {
+		Write(i);
+		return *this;
 	}
 
 private:
@@ -191,8 +216,18 @@ public:
 		return 0;
 	}
 
+	MIO<Cell>& operator=(const Cell i) {
+		Write(i);
+		return *this;
+	}
+
+	MIO<Cell>& operator=(const long unsigned int i) {
+		Write(i);
+		return *this;
+	}
+
 	MIO<Cell>& operator=(const int i) {
-		this->Write(i & 0xff);
+		Write(i);
 		return *this;
 	}
 
@@ -223,6 +258,17 @@ public:
 		return *this;
 	}
 
+	Unmapped<Cell>& operator=(const Cell i) {
+		Write(i);
+		return *this;
+	}
+
+	Unmapped<Cell>& operator=(const long unsigned int i) {
+		Write(i);
+		return *this;
+	}
+
+	
 private:
 };
 
