@@ -17,15 +17,15 @@
 
 #pragma once
 
-#include <stdio.h>
 #include <map>
-#include <bitset>
 #include <tuple>
 #include <string>
 #include <iostream>
 #include <vector>
+#include <chrono>
+#include <thread>
 
-#include <unistd.h>
+//#include <unistd.h>
 
 #include "memory.h"
 
@@ -57,7 +57,8 @@ public:
 	Cycles_t& operator++(int) {
 		_c++;
 		if (emulateTimings)
-			usleep(1);
+			//usleep(1);
+		      std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		return *this;
 	}
 
@@ -201,7 +202,7 @@ private:
 	void setupInstructionMap();
 
 	// CPU functions
-	void exception(const char *, ...);
+	void exception(const std::string &);
 	void setFlagZ(Byte);
 	void setFlagN(Byte);
 	bool isNegative(Byte);

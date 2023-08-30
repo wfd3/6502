@@ -16,4 +16,4 @@ clean :
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
 
 apple1: apple1.o $(6502_OBJS) 
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ $< -L../src -l6502
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ $< -L../src -l6502 -lfmt

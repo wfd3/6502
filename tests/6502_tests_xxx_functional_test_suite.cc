@@ -37,7 +37,7 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	cpu.Cycles.disableTimingEmulation();
 
 	//Then:
-	printf("# This test takes some time...\n");
+	std::cout << "# This test takes some time..." << std::endl;
 
 // Uncomment to start in debugger
 //	cpu.SetDebug(true);

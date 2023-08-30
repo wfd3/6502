@@ -27,6 +27,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <fmt/core.h>
+
 /////////
 // Memory element base class
 template<class Cell>
@@ -284,8 +286,10 @@ public:
 		auto _size = _endAddress + 1;
 
 		if (_size > _mem.max_size()) {
-			exception("End address %04lx exceeds host system "
-				  "memory limits", endAddress);
+			auto s = fmt::format("End address {:#04x} exceeds host "
+					     "system memory limits",
+					     endAddress);
+			exception(s);
 		}
 		_mem.reserve(_size);
 		_watch.reserve(_size);
@@ -306,7 +310,8 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			printf("# mem[%04x] %02x -> %02x\n",
+			std::cout <<
+				fmt::format("# mem[{:04x}] {:02x} -> {:02x}\n",
 			       address, _mem[address]->Read(), l);
 		}
 		
@@ -322,8 +327,10 @@ public:
 	bool mapRAM(const Address start, const Address end) {
 		boundsCheck(end);
 		if (addressRangeOverlapsExistingMap(start, end)) {
-			exception("Address range %lx:%lx overlaps with "
-				  "existing map", start, end);
+			auto s = fmt::format("Address range {:x}:{:x} overlaps "
+					     "with existing map",
+					     start, end);
+			exception(s);
 			return false;
 		}
 
@@ -342,8 +349,10 @@ public:
 		boundsCheck(start + rom.size());
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(start, start+rom.size())) {
-			exception("Address range %lx:%lx overlaps with "
-				  " existing map", start, start + rom.size());
+			auto s = fmt::format("Address range {:x}:{:x} overlaps "
+					     "with existing map",
+					     start, start + rom.size());
+			exception(s);
 			return false;
 		}
 
@@ -368,8 +377,9 @@ public:
 		boundsCheck(address);
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(address, address)) {
-			exception("Address %lx overlaps with existing map",
-				  address);
+			auto s = fmt::format("Address {:x} overlaps with "
+					     "existing map", address);
+			exception(s);
 			return false;
 		}
 
@@ -390,10 +400,12 @@ public:
 	// TODO: Remove for() loops by address
 	void hexdump(const Address start, Address end) {
 
-		printf("# Memory Dump 0x%04x:0x%04x\n", start, end);
+		std::cout << "# Memory Dump "
+			  << fmt::format("{:#04x}:{:#04x}", start, end)
+			  << std::endl;
 
 		if (start > end || end > _endAddress) {
-			printf("# -- Invalid memory range\n");
+			std::cout << "# -- Invalid memory range" << std::endl;
 			return;
 		}
 
@@ -401,7 +413,7 @@ public:
 			std::string ascii;
 			std::string hexdump;
 			
-			hexdump += vformat("%04x  ", i);
+			hexdump += fmt::format("{:04x}  ", i);
 			
 			for (unsigned long j = 0; j < 16; j++) {
 				if (j + i > end) {
@@ -410,25 +422,27 @@ public:
 					continue;
 				}
 				Cell c = _mem[i + j]->Read();
-				hexdump += vformat("%02x ", c);
+				hexdump += fmt::format("{:02x} ", c);
 				if (isprint(c))
 					ascii += c;
 				else
 					ascii += '.';
 			}
-			printf("%s  %s\n", hexdump.c_str(), ascii.c_str());
+			std::cout << hexdump << "  " << ascii << std::endl;
 		}
 	}
 
 	void printMap() const {
 
-		printf("Memory size: %ld bytes\n", _mem.size());
+		std::cout
+			<< fmt::format("Memory size: {} bytes\n", _mem.size())
+			<< std::endl;
 
 		auto it = _mem.begin();
 		auto range_start = it;
 		auto range_end = it;
 
-		printf("Memory map:\n");
+		std::cout << "Memory map:" << std::endl;
 
 		while (it != _mem.end()) {
 			auto next_it = std::next(it);
@@ -443,11 +457,13 @@ public:
 				unsigned long end =
 					std::distance(_mem.begin(), range_end);
 
-				printf("%04lx - %04lx %s (%ld bytes)\n",
-				       start, end, (*range_end)->type().c_str(),
-				       bytes)
-					;
-
+				std::cout << fmt::format("{:#04x}", start)
+					  << " - "
+					  << fmt::format("{:#04x}", end)
+					  << " "
+					  << (*range_end)->type().c_str()
+					  << "( " << bytes << " bytes)"
+					  << std::endl;
 				range_start = next_it;
 			}
 
@@ -459,7 +475,7 @@ public:
 			    return e->getType() != Element<Cell>::UNMAPPED;
 			});
 				
-		printf("Total bytes mapped: %ld\n", mappedBytes); 
+		std::cout << "Total bytes mapped: " << mappedBytes << std::endl;
 	}
 
 
@@ -478,8 +494,9 @@ public:
 		file.seekg(0, std::ios::beg);
 
 		if (fileSize == -1) {
-			exception("Can't load file '%s': not found\n",
-				  filename);
+			auto s = fmt::format("Can't load file '{}': not found",
+					     filename);
+			exception(s);
 		}
 		
 		// reserve capacity
@@ -496,13 +513,18 @@ public:
 	void loadData(std::vector<Cell> &data,
 		      Address startAddress) {
 		
-		if (startAddress > _endAddress)
-			exception("Data load address is not a valid "
-				  "address: 0x%04x", startAddress);
-		if (startAddress + data.size() - 1 > _endAddress)
-			exception("Data will not fit into memory at start "
-				  "address 0x%04x (data length %d bytes)",
-				  startAddress, data.size());
+		if (startAddress > _endAddress) {
+			auto s = fmt::format("Data load address is not a valid "
+					     "address: {:#04x}", startAddress);
+			exception(s);
+		}
+		if (startAddress + data.size() - 1 > _endAddress) {
+			auto s = fmt::format("Data will not fit into memory at "
+					     "start address {:#04x} (data "
+					     "length {} bytes)",
+					     startAddress, data.size());
+			exception(s);
+		}
 
 		// TODO: iterator
 		// TODO: Make sure we're only loading data into RAM
@@ -510,7 +532,11 @@ public:
 		     a++, i++)  {
 			
 			if (_mem[a]->getType() != Element<Cell>::RAM) {
-					exception("Data attempted to load on non-RAM memory location at address %x\n", startAddress + i);
+				auto s = fmt::format("Data attempted to load "
+						     "on non-RAM memory "
+						     "location at address {:x}",
+						     startAddress + i);
+				exception(s);
 			}
 
 			_mem[a]->Write(data[i]);
@@ -528,11 +554,12 @@ public:
 	}
 
 	void listWatch() {
-		printf("# Watch list\n");
+		std::cout << "# Watch list" << std::endl;
 
 		for(Address addr = 0; addr <= _watch.size(); addr++) 
 			if (_watch[addr])
-				printf("# e%04x\n", addr);
+				std::cout << fmt::format("# {:#04x}", addr)
+					  << std::endl;
 	}
 
 	void clearWatch(Address address) {
@@ -560,8 +587,11 @@ private:
 	std::vector<bool> _watch; // Vector of watched addresses.
 
 	void boundsCheck(Address address) {
-		if (!boundsCheckNoThrow(address))
-			exception("Address 0x%04x out of range", address);
+		if (!boundsCheckNoThrow(address)) {
+			auto s = fmt::format("Address {:#04x} out of range",
+					     address);
+			exception(s);
+		}
 	}
 
 	bool boundsCheckNoThrow(Address address) {
@@ -578,38 +608,9 @@ private:
 		return false;
 	}
 
-	static const std::string vformat(const char * const zcFormat, ...) {
-		va_list vaArgs;
-		va_start(vaArgs, zcFormat);
-		
-		va_list vaArgsCopy;
-		va_copy(vaArgsCopy, vaArgs);
-		const int iLen = std::vsnprintf(NULL, 0, zcFormat, vaArgsCopy);
-		va_end(vaArgsCopy);
-		
-		std::vector<char> zc(iLen + 1);
-		std::vsnprintf(zc.data(), zc.size(), zcFormat, vaArgs);
-		va_end(vaArgs);
-
-		return std::string(zc.data(), iLen);
-	}
-
-	void exception(const char *zcFormat, ...) {
-		va_list vaArgs;
-		va_start(vaArgs, zcFormat);
-		
-		va_list vaArgsCopy;
-		va_copy(vaArgsCopy, vaArgs);
-		const int iLen = std::vsnprintf(NULL, 0, zcFormat, vaArgsCopy);
-		va_end(vaArgsCopy);
-
-		std::vector<char> zc(iLen + 1);
-		std::vsnprintf(zc.data(), zc.size(), zcFormat, vaArgs);
-		va_end(vaArgs);
-
-		std::string formatted(zc.data(), iLen);
-		std::string error = "Memory Exception: " + formatted + "\n" +
-			"Halting\n";
+	void exception(const std::string &message) {
+		std::string error = "Memory Exception: " + message + 
+			"; Halting\n";
 		throw Exception(error);
 	}
 };

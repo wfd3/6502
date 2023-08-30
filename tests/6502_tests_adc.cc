@@ -23,12 +23,9 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
 
-	printf("PC Post reset = %04x\n", cpu.PC);
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
 	cpu.A = 0x10;
-	printf("PC = %04x\n", cpu.PC);
 
 	//When:
 	std::tie(UsedCycles, ExpectedCycles) =

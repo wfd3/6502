@@ -23,6 +23,8 @@
 #include <termio.h>
 #include <unistd.h>
 
+#include <fmt/core.h>
+
 #include <6502.h>
 #include <memory.h>
 
@@ -85,7 +87,7 @@ CPU cpu(&mem);
 void signalHandler( int signum ) {
 	switch (signum) {
 	case SIGQUIT:		// Reset computer
-		printf("\n");
+		fmt::print("\n");
 		cpu.setPendingReset();
 		break;
 
@@ -94,7 +96,7 @@ void signalHandler( int signum ) {
 		break;
 
 	case SIGINT:
-		printf("\nExiting emulator\n");
+		fmt::print("\nExiting emulator\n");
 		exit(0);
 	}
 }
@@ -104,17 +106,14 @@ void enable_raw_mode()
 {
     termios term;
     fflush(stdout);
-    if (tcgetattr(STDIN_FILENO, &term) < 0)
-	    perror("1 tcsetattr()");
+    tcgetattr(STDIN_FILENO, &term);
     term.c_lflag &= ~(ICANON | ECHO); // Disable echo as well
     term.c_cc[VMIN] = 1;
     term.c_cc[VTIME] = 0;
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &term) < 0)
-	    printf("2 tcsetattr()");
+    tcsetattr(STDIN_FILENO, TCSANOW, &term);
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
     tcflush(0, TCIFLUSH); 
-
 }
 
 void disable_raw_mode()
@@ -133,17 +132,17 @@ void dspwrite(unsigned char c) {
 	c &= 0x7f;		// clear hi bit
 	switch (c) {
 	case CR:	// \r
-		printf("\n");
+		fmt::print("\n");
 		break;
 	case '_':		// Backspace
-		printf("\b");
+		fmt::print("\b");
 		break;
 	case BELL:		// Bell
-		printf("\a");
+		fmt::print("\a");
 		break;
 	default:
 		if (isprint(c)|| isspace(c))
-			printf("%c", c);
+			fmt::print("{:c}", c);
 	}
 }
 
@@ -178,7 +177,7 @@ unsigned char kbdcr_read() {
 		kbdCharacter = CTRLC; // Fake out a ^C
 		break;
 	case CTRLA:		     
-		printf("\n");
+		fmt::print("\n");
 		cpu.setPendingReset();
 		return 0;
 	case CTRLD:		     
@@ -239,31 +238,32 @@ int main () {
 	mem.mapMIO(DISPLAY,    dspread, dspwrite, true );
 	mem.mapMIO(DISPLAYCR,  NULL, NULL, true);
 
-	printf("A Very Simple Apple I\n");
+	fmt::print("A Very Simple Apple I\n");
 	// Load Wozmon, Apple Basic, Applesoft Basic Lite and the
 	// Apple 1 sample program
-	printf("# Loading Apple I sample program at %04x\n",
-	       apple1SampleAddress);
+	fmt::print("# Loading Apple I sample program at {:04x}\n",
+		   apple1SampleAddress);
 	mem.loadData(apple1SampleProg, apple1SampleAddress);
 
-	printf("# Loading wozmon at %04x\n", wozmonAddress);
+	fmt::print("# Loading wozmon at {:04x}\n", wozmonAddress);
 	mem.loadDataFromFile(WOZMON_FILE, wozmonAddress);
 
 #ifdef APPLE_INTEGER_BASIC
-	printf("# Loading Apple Integer Basic at %04x\n", appleBasicAddress);
+	fmt::print("# Loading Apple Integer Basic at {:04x}\n",
+		  appleBasicAddress);
 	mem.loadDataFromFile(APPLESOFT_BASIC_FILE, appleBasicAddress);
 #endif
 
 #ifdef APPLESOFT_BASIC_LITE
-	printf("# Loading Applesoft Basic Lite at %04x\n",
+	fmt::print("# Loading Applesoft Basic Lite at {:04x}\n",
 	       applesoftBasicLiteAddress);
 	mem.loadDataFromFile(APPLE_INTEGER_BASIC_FILE,
 			     applesoftBasicLiteAddress);
 #endif
 
-	printf("# Note: ^A is Reset, ^D is Debugger\n");
-	printf("#       ^B is ^C\n"); // todo
-	printf("\n");
+	fmt::print("# Note: ^A is Reset, ^D is Debugger\n");
+	fmt::print("#       ^B is ^C\n"); // todo
+	fmt::print("\n");
 
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.

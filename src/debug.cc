@@ -26,6 +26,8 @@
 #include <vector>
 #include <cstdarg>
 
+#include <fmt/core.h>
+
 #include "6502.h"
 
 ///////////
@@ -52,37 +54,14 @@ bool cmpString(const std::string &s, const std::string &t) {
 	return s.compare(0, t_len, t, 0, t_len) == 0;
 }
 
-static const std::string vformat(const char * const zcFormat, ...) {
-
-    // initialize use of the variable argument array
-    va_list vaArgs;
-    va_start(vaArgs, zcFormat);
-
-    // reliably acquire the size
-    // from a copy of the variable argument array
-    // and a functionally reliable call to mock the formatting
-    va_list vaArgsCopy;
-    va_copy(vaArgsCopy, vaArgs);
-    const int iLen = std::vsnprintf(NULL, 0, zcFormat, vaArgsCopy);
-    va_end(vaArgsCopy);
-
-    // return a formatted string without risking memory mismanagement
-    // and without assuming any compiler or platform specific behavior
-    std::vector<char> zc(iLen + 1);
-    std::vsnprintf(zc.data(), zc.size(), zcFormat, vaArgs);
-    va_end(vaArgs);
-
-    return std::string(zc.data(), iLen);
-}
-
 void CPU::dumpStack() {
 	Byte p = INITIAL_SP;
 	Word a;
 
-	printf("# Stack dump [SP = %02x]:\n", SP);
+	fmt::print("# Stack dump [SP = {:02x}]:\n", SP);
 	while (p != SP) {
 		a = STACK_FRAME | p;
-		printf("# [%04x] %02x\n", a, mem->Read(a));
+		fmt::print("# [{:04x}] {:02x}\n", a, mem->Read(a));
 		p--;
 	}
 }
@@ -105,43 +84,50 @@ std::string CPU::decodeArgs(Byte ins) {
 	case ADDR_MODE_ACC:
 		return "A";
 	case ADDR_MODE_IMM: 
-		return vformat("#$%02x", readByteAtPC());
+		return fmt::format("#${:02x}", readByteAtPC());
 	case ADDR_MODE_ZP:
-		return vformat("$%02x", readByteAtPC());
+		return fmt::format("${:02x}", readByteAtPC());
 	case ADDR_MODE_ZPX:
 		byteval = readByteAtPC();
-		return vformat("$%02x,X  [address %04x]", byteval, byteval + X);
+		return fmt::format("${:02x},X  [address {:04x}]",
+				   byteval, byteval + X);
 	case ADDR_MODE_ZPY:
 		byteval = readByteAtPC();
-		return vformat("$%02x,Y  [address %04x]", byteval, byteval + Y);
+		return fmt::format("${:02x},Y  [address {:04x}]",
+				   byteval, byteval + Y);
 	case ADDR_MODE_REL:
 		rel = SByte(readByteAtPC());
-		return vformat("$%04x", PC + rel);
+		return fmt::format("${:04x}", PC + rel);
 	case ADDR_MODE_ABS:
-		return vformat("$%04x", readWordAtPC());
+		return fmt::format("${:04x}", readWordAtPC());
 	case ADDR_MODE_ABX:
 		wordval = readWordAtPC();
-		return vformat("$%04x,X  [address %04x]", wordval, wordval + X);
+		return fmt::format("${:04x},X  [address {:04x}]",
+			       wordval, wordval + X);
 	case ADDR_MODE_ABY:
 		wordval = readWordAtPC();
-		return vformat("$%04x,Y  [address %04x]", wordval, wordval + Y);
+		return fmt::format("${:04x},Y  [address {:04x}]",
+			       wordval, wordval + Y);
 	case ADDR_MODE_IND:
-		return vformat("($%04x)", readWordAtPC());
+		return fmt::format("(${:04x})", readWordAtPC());
 	case ADDR_MODE_IDX:
 		byteval = readByteAtPC();
 		wordval = byteval + X;
 		if (wordval > 0xFF)
 			wordval -= 0xFF;
 		wordval = readWord(wordval);
-		return vformat("($%02x,X)  [address %04lx]", byteval, wordval);
+		return fmt::format("(${:02x},X)  [address {:04x}]",
+				   byteval, wordval);
 	case ADDR_MODE_IDY:
 		byteval = readByteAtPC();
 		wordval = readWord(byteval);
 		wordval += Y;
-		return vformat("($%02x),Y  [address %04lx]", byteval, wordval);
+		return fmt::format("(${:02x}),Y  [address {:04x}]",
+				   byteval, wordval);
 	}
 
-	return vformat("[Invalid addressing mode %d, opcode %02x]", mode, ins);
+	return fmt::format("[Invalid addressing mode {}, opcode {:02x}]",
+			   mode, ins);
 }
 
 Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
@@ -154,17 +140,17 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 	saveCycles = Cycles;
 	PC = dPC;
 
-	d = vformat("%04x: ", PC);
+	d = fmt::format("{:04x}: ", PC);
 
 	opcode = readByteAtPC();
 
 	// Assume that, while debugging, the PC can not be at the
 	// start of an instruction sequence.
 	if (instructions.count(opcode) == 0) {
-		d += vformat(".byte $%02x", opcode);
+		d += fmt::format(".byte ${:02x}", opcode);
 	} else {
 		
-		d += vformat("%s", instructions[opcode].name);
+		d += instructions[opcode].name;
 
 		args = decodeArgs(opcode);
 		if (!args.empty())
@@ -190,13 +176,14 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 }
 
 void CPU::printCPUState() {
-	printf(" | PC: %04x SP: %02x\n", PC, SP );
-	printf(" | C:%d Z:%d I:%d D:%d B:%d U:%d V:%d N:%d (PS: %0x)\n",
-		Flags.C, Flags.Z, Flags.I, Flags.D, Flags.B, Flags._unused,
-		Flags.V, Flags.N,
-		PS);
-	printf(" | A: %02x X: %02x Y: %02x\n", A, X, Y );
-	printf(" | Cycle: %lu\n", Cycles.get()); 
+	fmt::print(" | PC: {:04x} SP: {:02x}\n", PC, SP );
+	// fmt::print() doesn't like to print out union/bit-field members?
+	fmt::print(" | C:{} Z:{} I:{} D:{} B:{} U:{} V:{} N:{} (PS: {:#x})\n",
+		   (int) Flags.C, (int) Flags.Z, (int) Flags.I, (int) Flags.D,
+		   (int) Flags.B, (int) Flags._unused, (int) Flags.V,
+		   (int) Flags.N, PS);
+	fmt::print(" | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print(" | Cycle: {}\n", Cycles.get()); 
 }
 
 void CPU::debuggerPrompt() {
@@ -239,8 +226,8 @@ void CPU::parseMemCommand(std::string s) {
 	if (e == 2) { 
 		Byte oldval = mem->Read(addr1);
 		mem->Write(addr1, (Byte) value);
-		std::cout << vformat("# [%04x] %02x -> %02x",
-				     addr1, oldval, (Byte) value) 
+		std::cout << fmt::format("# [{:04x}] {:02x} -> {:02x}",
+					 addr1, oldval, (Byte) value) 
 			  << std::endl;
 
 		return;
@@ -250,7 +237,8 @@ void CPU::parseMemCommand(std::string s) {
 	e = sscanf(s.c_str(), "%x",
 		   (unsigned int *) &addr1);
 	if (e == 1) { 
-		std::cout << vformat("[%04x] %02x", addr1, mem->Read(addr1))
+		std::cout << fmt::format("[{:04x}] {:02x}",
+					 addr1, mem->Read(addr1))
 			  << std::endl;
 
 		return;
@@ -411,7 +399,7 @@ unsigned long CPU::debugPrompt() {
 		}
 
 		if (cmpString(command, "reset")) {
-			printf("# Resetting 6502\n");
+			fmt::print("# Resetting 6502\n");
 			setDebug(false);
 			Reset();
 			return 1;
@@ -430,8 +418,9 @@ unsigned long CPU::debugPrompt() {
 				listPC = (Word) i;
 			else 
 				listPC = PC;
-			std::cout << "# List reset to PC " <<
-				vformat("%04x", listPC) << std::endl;
+			std::cout << "# List reset to PC "
+				  << fmt::format("{:04x}", listPC)
+				  << std::endl;
 
 			continue;
 		}
@@ -460,7 +449,7 @@ unsigned long CPU::debugPrompt() {
 			else
 				command.erase(0, 3);
 			s = stripSpaces(command);
-			printf("%s\n", s.c_str());
+			fmt::print("{}\n", s.c_str());
 			if (sscanf(s.c_str(),
 				   "%m[aAxXtYsSpPcC]=%x", &r, &value) != 2) {
 				std::cout << "# Parse error" << std::endl;
@@ -542,7 +531,6 @@ unsigned long CPU::debugPrompt() {
 			if (command[0] == '-') {
 				command.erase(0,1);
 				if (sscanf(command.c_str(), "%lx", &addr)==1) {
-					printf("doing it\n");
 					deleteBreakpoint(addr);
 				}
 			} else if (sscanf(command.c_str(), "%lx", &addr) == 1)
@@ -580,7 +568,8 @@ void CPU::debug() {
 	if (debugEntryFunc)
 		debugEntryFunc();
 
-	std::cout << "Debugger starting at PC " << vformat("0x%04x", PC)
+	std::cout << "Debugger starting at PC "
+		  << fmt::format("{:#04x}", PC)
 		  << std::endl;
 
 	debugMode = true;
@@ -589,7 +578,7 @@ void CPU::debug() {
 		count = debugPrompt();
 
 		if (!debugMode) {
-			printf("# Exiting debugger\n");
+			fmt::print("# Exiting debugger\n");
 			break;
 		}
 		
@@ -627,17 +616,17 @@ void CPU::listBreakpoints() {
 	std::vector<Word>::iterator i;
 	int c = 0;
 
-	printf("# Active breakpoints:\n");
+	fmt::print("# Active breakpoints:\n");
 	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-		printf("  %04x ", *i);
+		fmt::print("  {:04x} ", *i);
 		c++;
 		if (c == 4) {
 			c = 0;
-			printf("\n");
+			fmt::print("\n");
 		}
 	}
 
-	printf("\n");
+	fmt::print("\n");
 }
 
 bool CPU::isBreakpoint(Word _pc) {
@@ -656,20 +645,20 @@ void CPU::deleteBreakpoint(Word bp) {
 	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
 		if (*i == bp) {
 			breakpoints.erase(i);
-			printf("# Removed breakpoint at %04x\n", *i);
+			fmt::print("# Removed breakpoint at {:04x}\n", *i);
 			return;
 		}
 	}
-	printf("# No breakpoint set at %04x\n", bp);
+	fmt::print("# No breakpoint set at {:04x}\n", bp);
 }
 
 void CPU::addBreakpoint(Word bp) {
 	if (isBreakpoint(bp)) {
-		printf("# Breakpoint already set at %04x\n", bp);
+		fmt::print("# Breakpoint already set at {:04x}\n", bp);
 		return;
 	}
 	breakpoints.push_back(bp);
-	printf("# Set breakpoint at %04x\n", bp);
+	fmt::print("# Set breakpoint at {:04x}\n", bp);
 }
 
 // Backtrace
@@ -677,9 +666,9 @@ void CPU::showBacktrace() {
 	std::vector<std::string>::iterator i = backtrace.begin();
 	unsigned int cnt = 0;
 
-	printf("# Backtrace: %ld entries\n", backtrace.size());
+	fmt::print("# Backtrace: {} entries\n", backtrace.size());
 	for ( ; i < backtrace.end(); i++ )
-		printf("#%02d:  %s\n", cnt++, (*i).c_str());
+		fmt::print("#{:02d}:  {}\n", cnt++, (*i).c_str());
 
 }
 

@@ -79,29 +79,9 @@ void CPU::Reset() {
 	pendingReset = true;
 }
 
-void CPU::exception(const char *fmt_str, ...) {
-	va_list args;
-	int final_n, n = 256;
-	std::unique_ptr<char[]> formatted;
-
-	va_start(args, fmt_str);
-	while (1) {
-		// Wrap the plain char array into the unique_ptr 
-		formatted.reset(new char[n]); 
-		strcpy(&formatted[0], fmt_str);
-
-		final_n = vsnprintf(formatted.get(), n, fmt_str, args);
-
-		if (final_n < 0 || final_n >= n)
-			n += abs(final_n - n + 1);
-		else
-			break;
-	}
-
-	va_end(args);
-
-	printf("CPU Exception: %s\n", formatted.get());
-	printf("Entering debugger\n");
+void CPU::exception(const std::string &message) {
+	std::cout << "CPU Exception: " << message << std::endl;
+	std::cout << "Entering debugger" << std::endl;
 	debugMode = true;
 	debug();
 }
@@ -277,8 +257,9 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 		break;
 
 	default:
-		exception("Invalid addressing mode: 0x%ld\n",
-			  instructions[opcode].addrmode);
+		auto s = fmt::format("Invalid addressing mode: {:#04x}",
+				     instructions[opcode].addrmode);
+		exception(s);
 		break;
 	}
 	
@@ -324,7 +305,9 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	opcode = readByteAtPC();
 	if (instructions.count(opcode) == 0) {
 		PC--;
-		exception("Invalid opcode 0x%x at PC 0x%04x\n", opcode, PC);
+		auto s = fmt::format("Invalid opcode {:04x} at PC {:#04x}",
+				     opcode, PC);
+		exception(s);
 	}
 
 	expectedCyclesToUse = instructions[opcode].cycles;
@@ -333,7 +316,9 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	(this->*op)(opcode, expectedCyclesToUse);
 
 	if (debug_loopDetection && startPC == PC) {
-		printf("# Loop detected at %04x, entering debugger\n", PC);
+		std::cout << fmt::format("# Loop detected at {:04x}, entering "
+					 "debugger", PC)
+			  << std::endl;
 		debugMode = true;
 	}
 
