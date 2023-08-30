@@ -39,7 +39,7 @@ class Cycles_t {
 public:
 	Cycles_t() {
 		_c = 0;
-		emulateTimings = true;
+		_emulateTimings = true;
 	}
 
 	unsigned long get() {
@@ -55,17 +55,23 @@ public:
 	}
 	
 	Cycles_t& operator++(int) {
+		#if 0
 		_c++;
-		if (emulateTimings)
-			//usleep(1);
-		      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		if (_emulateTimings) {
+		 	auto millisecond = std::chrono::milliseconds(1);
+			std::this_thread::sleep_for(millisecond);
+		}
+		#endif
+		operator+=(1);
 		return *this;
 	}
 
 	Cycles_t& operator+=(int i) {
 		_c += i;
-		if (emulateTimings)
-			usleep(i);
+		if (_emulateTimings) {
+			auto milliseconds = std::chrono::milliseconds(i);
+			std::this_thread::sleep_for(milliseconds);
+		}
 		return *this;
 	}
 
@@ -94,16 +100,16 @@ public:
 	}
 
 	void enableTimingEmulation() {
-		emulateTimings = true;
+		_emulateTimings = true;
 	}
 	
 	void disableTimingEmulation() {
-		emulateTimings = false;
+		_emulateTimings = false;
 	}
 	
 private:
 	unsigned long _c;
-	bool emulateTimings;
+	bool _emulateTimings;
 };
 
 
