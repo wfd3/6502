@@ -138,10 +138,7 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // Set PC to @address if @condition is true
-void CPU::doBranch(bool condition, Word address, Word _PC,
-		   Byte &expectedCyclesToUse) {
-	(void) _PC;		// Avoid compiler warning;
-	
+void CPU::doBranch(bool condition, Word address, Byte &expectedCyclesToUse) {
 	if (condition) {
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;
@@ -157,29 +154,26 @@ void CPU::doBranch(bool condition, Word address, Word _PC,
 
 // BCC
 void CPU::ins_bcc(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(!Flags.C, address, _pc, expectedCyclesToUse);
+	doBranch(!Flags.C, address, expectedCyclesToUse);
 }
 
 // BCS
 void CPU::ins_bcs(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(Flags.C, address, _pc, expectedCyclesToUse);
+	doBranch(Flags.C, address, expectedCyclesToUse);
 }
 
 // BEQ
 void CPU::ins_beq(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(Flags.Z, address, _pc, expectedCyclesToUse);
+	doBranch(Flags.Z, address, expectedCyclesToUse);
 }
 
 // BIT
@@ -194,29 +188,26 @@ void CPU::ins_bit(Byte opcode, Byte &expectedCyclesToUse) {
 
 // BMI
 void CPU::ins_bmi(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(Flags.N, address, _pc, expectedCyclesToUse);
+	doBranch(Flags.N, address, expectedCyclesToUse);
 }
 
 // BNE
 void CPU::ins_bne(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(!Flags.Z, address, _pc, expectedCyclesToUse);
+	doBranch(!Flags.Z, address, expectedCyclesToUse);
 }
 
 // BPL
 void CPU::ins_bpl(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(!Flags.N, address, _pc, expectedCyclesToUse);
+	doBranch(!Flags.N, address, expectedCyclesToUse);
 }
 
 // BRK
@@ -241,20 +232,18 @@ void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
 
 // BVC
 void CPU::ins_bvc(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(!Flags.V, address, _pc, expectedCyclesToUse);
+	doBranch(!Flags.V, address, expectedCyclesToUse);
 }
 
 // BVS
 void CPU::ins_bvs(Byte opcode, Byte &expectedCyclesToUse) {
-	Word address, _pc;
+	Word address;
 
-	_pc = PC - 1;
 	address = getAddress(opcode, expectedCyclesToUse);
-	doBranch(Flags.V, address, _pc, expectedCyclesToUse);
+	doBranch(Flags.V, address, expectedCyclesToUse);
 }
 
 // CLC

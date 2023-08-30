@@ -224,7 +224,7 @@ private:
 	Byte readByte(Word);
 	void writeWord(Word, Word);
 	Word readWord(Word);
-	void doBranch(bool, Word, Word, Byte &);
+	void doBranch(bool, Word, Byte &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
