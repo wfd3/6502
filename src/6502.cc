@@ -81,8 +81,8 @@ void CPU::Reset() {
 }
 
 void CPU::exception(const std::string &message) {
-	std::cout << "CPU Exception: " << message << std::endl;
-	std::cout << "Entering debugger" << std::endl;
+	fmt::print("CPU Exception: {}\n", message);
+	fmt::print("Entering debugger\n");
 	debugMode = true;
 	debug();
 }
@@ -320,9 +320,8 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	(this->*op)(opcode, expectedCyclesToUse);
 
 	if (debug_loopDetection && startPC == PC) {
-		std::cout << fmt::format("# Loop detected at {:04x}, entering "
-					 "debugger", PC)
-			  << std::endl;
+		fmt::print("# Loop detected at {:04x}, entering debugger\n",
+			   PC);
 		debugMode = true;
 	}
 

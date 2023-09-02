@@ -290,7 +290,7 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 	std::string ins;
 
 	if (dPC > MAX_MEM) {
-		std::cout << "PC at end of memory" << std::endl;
+		fmt::print("PC at end of memory");
 		return dPC;
 	}
 
@@ -307,20 +307,20 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 
 void CPU::toggleDebug() {
 	debugMode = !debugMode;
-	std::cout << "# Debug mode ";
+	fmt::print("# Debug mode ");
 	if (debugMode)
-		std::cout << "enabled\n";
+		fmt::print("enabled\n");
 	else
-		std::cout << "disabled\n";
+		fmt::print("disabled\n");
 }
 
 void CPU::setDebug(bool d) {
 	debugMode = d;
-	std::cout << "# Debug mode ";
+	fmt::print("# Debug mode ");
 	if (debugMode)
-		std::cout << "enabled\n";
+		fmt::print("enabled\n");
 	else
-		std::cout << "disabled\n";
+		fmt::print("disabled\n");
 }
 
 //////////
@@ -339,8 +339,6 @@ void CPU::listBreakpoints() {
 			fmt::print("\n");
 		}
 	}
-
-	fmt::print("\n");
 }
 
 bool CPU::isBreakpoint(Word _pc) {
@@ -460,6 +458,7 @@ void CPU::parseMemCommand(std::string s) {
 
 int CPU::helpCmd([[maybe_unused]] std::string &line,
 		 [[maybe_unused]] unsigned long &returnValue) {
+
 	const auto debugCommands = getDebugCommands();
 	for (const auto& cmd : debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
@@ -486,6 +485,7 @@ int CPU::listCmd(std::string &line,
 }
 
 int CPU::runCmd(std::string &line, unsigned long &returnValue) {
+
 	try {
 		returnValue = std::stoul(line);
 	}
@@ -497,12 +497,14 @@ int CPU::runCmd(std::string &line, unsigned long &returnValue) {
 
 int CPU::stackCmd([[maybe_unused]] std::string &line,
 		  [[maybe_unused]] unsigned long &returnValue) {
+
 	dumpStack();
 	return ACTION_CONTINUE;
 }
 
 int CPU::breakpointCmd(std::string &line,
 		       [[maybe_unused]] unsigned long &returnValue) {
+
 	Word addr;
 	bool remove = false;
 
@@ -532,18 +534,20 @@ int CPU::breakpointCmd(std::string &line,
 
 int CPU::cpustateCmd([[maybe_unused]] std::string &line,
 		     [[maybe_unused]] unsigned long &returnValue) {
+
 	printCPUState(); 
 	return ACTION_CONTINUE;
 }
 
 int CPU::autostateCmd([[maybe_unused]] std::string &line,
 		      [[maybe_unused]] unsigned long &returnValue) {
+
 	debug_alwaysShowPS = !debug_alwaysShowPS;
-	std::cout << "# Processor status auto-display ";
+	fmt::print("# Processor status auto-display ");
 	if (debug_alwaysShowPS)
-		std::cout << "enabled" << std::endl;
+		fmt::print("enabled\n");
 	else 
-		std::cout << "disabled" << std::endl;
+		fmt::print("disabled");
 	
 	return ACTION_CONTINUE;
 }
@@ -551,6 +555,7 @@ int CPU::autostateCmd([[maybe_unused]] std::string &line,
 int CPU::resetListPCCmd(std::string &line,
 			[[maybe_unused]] unsigned long &returnValue) {
 	Word i;
+
 	try {
 		i = std::stoul(line, nullptr, 16);
 		if (i > MAX_MEM) {
@@ -564,15 +569,14 @@ int CPU::resetListPCCmd(std::string &line,
 		listPC = PC;
 	}
 
-	std::cout << "# List reset to PC "
-		  << fmt::format("{:04x}", listPC)
-		  << std::endl;
+	fmt::print("# List reset to PC {:04x}\n", listPC);
 	
 	return ACTION_CONTINUE;
 }
 
 int CPU::memdumpCmd(std::string &line,
 		    [[maybe_unused]] unsigned long &returnValue) {
+
 	parseMemCommand(line);
 	return ACTION_CONTINUE;
 }
@@ -677,6 +681,7 @@ int CPU::setCmd(std::string &line,
 
 int CPU::resetCmd([[maybe_unused]] std::string &line,
 		  [[maybe_unused]] unsigned long &returnValue) {
+
 	fmt::print("# Resetting 6502\n");
 	setDebug(false);
 	Reset();
@@ -686,6 +691,7 @@ int CPU::resetCmd([[maybe_unused]] std::string &line,
 		
 int CPU::continueCmd([[maybe_unused]] std::string &line,
 		     [[maybe_unused]] unsigned long &returnValue) {
+
 	toggleDebug();
 	returnValue = 1;
 	return ACTION_RETURN;
@@ -693,24 +699,27 @@ int CPU::continueCmd([[maybe_unused]] std::string &line,
 
 int CPU::loopdetectCmd([[maybe_unused]] std::string &line,
 		       [[maybe_unused]] unsigned long &returnValue) {
+
 	toggleLoopDetection();
-	std::cout << "# Loop detection ";
+	fmt::print("# Loop detection ");
 	if (debug_loopDetection)
-		std::cout << "enabled" << std::endl;
+		fmt::print("enabled\n");
 	else 
-		std::cout << "disabled" << std::endl;
+		fmt::print("disabled\n");
 	
 	return ACTION_CONTINUE;
 }
 
 int CPU::backtraceCmd([[maybe_unused]] std::string &line,
 		      [[maybe_unused]] unsigned long &returnValue) {
+
 	showBacktrace();
 	return ACTION_CONTINUE;
 }
 
 int CPU::whereCmd([[maybe_unused]] std::string &line,
 		  [[maybe_unused]] unsigned long &returnValue) {
+
 	disassemble(PC, 1);
 	return ACTION_CONTINUE;
 }
@@ -805,8 +814,7 @@ unsigned long CPU::debugPrompt() {
 		auto command = split(line, " ");
 		
 		if (matchCommand(command, f) ==false) {
-			std::cout << "Unknown command '" << command << "'"
-				  << std::endl;
+			fmt::print("Unknown command '{}'\n", command);
 			continue;
 		}
 

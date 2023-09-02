@@ -307,9 +307,8 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			std::cout <<
-				fmt::format("# mem[{:04x}] {:02x} -> {:02x}\n",
-			       address, _mem[address]->Read(), l);
+			fmt::print("# mem[{:04x}] {:02x} -> {:02x}\n",
+				   address, _mem[address]->Read(), l);
 		}
 		
 		_mem.at(address)->Write(l);
@@ -397,12 +396,10 @@ public:
 	// TODO: Remove for() loops by address
 	void hexdump(const Address start, Address end) {
 
-		std::cout << "# Memory Dump "
-			  << fmt::format("{:#04x}:{:#04x}", start, end)
-			  << std::endl;
+		fmt::print("# Memory Dump {:#04x}:{:#04x}\n", start, end);
 
 		if (start > end || end > _endAddress) {
-			std::cout << "# -- Invalid memory range" << std::endl;
+			fmt::print("# -- Invalid memory range\n");
 			return;
 		}
 
@@ -425,21 +422,19 @@ public:
 				else
 					ascii += '.';
 			}
-			std::cout << hexdump << "  " << ascii << std::endl;
+			fmt::print("{}  {}\n", hexdump, ascii);
 		}
 	}
 
 	void printMap() const {
 
-		std::cout
-			<< fmt::format("Memory size: {} bytes\n", _mem.size())
-			<< std::endl;
+		fmt::print("Memory size: {} bytes\n", _mem.size());
 
 		auto it = _mem.begin();
 		auto range_start = it;
 		auto range_end = it;
 
-		std::cout << "Memory map:" << std::endl;
+		fmt::print("Memory map:");
 
 		while (it != _mem.end()) {
 			auto next_it = std::next(it);
@@ -454,13 +449,10 @@ public:
 				unsigned long end =
 					std::distance(_mem.begin(), range_end);
 
-				std::cout << fmt::format("{:#04x}", start)
-					  << " - "
-					  << fmt::format("{:#04x}", end)
-					  << " "
-					  << (*range_end)->type().c_str()
-					  << "( " << bytes << " bytes)"
-					  << std::endl;
+				fmt::print("{:#04x} - {:#04x} {} ({} bytes)\n",
+					   start, end,
+					   (*range_end)->type().c_str(),
+					   bytes);
 				range_start = next_it;
 			}
 
@@ -472,7 +464,7 @@ public:
 			    return e->getType() != Element<Cell>::UNMAPPED;
 			});
 				
-		std::cout << "Total bytes mapped: " << mappedBytes << std::endl;
+		fmt::print("Total bytes mapped: {}\n", mappedBytes);
 	}
 
 
@@ -554,12 +546,11 @@ public:
 	}
 
 	void listWatch() {
-		std::cout << "# Watch list" << std::endl;
+		fmt::print("# Watch list\n");
 
 		for(Address addr = 0; addr <= _watch.size(); addr++) 
 			if (_watch[addr])
-				std::cout << fmt::format("# {:#04x}", addr)
-					  << std::endl;
+				fmt::print("# {:#04x}\n", addr);
 	}
 
 	void clearWatch(Address address) {
