@@ -405,7 +405,6 @@ void CPU::removeBacktrace() {
 //////////
 // Debugger
 
-// TODO - bounds checking on addr1, addr2 and value.
 void CPU::parseMemCommand(std::string s) {
 	Word addr1, addr2;
 	Word value;		
@@ -414,10 +413,18 @@ void CPU::parseMemCommand(std::string s) {
 	s = stripSpaces(s);
 	std::istringstream iss(s);
 
+	auto rangeCheckAddr = [](Word addr) {
+		return addr <= MAX_MEM;
+	};
+
+	auto rangeCheckValue =[](Word value) {
+		return value <= 0xff;
+	};
+		
 	// xxxx
 	iss.seekg(0);
 	iss >> std::hex >> addr1;
-	if (iss.eof()) {
+	if (!iss.fail() && iss.eof() && rangeCheckAddr(addr1)) {
 		fmt::print("[{:04x}] {:02x}\n", addr1, mem->Read(addr1));
 		return;
 	}
@@ -425,7 +432,8 @@ void CPU::parseMemCommand(std::string s) {
 	// xxxx=val
 	iss.seekg(0);
 	iss >> std::hex >> addr1 >> equal >> std::hex >> value;
-	if (!iss.fail() && iss.eof() && equal == '=') {
+	if (!iss.fail() && iss.eof() && equal == '=' &&
+	    rangeCheckAddr(addr1) && rangeCheckValue(value)) {
 		Byte oldval = mem->Read(addr1);
 		mem->Write(addr1, (Byte) value);
 		 fmt::print("# [{:04x}] {:02x} -> {:02x}\n",
@@ -436,7 +444,8 @@ void CPU::parseMemCommand(std::string s) {
 	// xxxx:yyyy
 	iss.seekg(0);
 	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2;
-	if (!iss.fail() && iss.eof() && colon == ':') {
+	if (!iss.fail() && iss.eof() && colon == ':' &&
+	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
 		mem->hexdump(addr1, addr2);
 		return;
 	}
@@ -446,7 +455,9 @@ void CPU::parseMemCommand(std::string s) {
 	value = 0;
 	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> equal
 	    >> std::hex >> value;
-	if (!iss.fail() && iss.eof() && colon == ':' && equal == '=') {
+	if (!iss.fail() && iss.eof() && colon == ':' && equal == '=' &&
+	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
+	    rangeCheckValue(value)) {
 		for (Address_t a = addr1; a <= addr2; a++)
 			mem->Write(a, (Byte) value);
 		return;
