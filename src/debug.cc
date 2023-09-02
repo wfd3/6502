@@ -171,92 +171,115 @@ void CPU::dumpStack() {
 //////////
 // Disassembler
 
-std::string CPU::decodeArgs(Byte ins) {
+std::string CPU::decodeArgs(Byte ins, bool atPC) {
 	Byte mode = _instructions[ins].addrmode;
 	Byte byteval;
 	Word wordval;
 	SByte rel;
+	std::string out;
 
 	switch (mode) {
 	case ADDR_MODE_IMP:
 		return "";
+
 	case ADDR_MODE_ACC:
 		return "A";
+
 	case ADDR_MODE_IMM: 
 		return fmt::format("#${:02x}", readByteAtPC());
+
 	case ADDR_MODE_ZP:
 		return fmt::format("${:02x}", readByteAtPC());
+
 	case ADDR_MODE_ZPX:
 		byteval = readByteAtPC();
-		return fmt::format("${:02x},X  [address {:04x}]",
-				   byteval, byteval + X);
+		out = fmt::format("${:02x},X",  byteval);
+		if (atPC)
+			out += fmt::format(" [address {:04x}]", byteval + X);
+		return out;
+
 	case ADDR_MODE_ZPY:
 		byteval = readByteAtPC();
-		return fmt::format("${:02x},Y  [address {:04x}]",
-				   byteval, byteval + Y);
+		out = fmt::format("${:02x},Y", byteval);
+		if (atPC)
+			out += fmt::format("[address {:04x}]", byteval + Y);
+		return out;
+
 	case ADDR_MODE_REL:
 		rel = SByte(readByteAtPC());
 		return fmt::format("${:04x}", PC + rel);
+
 	case ADDR_MODE_ABS:
 		return fmt::format("${:04x}", readWordAtPC());
+
 	case ADDR_MODE_ABX:
 		wordval = readWordAtPC();
-		return fmt::format("${:04x},X  [address {:04x}]",
-			       wordval, wordval + X);
+		out = fmt::format("${:04x},X", wordval);
+		if (atPC)
+			out += fmt::format("[address {:04x}]", wordval + X);
+		return out;
+
 	case ADDR_MODE_ABY:
 		wordval = readWordAtPC();
-		return fmt::format("${:04x},Y  [address {:04x}]",
-			       wordval, wordval + Y);
+		out = fmt::format("${:04x},Y", wordval);
+		if (atPC)
+			out += fmt::format("[address {:04x}]", wordval + Y);
+		return out;
+		
 	case ADDR_MODE_IND:
 		return fmt::format("(${:04x})", readWordAtPC());
+
 	case ADDR_MODE_IDX:
 		byteval = readByteAtPC();
 		wordval = byteval + X;
 		if (wordval > 0xFF)
 			wordval -= 0xFF;
 		wordval = readWord(wordval);
-		return fmt::format("(${:02x},X)  [address {:04x}]",
-				   byteval, wordval);
+		out = fmt::format("(${:02x},X)", byteval);
+		if (atPC)
+			out += fmt::format("[address {:04x}]", wordval);
+		return out;
+		
 	case ADDR_MODE_IDY:
 		byteval = readByteAtPC();
 		wordval = readWord(byteval);
 		wordval += Y;
-		return fmt::format("(${:02x}),Y  [address {:04x}]",
-				   byteval, wordval);
+		out = fmt::format("(${:02x}),Y", byteval);
+		if (atPC)
+			out += fmt::format("[address {:04x}]", wordval);
+		return out;
 	}
 
 	return fmt::format("[Invalid addressing mode {}, opcode {:02x}]",
 			   mode, ins);
 }
 
-Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
-	Address_t savePC, returnPC;
-	Cycles_t saveCycles;
-	Byte opcode;
-	std::string args;
+Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
+	Address_t savePC = PC;
+	Cycles_t saveCycles = Cycles;
 
-	savePC = PC;
-	saveCycles = Cycles;
+	// Are we looking at the next address to execute?  If we are, then
+	// the processor state is correct to calculate address offsets.
+	bool atPC = (PC == dPC);
+
 	PC = dPC;
+	disassembly = fmt::format("{:04x}: ", PC);
+	Byte opcode = readByteAtPC();
 
-	d = fmt::format("{:04x}: ", PC);
-
-	opcode = readByteAtPC();
-
-	// Assume that, while debugging, the PC can not be at the
+	// Assume that, while debugging, the PC must be at the
 	// start of an instruction sequence.
 	if (_instructions.count(opcode) == 0) {
-		d += fmt::format(".byte ${:02x}", opcode);
+		disassembly += fmt::format(".byte ${:02x}", opcode);
 	} else {
 		
-		d += _instructions[opcode].name;
+		disassembly += _instructions[opcode].name;
 
-		args = decodeArgs(opcode);
+		auto args = decodeArgs(opcode, atPC);
 		if (!args.empty())
-			d += "     " + args;
+			disassembly += "     " + args;
 	}
 
-	returnPC = PC;
+	Address_t returnPC = PC;
 	PC = savePC;
 	Cycles = saveCycles;
 
@@ -264,15 +287,16 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 }
 
 Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
-	std::string out;
+	std::string ins;
 
 	if (dPC > MAX_MEM) {
 		std::cout << "PC at end of memory" << std::endl;
 		return dPC;
 	}
+
 	do {
-		dPC = disassembleAt(dPC, out);
-		std::cout << out << std::endl;
+		dPC = disassembleAt(dPC, ins);
+		fmt::print("{}\n", ins);
 	} while (--cnt && dPC < MAX_MEM);
 	
 	return dPC;

@@ -233,6 +233,11 @@ private:
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
 
+	// Disassembler
+	std::string decodeArgs(Byte, bool);
+	Address_t disassemble(Address_t, unsigned long);
+	Address_t disassembleAt(Address_t dPC, std::string &);
+
 	// Debugger
 	bool debugMode;
 	debugEntryExitFn_t debugEntryFunc, debugExitFunc;
@@ -241,9 +246,6 @@ private:
 	bool debug_loopDetection;
 
 	void toggleDebug();
-	std::string decodeArgs(Byte opcode);
-	Address_t disassemble(Address_t, unsigned long);
-	Address_t disassembleAt(Address_t dPC, std::string &d);
 	unsigned long debugPrompt();
 	void dumpStack();
 	void printCPUState();
