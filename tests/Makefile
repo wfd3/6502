@@ -148,10 +148,10 @@ MEMORY_TEST_OBJS  = \
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
 
 6502_tests : $(6502_TESTS_OBJS) gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@ -lfmt
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@ -lfmt -lreadline
 
 memory_tests : $(MEMORY_TEST_OBJS) gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@ -lfmt
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@ -lfmt -lreadline
 
 runmemtests: memory_tests
 	./memory_tests

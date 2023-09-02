@@ -131,7 +131,7 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -143,14 +143,14 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagN(data);
 	setFlagZ(data);
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		A = data;
 	} else {
 		writeByte(address, data);
 	}
 	
 	Cycles++;
-	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
 }
 
@@ -213,9 +213,8 @@ void CPU::ins_bpl(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // BRK
-void CPU::ins_brk(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
+void CPU::ins_brk([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 
 	// From the internets, BRK pushes PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
@@ -249,37 +248,29 @@ void CPU::ins_bvs(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // CLC
-void CPU::ins_clc(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_clc([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.C = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLD
-void CPU::ins_cld(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_cld([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.D = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLI
-void CPU::ins_cli(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_cli([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.I = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLV
-void CPU::ins_clv(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_clv([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.V = 0;
 	Cycles++;		// Single byte instruction
 }
@@ -327,15 +318,13 @@ void CPU::ins_dec(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 	Cycles++;
-	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
 // DEX
-void CPU::ins_dex(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_dex([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	X--;
 	setFlagN(X);
 	setFlagZ(X);
@@ -343,10 +332,8 @@ void CPU::ins_dex(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // DEY
-void CPU::ins_dey(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_dey([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Y--;
 	setFlagN(Y);
 	setFlagZ(Y);
@@ -375,15 +362,13 @@ void CPU::ins_inc(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 	Cycles++;
-	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
 // INX
-void CPU::ins_inx(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_inx([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	X++;
 	setFlagZ(X);
 	setFlagN(X);
@@ -391,10 +376,8 @@ void CPU::ins_inx(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // INY
-void CPU::ins_iny(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_iny([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Y++;
 	setFlagZ(Y);
 	setFlagN(Y);
@@ -407,7 +390,7 @@ void CPU::ins_jmp(Byte opcode, Byte &expectedCyclesToUse) {
 
 	addBacktrace(PC - 1);
 
-	if (instructions[opcode].addrmode == ADDR_MODE_IND) {
+	if (_instructions[opcode].addrmode == ADDR_MODE_IND) {
 		address = getAddress(opcode, expectedCyclesToUse);
 	}
 
@@ -415,7 +398,8 @@ void CPU::ins_jmp(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // JSR
-void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
+void CPU::ins_jsr([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Word newPC;
 	
 	addBacktrace(PC - 1);
@@ -425,9 +409,6 @@ void CPU::ins_jsr(Byte opcode, Byte &expectedCyclesToUse) {
 	PC = newPC;
 	
 	Cycles++;
-
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
 }
 
 // LDA
@@ -456,7 +437,7 @@ void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC) 
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) 
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -468,24 +449,22 @@ void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		writeByte(address, data);
 
 	Cycles++;
-	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;	
 }
 
 // NOP
-void CPU::ins_nop(Byte opcode, Byte &expectedCyclesToUse) {
+void CPU::ins_nop([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	// NOP, like all single byte instructions, takes
 	// two cycles.
 	Cycles++;
-
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
 }
 
 // ORA
@@ -499,19 +478,15 @@ void CPU::ins_ora(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // PHA
-void CPU::ins_pha(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_pha([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	push(A);
 	Cycles++;		// Single byte instruction
 }
 
 // PLA
-void CPU::ins_pla(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_pla([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	A = pop();
 	setFlagN(A);
 	setFlagZ(A);
@@ -519,19 +494,15 @@ void CPU::ins_pla(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // PHP
-void CPU::ins_php(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-
+void CPU::ins_php([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	pushPS();
 	Cycles++;		// Single byte instruction
 }
 
 // PLP
-void CPU::ins_plp(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_plp([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	popPS();
 	Cycles += 2;
 }
@@ -541,7 +512,7 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data, carry;
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC) {
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -556,13 +527,13 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		writeByte(address, data);
 
 	Cycles++;
-	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
@@ -571,7 +542,7 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data, zero;
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC) 
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) 
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -586,21 +557,19 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	Flags.C = zero;
 
-	if (instructions[opcode].addrmode == ADDR_MODE_ACC)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		writeByte(address, data);
 
 	Cycles++;
-	if (instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
 // RTI
-void CPU::ins_rti(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-
+void CPU::ins_rti([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	removeBacktrace();
 	popPS();
 	PC = popWord();
@@ -608,10 +577,8 @@ void CPU::ins_rti(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // RTS
-void CPU::ins_rts(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-
+void CPU::ins_rts([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	removeBacktrace();
 	
 	PC = popWord() + 1;
@@ -631,28 +598,22 @@ void CPU::ins_sbc(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // SEC
-void CPU::ins_sec(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_sec([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.C = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // SED
-void CPU::ins_sed(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_sed([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.D = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // SEI
-void CPU::ins_sei(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_sei([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Flags.I = 1;
 	Cycles++;		// Single byte instruction
 }
@@ -676,10 +637,8 @@ void CPU::ins_sty(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // TAX
-void CPU::ins_tax(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_tax([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	X = A;
 	setFlagZ(X);
 	setFlagN(X);
@@ -687,10 +646,8 @@ void CPU::ins_tax(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // TAY
-void CPU::ins_tay(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_tay([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	Y = A;
 	setFlagZ(Y);
 	setFlagN(Y);
@@ -698,10 +655,8 @@ void CPU::ins_tay(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // TSX
-void CPU::ins_tsx(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_tsx([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	X = SP;
 	setFlagZ(X);
 	setFlagN(X);
@@ -709,10 +664,8 @@ void CPU::ins_tsx(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // TXA
-void CPU::ins_txa(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_txa([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	A = X;
 	setFlagZ(A);
 	setFlagN(A);
@@ -720,19 +673,15 @@ void CPU::ins_txa(Byte opcode, Byte &expectedCyclesToUse) {
 }
 
 // TXS
-void CPU::ins_txs(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_txs([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	SP = X;
 	Cycles++;
 }
 
 // TYA
-void CPU::ins_tya(Byte opcode, Byte &expectedCyclesToUse) {
-	(void)opcode;		// Suppress '-Wununsed' warnings
-	(void)expectedCyclesToUse;
-	
+void CPU::ins_tya([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 	A = Y;
 	setFlagZ(A);
 	setFlagN(A);

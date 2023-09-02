@@ -162,8 +162,7 @@ public:
 		return _cell;
 	}
 
-	void Write(const Cell  b) {
-		(void) b;	// Suppress -Wall warning
+	void Write([[maybe_unused]] const Cell  b) {
 		;
 	}
 
@@ -246,8 +245,7 @@ public:
 		this->_type = Element<Cell>::UNMAPPED;
 	}
 
-	void Write(const Cell b) {
-		(void) b;	// Suppress -Wall warnings
+	void Write([[maybe_unused]] const Cell b) {
 		;
 	}
 
@@ -255,8 +253,7 @@ public:
 		return 0;
 	}
 
-	Unmapped<Cell>& operator=(const int i) {
-		(void) i;	// Suppress -Wall warning
+	Unmapped<Cell>& operator=([[maybe_unused]] const int i) {
 		return *this;
 	}
 
@@ -546,10 +543,13 @@ public:
 	// watch memory address
 	
 	void enableWatch(const Address address) {
+		boundsCheck(address);
+		
 		_watch[address] = true;
 	}
 
 	bool watching(const Address address) const {
+		boundsCheck(address);
 		return _watch[address];
 	}
 
@@ -563,6 +563,7 @@ public:
 	}
 
 	void clearWatch(Address address) {
+		boundsCheck(address);
 		_watch[address] = false;
 	}
 

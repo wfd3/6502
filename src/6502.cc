@@ -181,9 +181,9 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	Byte flags;
 	SByte rel;
 
-	flags = instructions[opcode].flags;
+	flags = _instructions[opcode].flags;
 	
-	switch (instructions[opcode].addrmode) {
+	switch (_instructions[opcode].addrmode) {
 
         // ZeroPage mode
 	case ADDR_MODE_ZP:
@@ -260,7 +260,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 
 	default:
 		auto s = fmt::format("Invalid addressing mode: {:#04x}",
-				     instructions[opcode].addrmode);
+				     _instructions[opcode].addrmode);
 		exception(s);
 		break;
 	}
@@ -272,7 +272,7 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 	Byte data;
 	Word address;
 
-	switch (instructions[opcode].addrmode) {
+	switch (_instructions[opcode].addrmode) {
 
 	// Implied and Accumulator
 	case ADDR_MODE_IMP:
@@ -307,15 +307,15 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	startCycles = Cycles;
 
 	opcode = readByteAtPC();
-	if (instructions.count(opcode) == 0) {
+	if (_instructions.count(opcode) == 0) {
 		PC--;
 		auto s = fmt::format("Invalid opcode {:04x} at PC {:#04x}",
 				     opcode, PC);
 		exception(s);
 	}
 
-	expectedCyclesToUse = instructions[opcode].cycles;
-	op = instructions[opcode].opfn;
+	expectedCyclesToUse = _instructions[opcode].cycles;
+	op = _instructions[opcode].opfn;
 
 	(this->*op)(opcode, expectedCyclesToUse);
 

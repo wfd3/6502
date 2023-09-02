@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <array>
 #include <map>
 #include <tuple>
 #include <string>
@@ -193,13 +194,14 @@ private:
 		Byte cycles;
 		opfn_t opfn;
 	};
-	std::map<Byte, instruction> instructions;
+	std::map<Byte, instruction> _instructions;
 
 	CPU::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
 	void setupInstructionMap();
 
 	// CPU functions
 	void exception(const std::string &);
+
 	// Flags
 	void setFlagZ(Byte);
 	void setFlagN(Byte);
@@ -246,7 +248,27 @@ private:
 	void dumpStack();
 	void printCPUState();
 	void parseMemCommand(std::string);
-	void debuggerPrompt();
+
+	typedef int (CPU::*debugFn_t)(std::string &, unsigned long &);
+
+	bool matchCommand(const std::string &, debugFn_t &);
+	int helpCmd(std::string &, unsigned long &);
+	int listCmd(std::string &, unsigned long &);
+	int runCmd(std::string &, unsigned long &);
+	int stackCmd(std::string &, unsigned long &);
+	int breakpointCmd(std::string &, unsigned long &);
+	int cpustateCmd(std::string &, unsigned long &);
+	int autostateCmd(std::string &, unsigned long &);
+	int resetListPCCmd(std::string &, unsigned long &);
+	int memdumpCmd(std::string &, unsigned long &);
+	int setCmd(std::string &, unsigned long &);
+	int resetCmd(std::string &, unsigned long &);
+	int continueCmd(std::string &, unsigned long &);
+	int loopdetectCmd(std::string &, unsigned long &);
+	int backtraceCmd(std::string &, unsigned long &);
+	int whereCmd(std::string &, unsigned long &);
+	int watchCmd(std::string &, unsigned long &);
+	int quitCmd(std::string &, unsigned long &);
 
 	// Breakpoints
 	std::vector<Word> breakpoints;
@@ -414,6 +436,73 @@ public:
 	constexpr static Byte INS_RTS_IMP = 0x60;
 	constexpr static Byte INS_ADC_IDX = 0x61;
 	constexpr static Byte INS_PLA_IMP = 0x68;
+
+	// Debugger commands
+	struct debugCommand {
+		const char *command;
+		const char *shortcut;
+		const CPU::debugFn_t func;
+		const std::string helpMsg;
+	};
+
+	static const std::array<debugCommand,16>& getDebugCommands() {
+		static const std::array<debugCommand,16> debugCommands = {{
+			{ "help",      "h",  &CPU::helpCmd,
+			  "This help message" 
+			},
+			{ "list",      "l",  &CPU::listCmd,
+			  "List instructions at current Program Counter"
+			},
+			{ "run",   "r",  &CPU::runCmd,
+			  "Run program at current Program Counter.  Optionally "
+			  "run for [x] instructions then reutrn to debugger"
+			},
+			{ "stack",     "S",  &CPU::stackCmd,
+			  "Show current stack elements"
+			},
+			{ "break",     "b",  &CPU::breakpointCmd,
+			  "Add, remove or show current breakpoints.  'break  "
+			  "xxxx' adds a breakpoint at address xxxx, 'break "
+			  "-xxxx' removes the breakpoint at address xxxx, and "
+			  "'break' alone will list active breakpoints"
+			},
+			{ "state",     "p",  &CPU::cpustateCmd,
+			  "Show current CPU state"},
+			{ "autostate", "a",  &CPU::autostateCmd,
+			  "Display CPU state after every debugger command"
+			},
+			{ "listpc",   "P",  &CPU::resetListPCCmd,
+			  "Reset where the 'list' command start to disassembe"
+			},
+			{ "mem",       "m",  &CPU::memdumpCmd,
+			  "Examine or change memory"},
+			{ "set",       "s",  &CPU::setCmd,
+			  "set a register or CPU flag, (ex. 'set A=ff')"},
+			{ "reset",     "" ,  &CPU::resetCmd,
+			  "Reset the CPU and jump through the reset vector"
+			},
+			{ "continue",  "c",  &CPU::continueCmd,
+			  "Exit the debugger and contunue running the CPU"
+			},
+			{ "loopdetect","ld", &CPU::loopdetectCmd,
+			  "Enable or disable loop detection (ie, 'jmp *'"},
+			{ "backtrace", "t",  &CPU::backtraceCmd,
+			  "Show the current subroutine and break backtrace"
+			},
+			{ "where",     "w",  &CPU::whereCmd,
+			  "Display the instruction at the Program Counter"
+			},
+			{ "watch",     "W",  &CPU::watchCmd,
+			  "Add, remove or show current memory watchpoints. "
+			  "'watch xxxx' adds a watchpoint at memory address "
+			  "xxxx, 'watch -xxxx' removes the watchpoint at "
+			  "memory address xxxx, and 'watch' alone will list "
+			  "active watchpoints"
+			},
+			}};
+		return debugCommands;
+	};
+
 
 private:
 	// Addressing modes

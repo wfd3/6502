@@ -27,8 +27,21 @@
 #include <cstdarg>
 
 #include <fmt/core.h>
+#include <fmt/format.h>
+
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include "6502.h"
+
+constexpr unsigned char ACTION_RETURN = 0;
+constexpr unsigned char ACTION_CONTINUE = 1;
+
+Word listPC;
+
+// Static variable to keep track of readline completion state
+static auto commands = CPU::getDebugCommands();
 
 ///////////
 // Helper functions
@@ -44,36 +57,122 @@ std::string stripSpaces(std::string s) {
 	return new_s;
 }
 
-bool cmpString(const std::string &s, const std::string &t) {
+std::string split(std::string &input, const std::string &delim) {
+    size_t pos = input.find(delim);
 
-	size_t t_len = t.length();
+    if (pos == std::string::npos) {
+	    std::string part = input;
+	    input = "";
+	    return part;
+    }
 
-	if (s.length() < t_len)
-		return false;
-	
-	return s.compare(0, t_len, t, 0, t_len) == 0;
+    std::string part = input.substr(0, pos);
+    input = input.substr(pos + delim.length());
+    return part;
+}
+
+//////////
+// readline helpers
+void getline(std::string &line) {
+	char *c_line = readline(":");
+	if (c_line == NULL) {
+		line.clear();
+	} else {
+		line = c_line;
+		add_history(c_line);
+		free(c_line);
+	}
+}
+
+// Non-lambda completion generator function
+static char* commandGenerator(const char* text, int state) {
+    static size_t listIndex = 0;
+    static size_t length;
+    
+    if (!state) {
+	    listIndex = 0;
+	    length = strlen(text);
+    }
+
+    while (listIndex < commands.size()) {
+	    const auto& cmd = commands[listIndex++];
+	    if (strncmp(cmd.command, text, length) == 0) {
+		    return strdup(cmd.command);
+	    }
+    }
+    
+    return NULL;
+}
+
+// Static completion callback function outside the class
+static char** completionCallback(const char* text, [[maybe_unused]] int start,
+				 [[maybe_unused]] int end) {
+	rl_attempted_completion_over = 1;
+	return rl_completion_matches(text, commandGenerator);
+
+}
+
+std::string wrapText(const std::string& text, int width, int tabLength) {
+    std::string result;
+    std::string line;
+    int lineLength = 0;
+
+    for (char c : text) {
+        if (c == ' ' && lineLength >= width - tabLength) {
+            result += line + '\n';
+            line.clear();
+            lineLength = 0;
+	    // Add a tab on the new line
+            line.append(tabLength, ' ');
+            lineLength += tabLength;
+        } else if (c == '\t') {
+            int spacesToAdd = tabLength - (lineLength % tabLength);
+            line.append(spacesToAdd, ' '); // Add spaces for the tab
+            lineLength += spacesToAdd;
+        } else {
+            line += c;
+            lineLength++;
+        }
+    }
+
+    result += line; // Add any remaining text to the result
+    return result;
+}
+
+//////////
+// CPU State information 
+
+void CPU::printCPUState() {
+	fmt::print(" | PC: {:04x} SP: {:02x}\n", PC, SP );
+	// fmt::print() doesn't like to print out union/bit-field members?
+	fmt::print(" | C:{} Z:{} I:{} D:{} B:{} U:{} V:{} N:{} (PS: {:#x})\n",
+		   (int) Flags.C, (int) Flags.Z, (int) Flags.I, (int) Flags.D,
+		   (int) Flags.B, (int) Flags._unused, (int) Flags.V,
+		   (int) Flags.N, PS);
+	fmt::print(" | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print(" | Cycle: {}\n", Cycles.get()); 
 }
 
 void CPU::dumpStack() {
 	Byte p = INITIAL_SP;
 	Word a;
 
-	fmt::print("# Stack dump [SP = {:02x}]:\n", SP);
+	fmt::print("# Stack [SP = {:02x}]\n", SP);
+	if (p == SP)
+		fmt::print("# Empty stack\n");
+
 	while (p != SP) {
 		a = STACK_FRAME | p;
 		fmt::print("# [{:04x}] {:02x}\n", a, mem->Read(a));
 		p--;
 	}
 }
-	
 
-std::tuple<Byte, Byte> CPU::traceOneInstruction() {
-	disassemble(PC, 1);
-	return executeOneInstruction();
-}
+//////////
+// Disassembler
 
 std::string CPU::decodeArgs(Byte ins) {
-	Byte mode = instructions[ins].addrmode;
+	Byte mode = _instructions[ins].addrmode;
 	Byte byteval;
 	Word wordval;
 	SByte rel;
@@ -146,11 +245,11 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 
 	// Assume that, while debugging, the PC can not be at the
 	// start of an instruction sequence.
-	if (instructions.count(opcode) == 0) {
+	if (_instructions.count(opcode) == 0) {
 		d += fmt::format(".byte ${:02x}", opcode);
 	} else {
 		
-		d += instructions[opcode].name;
+		d += _instructions[opcode].name;
 
 		args = decodeArgs(opcode);
 		if (!args.empty())
@@ -166,7 +265,11 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string &d) {
 
 Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 	std::string out;
-	
+
+	if (dPC > MAX_MEM) {
+		std::cout << "PC at end of memory" << std::endl;
+		return dPC;
+	}
 	do {
 		dPC = disassembleAt(dPC, out);
 		std::cout << out << std::endl;
@@ -175,423 +278,8 @@ Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
 	return dPC;
 }
 
-void CPU::printCPUState() {
-	fmt::print(" | PC: {:04x} SP: {:02x}\n", PC, SP );
-	// fmt::print() doesn't like to print out union/bit-field members?
-	fmt::print(" | C:{} Z:{} I:{} D:{} B:{} U:{} V:{} N:{} (PS: {:#x})\n",
-		   (int) Flags.C, (int) Flags.Z, (int) Flags.I, (int) Flags.D,
-		   (int) Flags.B, (int) Flags._unused, (int) Flags.V,
-		   (int) Flags.N, PS);
-	fmt::print(" | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print(" | Cycle: {}\n", Cycles.get()); 
-}
-
-void CPU::debuggerPrompt() {
-
-	std::cout << ": ";
-}
-
-void CPU::parseMemCommand(std::string s) {
-	unsigned int addr1, addr2, value;
-	int e;
-	
-	s = stripSpaces(s);
-
-	// mem:mem=val
-	e = sscanf(s.c_str(), "%x:%x=%x",
-		   (unsigned int *) &addr1,
-		   (unsigned int *) &addr2,
-		   (unsigned int *) &value);
-	if (e == 3) { 
-		for (Address_t a = addr1; a <= addr2; a++)
-			mem->Write(a, (Byte) value);
-
-		return;
-	}
-	
-	// mem:mem
-	e = sscanf(s.c_str(), "%x:%x",
-		   (unsigned int *) &addr1,
-		   (unsigned int *) &addr2);
-	if (e == 2) { 
-		mem->hexdump(addr1, addr2);
-
-		return;
-	}
-	
-	// mem=mem
-	e = sscanf(s.c_str(), "%x=%x",
-		   (unsigned int *) &addr1,
-		   (unsigned int *) &value);
-	if (e == 2) { 
-		Byte oldval = mem->Read(addr1);
-		mem->Write(addr1, (Byte) value);
-		std::cout << fmt::format("# [{:04x}] {:02x} -> {:02x}",
-					 addr1, oldval, (Byte) value) 
-			  << std::endl;
-
-		return;
-	}
-	
-	// mem
-	e = sscanf(s.c_str(), "%x",
-		   (unsigned int *) &addr1);
-	if (e == 1) { 
-		std::cout << fmt::format("[{:04x}] {:02x}",
-					 addr1, mem->Read(addr1))
-			  << std::endl;
-
-		return;
-	}
-	
-	std::cout << "# Parse error" << std::endl;
-}
-
-unsigned long CPU::debugPrompt() {
-	unsigned long count = 1;
-	Address_t listPC;
-	std::string command;
-
-	listPC = PC;
-
-	if (debug_alwaysShowPS)
-		printCPUState();
-
-	disassemble(PC, 1);
-
-	for (std::string line;
-	     debuggerPrompt(), std::getline(std::cin, command); ) {
-
-		if (command.empty() && debug_lastCmd.empty()) // Blank input
-			continue;
-
-		if (command.empty() && !debug_lastCmd.empty()) {
-			command = debug_lastCmd;
-		}
-
-		debug_lastCmd = command;
-
-		std::istringstream iss(command);
-		if (iss >> count) {
-			return count;
-		}
-
- 		// help
-		if (cmpString(command, "help") ||
-		    cmpString(command, "h") ||
-		    cmpString(command, "?")) {
-			std::cout <<
-				"# help|h" << std::endl <<
-				"# <number>" << std::endl <<
-				"# list|l <x>" << std::endl <<
-				"# run <x>" << std::endl <<
-				"# <number>" << std::endl <<
-				"# stack|s" << std::endl <<
-				"# break|b <address>" << std::endl <<
-				"# processor-state|ps" << std::endl <<
-				"# psalways|a" << std::endl << 
-				"# listpc|pc [address]" << std::endl <<
-				"# mem|m start:end" << std::endl <<
-				"# mem|m address=value" << std::endl <<
-				"# mem|m start:end=value " << std::endl <<
-				"# reg|r <reg>=value" << std::endl <<
-				"# flags|f X" << std::endl <<
-				"# reset" << std::endl <<
-				"# continue|c" << std::endl <<
-				"# loop-detect|ld" << std::endl <<
-				"# backtrace|t" << std::endl <<
-				"# where|w" << std::endl <<
-				"# quit|q" << std::endl;
-			continue;
-		}
-
-		// quit
-		if (cmpString(command, "quit") ||
-		    cmpString(command, "q"))
-			exit(0);
-
-		if (cmpString(command, "continue") ||
-		    cmpString(command, "co")) {
-			toggleDebug();
-			return 1;
-		}
-
-		// where
-		if (cmpString(command, "where") ||
-		    cmpString(command, "w")) {
-			disassemble(PC, 1);
-			continue;
-		}
-
-		// psalways
-		if (cmpString(command, "psalways") ||
-		    cmpString(command, "a")) {
-			debug_alwaysShowPS = !debug_alwaysShowPS;
-			std::cout << "# Processor status auto-display ";
-			if (debug_alwaysShowPS)
-				std::cout << "enabled" << std::endl;
-			else 
-				std::cout << "disabled" << std::endl;
-
-			continue;
-		}
-
-		// loop-detect
-		if (cmpString(command, "loop-detect") ||
-		    cmpString(command, "ld")) {
-			toggleLoopDetection();
-			std::cout << "# Loop detection ";
-			if (debug_loopDetection)
-				std::cout << "enabled" << std::endl;
-			else 
-				std::cout << "disabled" << std::endl;
-
-			continue;
-		}
-
-		// cpu | ps
-		if (cmpString(command, "processor-state") ||
-		    cmpString(command, "ps")) {
-			printCPUState(); 
-
-			continue;
-		}
-
-		// stack
-		if (cmpString(command, "stack") ||
-		    cmpString(command, "s")) {
-			dumpStack();
-			continue;
-		}
-
-		// backtrace
-		if (cmpString(command, "backtrace") ||
-		    cmpString(command, "t")) {
-			showBacktrace();
-			continue;
-		}
-
-		// list instructions
-		if (cmpString(command, "list") ||
-		    cmpString(command, "l")) {
-			unsigned int instructions;
-			if (cmpString(command, "list"))
-				command.erase(0, 4);
-			else
-				command.erase(0, 1);
-			if (sscanf(command.c_str(), "%d", &instructions) != 1)
-				instructions = 10;
-			listPC = disassemble(listPC, instructions);
-
-			continue;
-		}
-
-		// list instructions
-		if (cmpString(command, "run")) {
-			unsigned int instructions;
-			if (cmpString(command,"run"))
-				command.erase(0, 3);
-			else
-				command.erase(0, 1);
-			if (sscanf(command.c_str(), "%d", &instructions) != 1)
-				instructions = 1;
-			return instructions;
-		}
-
-		if (cmpString(command, "reset")) {
-			fmt::print("# Resetting 6502\n");
-			setDebug(false);
-			Reset();
-			return 1;
-		}
-		
-		// reset list PC
-		if (cmpString(command, "listpc") ||
-		    cmpString(command, "p")) {
-			unsigned int i;
-			if (cmpString(command, "listpc"))
-				command.erase(0, 6);
-			else
-				command.erase(0, 2);
-
-			if (sscanf(command.c_str(), "%x", &i) == 1)
-				listPC = (Word) i;
-			else 
-				listPC = PC;
-			std::cout << "# List reset to PC "
-				  << fmt::format("{:04x}", listPC)
-				  << std::endl;
-
-			continue;
-		}
-
-		// mem dump/set
-		if (cmpString(command, "mem") ||
-		    cmpString(command, "m")) {
-			if (cmpString(command, "mem"))
-				command.erase(0, 4);
-			else
-				command.erase(0, 2);
-			parseMemCommand(command);
-
-			continue;
-		}
-
-		if (cmpString(command, "register") ||
-		    cmpString(command, "reg")) {
-			std::string s;
-			std::string reg;					
-			unsigned int value;
-			char *r;
-
-			if (cmpString(command, "register"))
-				command.erase(0, 8);
-			else
-				command.erase(0, 3);
-			s = stripSpaces(command);
-			fmt::print("{}\n", s.c_str());
-			if (sscanf(s.c_str(),
-				   "%m[aAxXtYsSpPcC]=%x", &r, &value) != 2) {
-				std::cout << "# Parse error" << std::endl;
-				continue;
-			}
-
-			reg = r;
-			std::transform(reg.begin(), reg.end(), reg.begin(),
-				       ::toupper);
-
-			if (reg == "A") 
-				A = (Byte) value;
-			else if (reg == "Y")
-				Y = (Byte) value;
-			else if (reg == "X")
-				X = (Byte) value;
-			else if (reg == "PC")
-				PC = (Word) value;
-			else if (reg == "SP")
-				SP = (Byte) value;
-			else if (reg == "PS")
-				PS = (Byte) value;
-			else
-				std::cout << "# No register '" << r << "'"
-					  << std::endl;
-			free(r);
-
-			continue;
-		}
-
-		if (cmpString(command, "flag") ||
-		    cmpString(command, "fl")) {
-			std::string s;
-			char c;
-			
-			command.erase(0, 2);
-			s = stripSpaces(command);
-			if (sscanf(s.c_str(),"%c", &c) != 1) {
-				std::cout << "# Parse error" << std::endl;
-				continue;
-			}
-
-			c = toupper(c);
-			switch (c) {
-			case 'C':
-				Flags.C = !Flags.C;
-				break;
-			case 'Z':
-				Flags.Z = !Flags.Z;
-				break;
-			case 'I':
-				Flags.I = !Flags.I;
-				break;
-			case 'D':
-				Flags.D = !Flags.D;
-				break;
-			case 'B':
-				Flags.B = !Flags.B;
-				break;
-			case 'V':
-				Flags.V = !Flags.V;
-				break;
-			case 'N':
-				Flags.N = !Flags.N;
-				break;
-			default:
-				std::cout << "# No status flag '" << c
-					  << "'" << std::endl;
-				break;
-			}
-
-			continue;
-		}
-
-		if (cmpString(command, "break")) {
-			unsigned long addr;
-
-			command.erase(0, 6);
-			if (command[0] == '-') {
-				command.erase(0,1);
-				if (sscanf(command.c_str(), "%lx", &addr)==1) {
-					deleteBreakpoint(addr);
-				}
-			} else if (sscanf(command.c_str(), "%lx", &addr) == 1)
-				addBreakpoint((Address_t) addr);
-			else
-				listBreakpoints();
-
-			continue;
-		}
-
-		if (cmpString(command, "watch")) {
-			unsigned long addr;
-
-			command.erase(0, 6);
-			if (command[0] == '-') {
-				command.erase(0,1);
-				if (sscanf(command.c_str(), "%lx", &addr)==1) {
-					mem->clearWatch(addr);
-				}
-			} else if (sscanf(command.c_str(), "%lx", &addr) == 1)
-				mem->enableWatch((Address_t) addr);
-			else
-				mem->listWatch();
-
-			continue;
-		}
-
-	}
-	return 1;
-}
-
-void CPU::debug() {
-	unsigned long count = 1;
-
-	if (debugEntryFunc)
-		debugEntryFunc();
-
-	std::cout << "Debugger starting at PC "
-		  << fmt::format("{:#04x}", PC)
-		  << std::endl;
-
-	debugMode = true;
-
-	while (1) {
-		count = debugPrompt();
-
-		if (!debugMode) {
-			fmt::print("# Exiting debugger\n");
-			break;
-		}
-		
-		while (count--) {
-			executeOneInstruction();
-			if (count)
-				disassemble(PC, 1);
-		}
-	}
-
-	if (debugExitFunc)
-		debugExitFunc();
-}
+//////////
+// Debug on/off?
 
 void CPU::toggleDebug() {
 	debugMode = !debugMode;
@@ -611,7 +299,9 @@ void CPU::setDebug(bool d) {
 		std::cout << "disabled\n";
 }
 
+//////////
 // Breakpoints
+
 void CPU::listBreakpoints() {
 	std::vector<Word>::iterator i;
 	int c = 0;
@@ -653,6 +343,11 @@ void CPU::deleteBreakpoint(Word bp) {
 }
 
 void CPU::addBreakpoint(Word bp) {
+	if (bp > MAX_MEM) {
+		fmt::print("Error: Breakpoint address outside of available "
+			   "address range\n");
+		return;
+	}
 	if (isBreakpoint(bp)) {
 		fmt::print("# Breakpoint already set at {:04x}\n", bp);
 		return;
@@ -661,7 +356,9 @@ void CPU::addBreakpoint(Word bp) {
 	fmt::print("# Set breakpoint at {:04x}\n", bp);
 }
 
+//////////
 // Backtrace
+
 void CPU::showBacktrace() {
 	std::vector<std::string>::iterator i = backtrace.begin();
 	unsigned int cnt = 0;
@@ -681,4 +378,451 @@ void CPU::addBacktrace(Word PC) {
 void CPU::removeBacktrace() {
 	if (!backtrace.empty())
 		backtrace.pop_back();
+}
+
+//////////
+// Debugger
+
+// TODO - bounds checking on addr1, addr2 and value.
+void CPU::parseMemCommand(std::string s) {
+	Word addr1, addr2;
+	Word value;		
+	char equal, colon;
+	
+	s = stripSpaces(s);
+	std::istringstream iss(s);
+
+	// xxxx
+	iss.seekg(0);
+	iss >> std::hex >> addr1;
+	if (iss.eof()) {
+		fmt::print("[{:04x}] {:02x}\n", addr1, mem->Read(addr1));
+		return;
+	}
+
+	// xxxx=val
+	iss.seekg(0);
+	iss >> std::hex >> addr1 >> equal >> std::hex >> value;
+	if (!iss.fail() && iss.eof() && equal == '=') {
+		Byte oldval = mem->Read(addr1);
+		mem->Write(addr1, (Byte) value);
+		 fmt::print("# [{:04x}] {:02x} -> {:02x}\n",
+			    addr1, oldval, (Byte) value);
+		return;
+	}
+
+	// xxxx:yyyy
+	iss.seekg(0);
+	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2;
+	if (!iss.fail() && iss.eof() && colon == ':') {
+		mem->hexdump(addr1, addr2);
+		return;
+	}
+
+	// xxxx:yyyy=val
+	iss.seekg(0);
+	value = 0;
+	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> equal
+	    >> std::hex >> value;
+	if (!iss.fail() && iss.eof() && colon == ':' && equal == '=') {
+		for (Address_t a = addr1; a <= addr2; a++)
+			mem->Write(a, (Byte) value);
+		return;
+	}
+
+	// Handle parsing errors
+	fmt::print("Parse error: '{}'\n", s);
+}
+
+int CPU::helpCmd([[maybe_unused]] std::string &line,
+		 [[maybe_unused]] unsigned long &returnValue) {
+	const auto debugCommands = getDebugCommands();
+	for (const auto& cmd : debugCommands) {
+		fmt::print("{:<10}: {}\n", cmd.command,
+			   wrapText(cmd.helpMsg, 80, 10+2)); // Add ': '
+	}
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::listCmd(std::string &line,
+		 [[maybe_unused]] unsigned long &returnValue) {
+	unsigned long count;
+
+	try {
+		count = std::stoul(line);
+	}
+	catch (...) {
+		count = 10;
+	}
+
+	listPC = disassemble(listPC, count);
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::runCmd(std::string &line, unsigned long &returnValue) {
+	try {
+		returnValue = std::stoul(line);
+	}
+	catch(...) {
+		returnValue = 1;
+	}
+	return ACTION_RETURN;
+}
+
+int CPU::stackCmd([[maybe_unused]] std::string &line,
+		  [[maybe_unused]] unsigned long &returnValue) {
+	dumpStack();
+	return ACTION_CONTINUE;
+}
+
+int CPU::breakpointCmd(std::string &line,
+		       [[maybe_unused]] unsigned long &returnValue) {
+	Word addr;
+	bool remove = false;
+
+	if (line.empty()) {
+		listBreakpoints();
+		return ACTION_CONTINUE;
+	}
+		
+	if (line[0] == '-') {
+		line.erase(0,1);
+		remove = true;
+	} 
+
+	try {
+		addr = std::stoul(line, nullptr, 16);
+		if (remove)
+			deleteBreakpoint(addr);
+		else
+			addBreakpoint(addr);
+	}
+	catch(...) {
+		fmt::print("Parse error: {}\n", line);
+	}
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::cpustateCmd([[maybe_unused]] std::string &line,
+		     [[maybe_unused]] unsigned long &returnValue) {
+	printCPUState(); 
+	return ACTION_CONTINUE;
+}
+
+int CPU::autostateCmd([[maybe_unused]] std::string &line,
+		      [[maybe_unused]] unsigned long &returnValue) {
+	debug_alwaysShowPS = !debug_alwaysShowPS;
+	std::cout << "# Processor status auto-display ";
+	if (debug_alwaysShowPS)
+		std::cout << "enabled" << std::endl;
+	else 
+		std::cout << "disabled" << std::endl;
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::resetListPCCmd(std::string &line,
+			[[maybe_unused]] unsigned long &returnValue) {
+	Word i;
+	try {
+		i = std::stoul(line, nullptr, 16);
+		if (i > MAX_MEM) {
+			fmt::print("Error: Program Counter address outside of "
+				   "available address range\n");
+			return ACTION_CONTINUE;
+		}
+		listPC = i;
+	}
+	catch (...) {
+		listPC = PC;
+	}
+
+	std::cout << "# List reset to PC "
+		  << fmt::format("{:04x}", listPC)
+		  << std::endl;
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::memdumpCmd(std::string &line,
+		    [[maybe_unused]] unsigned long &returnValue) {
+	parseMemCommand(line);
+	return ACTION_CONTINUE;
+}
+
+int CPU::setCmd(std::string &line,
+		[[maybe_unused]] unsigned long &returnValue) {
+	std::string v;
+	std::string reg;					
+	unsigned int value;
+	bool flipFlag = false;
+
+	// TODO:  make 'set x 5' and 'set x=5' work.
+	v = stripSpaces(line);
+	reg = split(v, "=");
+	if (reg.empty()) {
+		fmt::print("Parse Error: register or flag required for set "
+			   "command\n");
+		return ACTION_CONTINUE;
+	}
+
+
+	// reg contains the register, s is the value.
+	std::transform(reg.begin(), reg.end(), reg.begin(), ::toupper);
+	try {
+		value = std::stoul(v, nullptr, 16);
+		if ((reg != "PC" && value > 0xff) ||
+		    (reg == "PC" && value > 0xffff)) {
+			fmt::print("Error: value would overflow register {}\n",
+				   reg);
+			return ACTION_CONTINUE;
+		}
+	}
+	catch(...) {
+		std::string flagChars = "CZIDBVN";
+		bool containsFlagCharacter =
+			std::any_of(flagChars.begin(), flagChars.end(),
+				 [&reg](char c) {
+				    return reg.find(c) != std::string::npos;
+				 }
+			      );
+		if (containsFlagCharacter)
+			flipFlag = true;
+		else {
+			fmt::print("Parse Error: '{}' is not a valid value for "
+				   "set\n", v);
+			return ACTION_CONTINUE;
+		}
+	}
+
+	if (reg == "A") 
+		A = (Byte) value;
+	else if (reg == "Y")
+		Y = (Byte) value;
+	else if (reg == "X")
+		X = (Byte) value;
+	else if (reg == "PC")
+		PC = (Word) value;
+	else if (reg == "SP")
+		SP = (Byte) value;
+	else if (reg == "PS")
+		PS = (Byte) value;
+	else if (reg == "C")
+		if (flipFlag)
+			Flags.C = !Flags.C;
+		else
+			Flags.C = (bool) value;
+	else if (reg == "Z")
+		if (flipFlag)
+			Flags.Z = !Flags.Z;
+		else
+			Flags.Z = (bool) value;
+	else if (reg == "I")
+		if (flipFlag)
+			Flags.I = !Flags.I;
+		else
+			Flags.I = (bool) value;
+	else if (reg == "D")
+		if (flipFlag)
+			Flags.D = !Flags.D;
+		else
+			Flags.D = (bool) value;
+	else if (reg == "B")
+		if (flipFlag)
+			Flags.B = !Flags.B;
+		else
+			Flags.B = (bool) value;
+	else if (reg == "V")
+		if (flipFlag)
+			Flags.V = !Flags.V;
+		else
+			Flags.V = (bool) value;
+	else if (reg == "N")
+		if (flipFlag)
+			Flags.N = !Flags.N;
+		else
+			Flags.N = (bool) value;
+	else 
+		fmt::print("# No register or status flag '{}'\n", reg);
+
+	return ACTION_CONTINUE;
+}
+
+int CPU::resetCmd([[maybe_unused]] std::string &line,
+		  [[maybe_unused]] unsigned long &returnValue) {
+	fmt::print("# Resetting 6502\n");
+	setDebug(false);
+	Reset();
+	returnValue = 1;
+	return ACTION_RETURN;
+}
+		
+int CPU::continueCmd([[maybe_unused]] std::string &line,
+		     [[maybe_unused]] unsigned long &returnValue) {
+	toggleDebug();
+	returnValue = 1;
+	return ACTION_RETURN;
+}
+
+int CPU::loopdetectCmd([[maybe_unused]] std::string &line,
+		       [[maybe_unused]] unsigned long &returnValue) {
+	toggleLoopDetection();
+	std::cout << "# Loop detection ";
+	if (debug_loopDetection)
+		std::cout << "enabled" << std::endl;
+	else 
+		std::cout << "disabled" << std::endl;
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::backtraceCmd([[maybe_unused]] std::string &line,
+		      [[maybe_unused]] unsigned long &returnValue) {
+	showBacktrace();
+	return ACTION_CONTINUE;
+}
+
+int CPU::whereCmd([[maybe_unused]] std::string &line,
+		  [[maybe_unused]] unsigned long &returnValue) {
+	disassemble(PC, 1);
+	return ACTION_CONTINUE;
+}
+
+int CPU::watchCmd(std::string &line,
+		  [[maybe_unused]] unsigned long &returnValue) {
+	Word addr;
+	bool remove = false;
+
+	if (line.empty()) {
+		mem->listWatch();
+		return ACTION_CONTINUE;
+	}
+	
+	if (line[0] == '-') {
+		line.erase(0,1);
+		remove = true;
+	}
+
+	try {
+		addr = std::stoul(line, nullptr, 16);
+		if (addr > MAX_MEM) {
+			fmt::print("Error: Watchpoint address outside of "
+				   "available address range\n");
+			return ACTION_CONTINUE;
+		}
+		if (remove) {
+			mem->clearWatch(addr);
+			fmt::print("Watchpoint at memory address {:04x} "
+				   "removed\n", addr);
+		} else {
+			mem->enableWatch(addr);
+			fmt::print("Watchpoint at memory address {:04x} "
+				   "added\n", addr);
+		}
+	}
+	catch(...) {
+		fmt::print("Parse error: {}\n", line);
+	}
+	
+	return ACTION_CONTINUE;
+}
+
+bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
+
+	auto debugCommands = getDebugCommands();
+	for (const auto &cmd : debugCommands) {
+		if (std::strcmp(cmd.command, input.c_str()) == 0 ||
+		    std::strcmp(cmd.shortcut, input.c_str()) == 0) {
+			func = cmd.func;
+			return true;
+		}
+	}
+	return false;
+}
+
+unsigned long CPU::debugPrompt() {
+	unsigned long returnValue, count = 1;
+	std::string line;
+	debugFn_t f;
+
+	// Setup GNU readline	
+	rl_completion_query_items = 0; // Disable file completion
+	rl_attempted_completion_function =
+		(rl_completion_func_t*) &completionCallback;
+	
+	listPC = PC;
+	disassemble(PC, 1);
+
+	while(1) {
+		getline(line);
+
+		if (line.empty() && debug_lastCmd.empty()) // Blank input
+			continue;
+
+		if (line.empty() && !debug_lastCmd.empty()) {
+			line = debug_lastCmd;
+		}
+
+		debug_lastCmd = line;
+
+		// Check if command is numbers, convert them to
+		// integer and return it.
+		try {
+			count = stol(line);
+			return count;
+		}
+		catch(...) {
+			// line isn't numbers, continue.
+		}
+
+		auto command = split(line, " ");
+		
+		if (matchCommand(command, f) ==false) {
+			std::cout << "Unknown command '" << command << "'"
+				  << std::endl;
+			continue;
+		}
+
+		line = stripSpaces(line);
+		auto action = (this->*f)(line, returnValue);
+		if (action == ACTION_CONTINUE)
+			continue;
+		if (action == ACTION_RETURN)
+			return returnValue;
+
+	}
+	return 1;
+}
+
+void CPU::debug() {
+	unsigned long count;
+
+	if (debugEntryFunc)
+		debugEntryFunc();
+
+	fmt::print("Debugger starting at PC {:#04x}\n", PC);
+
+	debugMode = true;
+
+	while (debugMode) {
+		count = debugPrompt();
+
+		while (count--) {
+			executeOneInstruction();
+			if (count)
+				disassemble(PC, 1);
+		}
+	}
+
+	fmt::print("# Exiting debugger\n");
+	if (debugExitFunc)
+		debugExitFunc();
+}
+
+std::tuple<Byte, Byte> CPU::traceOneInstruction() {
+	disassemble(PC, 1);
+	return executeOneInstruction();
 }

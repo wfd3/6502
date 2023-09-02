@@ -84,7 +84,7 @@ foreach my $opcode (sort keys(%i)) {
     $amode = $i{$opcode}{"amode"};
     $fn    = "ins_" . lc($ins) . "()";         # ins_xxx() 
     $const = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM 
-    printf("const Byte %s = 0x%x;\n", $const, $opcode);
+    printf("constexpr Byte %s = 0x%x;\n", $const, $opcode);
 }	
 
 # Prototypes
@@ -94,7 +94,7 @@ foreach my $opcode (sort keys(%i)) {
     $amode = $i{$opcode}{"amode"};
     $fn    = "ins_" . lc($ins) . "()";         # ins_xxx() 
     $const = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM 
-    printf("void %s(Byte addrmode) {}\n", $fn);
+    printf("void %s([[maybe__unused]] Byte addrmode,\n\t[[maybe_unused]] Byte &expectedCyclesToUse) {}\n", $fn);
 }
 
 # i[INS_XXX] = makeIns(...);
