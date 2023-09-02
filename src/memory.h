@@ -516,12 +516,11 @@ public:
 			exception(s);
 		}
 
-		// TODO: iterator
-		// TODO: Make sure we're only loading data into RAM
-		for (Address a = startAddress, i = 0; i < data.size();
+		auto start = _mem.begin() + startAddress;
+		for (auto a = start, i = 0; i < data.size(), a != _mem.end();
 		     a++, i++)  {
 			
-			if (_mem[a]->getType() != Element<Cell>::RAM) {
+			if ((*a)->getType() != Element<Cell>::RAM) {
 				auto s = fmt::format("Data attempted to load "
 						     "on non-RAM memory "
 						     "location at address {:x}",
@@ -529,7 +528,7 @@ public:
 				exception(s);
 			}
 
-			_mem[a]->Write(data[i]);
+			(*a)->Write(data[i]);
 		}
 	}
 
