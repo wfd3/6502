@@ -393,29 +393,30 @@ public:
 		return e != &_unmapped;
 	}
 
-	// TODO: Remove for() loops by address
 	void hexdump(const Address start, Address end) {
 
-		fmt::print("# Memory Dump {:#04x}:{:#04x}\n", start, end);
-
 		if (start > end || end > _endAddress) {
-			fmt::print("# -- Invalid memory range\n");
+			fmt::print("# Invalid memory range\n");
 			return;
 		}
 
-		for (unsigned long i = start; i <= end; i += 16) {
+		fmt::print("# Memory Dump {:#04x}:{:#04x}\n", start, end);
+
+		auto begin = _mem.begin() + start;
+		auto stop = _mem.begin() + end; 
+
+		for (auto it = begin; it <= stop; it += 16) {
 			std::string ascii;
 			std::string hexdump;
 			
-			hexdump += fmt::format("{:04x}  ", i);
+			hexdump += fmt::format("{:04x}  ",
+					       std::distance(_mem.begin(), it));
 			
-			for (unsigned long j = 0; j < 16; j++) {
-				if (j + i > end) {
-					hexdump += "   ";
-					ascii += ' ';
-					continue;
+			for (auto jt = it; jt < it+16; jt++) {
+				if (jt == _mem.end()) {
+					break;
 				}
-				Cell c = _mem[i + j]->Read();
+				Cell c = (*jt)->Read();
 				hexdump += fmt::format("{:02x} ", c);
 				if (isprint(c))
 					ascii += c;
