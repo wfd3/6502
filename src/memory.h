@@ -29,8 +29,18 @@
 
 #include <fmt/core.h>
 
+//
+// Memory is a simple vector of Elements, where each element is a
+// storage container for a Cell.  Elements are of four different
+// types: Unmapped, RAM, ROM and MIO (memory-mapped I/O).  Unmapped
+// elements are represented by the base Element class.  RAM, ROM and
+// MIO are represented by their own derived class.
+//
+// Each element is organized and accessed via the Memory class.
+// 
+
 /////////
-// Memory element base class
+// Memory element base class, also indicates an unmapped memory cell.
 template<class Cell>
 class Element {
 public:
@@ -38,38 +48,49 @@ public:
 
 	virtual ~Element() { }
 
-	virtual Cell Read() const = 0;
+	virtual Cell Read() const {
+		return 0;
+	}
 
-	virtual void Write(const Cell b) = 0;
+	virtual void Write([[maybe_unused]] const Cell b) {
+	};
 
-	virtual Element<Cell>& operator=(const Cell b) {
+	virtual std::string type() const {
+		return "Unmapped";
+	}
+
+	virtual Type getType() const {
+		return UNMAPPED;
+	}
+
+	Element<Cell>& operator=(const Cell b) {
 		this->Write(b);
 		return *this;
 	}	
 
-	virtual Element<Cell>& operator=(const int i) {
+	Element<Cell>& operator=(const int i) {
 		this->Write(i & 0xff);
 		return *this;
 	}
 
-	virtual Element<Cell>& operator=(const long unsigned int i) {
+	Element<Cell>& operator=(const long unsigned int i) {
 		this->Write(i & 0xff);
 		return *this;
 	}
 
-	virtual bool operator==(const Element<Cell> &e) const {
+	bool operator==(const Element<Cell> &e) const {
 		return Read() == e.Read();
 	}
 
-	virtual bool operator==(const int i) const {
+	bool operator==(const int i) const {
 		return this->Read() == i;
 	}
 
-	virtual bool operator==(const unsigned int i) const {
+	bool operator==(const unsigned int i) const {
 		return this->Read() == i;
 	}
 
-	virtual bool operator==(const unsigned char i) const {
+	bool operator==(const unsigned char i) const {
 		return this->Read() == i;
 	}
 
@@ -93,55 +114,36 @@ public:
 		return this->Read();
 	}
 
-	std::string type() const {
-		switch (this->_type) {
-		case RAM:      return "RAM";
-		case ROM:      return "ROM";
-		case MIO:      return "Memory Mapped I/O";
-		case UNMAPPED: return "Unmapped";
-		}
-		return "Error - bad memory type";
-	}
-
-	Type getType() const {
-		return this->_type;
-	}
-
 private:
 
 protected:
-	Type _type;
 };
 
 // RAM element
 template<class Cell>
 class RAM : public Element<Cell> {
 public:
-	RAM () {
-		this->_type = Element<Cell>::RAM;
-	}
+	RAM () { }
 
 	RAM<Cell>& operator=(const Cell i) {
 		Write(i);
 		return *this;
 	}
 
-	RAM<Cell>& operator=(const long unsigned int i) {
-		Write(i);
-		return *this;
-	}
-
-	RAM<Cell>& operator=(const int i) {
-		Write(i);
-		return *this;
-	}
-
-	Cell Read() const {
+	Cell Read() const override {
 		return _cell;
 	}
 
-	void Write(const Cell b) {
+	void Write(const Cell b) override {
 		_cell = b;
+	}
+
+	Element<Cell>::Type getType() const override {
+		return Element<Cell>::RAM;
+	}
+
+	std::string type() const override{
+		return "RAM";
 	}
 
 private:
@@ -155,30 +157,22 @@ public:
 	
 	ROM(Cell value) {
 		_cell = value;
-		this->_type = Element<Cell>::ROM;
 	}
 
-	Cell Read() const {
+	Cell Read() const override {
 		return _cell;
 	}
 
-	void Write([[maybe_unused]] const Cell  b) {
+	void Write([[maybe_unused]] const Cell  b) override {
 		;
 	}
 
-	ROM<Cell>& operator=(const Cell i) {
-		Write(i);
-		return *this;
+	Element<Cell>::Type getType() const override {
+		return Element<Cell>::ROM;
 	}
 
-	ROM<Cell>& operator=(const long unsigned int i) {
-		Write(i);
-		return *this;
-	}
-
-	ROM<Cell>& operator=(const int i) {
-		Write(i);
-		return *this;
+	std::string type() const override {
+		return "ROM";
 	}
 
 private:
@@ -192,13 +186,10 @@ public:
 	using readfn_t  = Cell (*)(void);
 	using writefn_t = void (*)(Cell);
 
-	MIO() {
-		this-> _type = Element<Cell>::MIO;
-	}
+	MIO() {	}
 
 	MIO(readfn_t readfn, writefn_t writefn) {
 		setMIO(readfn, writefn);
-		this->_type = Element<Cell>::MIO;
 	}
 	
 	void setMIO(readfn_t readfn = NULL, writefn_t writefn = NULL) {
@@ -206,71 +197,29 @@ public:
 		_writefn = writefn;
 	}
 
-	void Write(const Cell b) {
+	void Write(const Cell b) override {
 		if (_writefn) 
 			_writefn(b);
 	}
 
-	Cell Read() const {
+	Cell Read() const override {
 		if (_readfn) 
 			return _readfn();
 		return 0;
 	}
 
-	MIO<Cell>& operator=(const Cell i) {
-		Write(i);
-		return *this;
+	Element<Cell>::Type getType() const override {
+		return Element<Cell>::MIO;
 	}
 
-	MIO<Cell>& operator=(const long unsigned int i) {
-		Write(i);
-		return *this;
-	}
-
-	MIO<Cell>& operator=(const int i) {
-		Write(i);
-		return *this;
+	std::string type() const override {
+		return "MIO";
 	}
 
 private:
 	readfn_t _readfn;
 	writefn_t _writefn;
 };
-
-// An unmapped address; there should only be one of these.
-template<class Cell>
-class Unmapped : public Element<Cell> {
-public:
-	Unmapped() {
-		this->_type = Element<Cell>::UNMAPPED;
-	}
-
-	void Write([[maybe_unused]] const Cell b) {
-		;
-	}
-
-	Cell Read() const {
-		return 0;
-	}
-
-	Unmapped<Cell>& operator=([[maybe_unused]] const int i) {
-		return *this;
-	}
-
-	Unmapped<Cell>& operator=(const Cell i) {
-		Write(i);
-		return *this;
-	}
-
-	Unmapped<Cell>& operator=(const long unsigned int i) {
-		Write(i);
-		return *this;
-	}
-
-	
-private:
-};
-
 	
 /////////
 // memory class
@@ -429,13 +378,11 @@ public:
 
 	void printMap() const {
 
-		fmt::print("Memory size: {} bytes\n", _mem.size());
-
 		auto it = _mem.begin();
 		auto range_start = it;
 		auto range_end = it;
 
-		fmt::print("Memory map:");
+		fmt::print("Memory map:\n");
 
 		while (it != _mem.end()) {
 			auto next_it = std::next(it);
@@ -443,17 +390,17 @@ public:
 			  ((*next_it)->getType() != (*range_start)->getType())){
 
 				range_end = it;
-				unsigned long bytes = 1 +
+				Address bytes = 1 +
 					std::distance(range_start, range_end);
-				unsigned long start =
+				Address start = 
 				       std::distance(_mem.begin(), range_start);
-				unsigned long end =
+				Address end =
 					std::distance(_mem.begin(), range_end);
+				auto type = (*range_end)->type();
 
-				fmt::print("{:#04x} - {:#04x} {} ({} bytes)\n",
-					   start, end,
-					   (*range_end)->type().c_str(),
-					   bytes);
+				fmt::print("{:#06x} - {:#04x} {} ({} bytes)\n",
+					   start, end, type, bytes);
+
 				range_start = next_it;
 			}
 
@@ -465,9 +412,10 @@ public:
 			    return e->getType() != Element<Cell>::UNMAPPED;
 			});
 				
-		fmt::print("Total bytes mapped: {}\n", mappedBytes);
-	}
+		fmt::print("Total bytes mapped: {} bytes\n", mappedBytes);
+		fmt::print("Total memory size : {} bytes\n", _mem.size());
 
+	}
 
 	// Loading data into memory
 
@@ -500,9 +448,8 @@ public:
 		loadData(vec, start);
 	}
 	
-	void loadData(std::vector<Cell> &data,
-		      Address startAddress) {
-		
+	void loadData(std::vector<Cell> &data, Address startAddress) {
+
 		if (startAddress > _endAddress) {
 			auto s = fmt::format("Data load address is not a valid "
 					     "address: {:#04x}", startAddress);
@@ -516,19 +463,19 @@ public:
 			exception(s);
 		}
 
-		auto start = _mem.begin() + startAddress;
-		for (auto a = start, i = 0; i < data.size(), a != _mem.end();
-		     a++, i++)  {
+		for (auto a = _mem.begin() + startAddress, i = data.begin();
+		     a != _mem.end() && i != data.end(); a++, i++)  {
 			
 			if ((*a)->getType() != Element<Cell>::RAM) {
 				auto s = fmt::format("Data attempted to load "
 						     "on non-RAM memory "
 						     "location at address {:x}",
-						     startAddress + i);
+						     std::distance(_mem.begin(),
+								   a));
 				exception(s);
 			}
-
-			(*a)->Write(data[i]);
+			auto d = *i;
+			(*a)->Write(d);
 		}
 	}
 
@@ -573,7 +520,7 @@ public:
 private:
 
 	Address _endAddress; // Last address
-	::Unmapped<Cell> _unmapped;	   // Default memory element 
+	Element<Cell> _unmapped;	   // Default memory element 
 
 	std::vector<Element<Cell> *> _mem;
 	std::vector<bool> _watch; // Vector of watched addresses.
