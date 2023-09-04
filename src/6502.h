@@ -231,6 +231,7 @@ private:
 	std::vector<std::string> backtrace;
 	void showBacktrace();
 	void addBacktrace(Word);
+	void addBacktraceInterrupt(Word);
 	void removeBacktrace();
 
 public:

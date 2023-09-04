@@ -100,7 +100,7 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
 void getReadline(std::string &line) {
 	char *c_line = readline(":");
 	if (c_line == nullptr) {
-		line = "continue";
+		line = "";
 	} else {
 		line = c_line;
 		add_history(c_line);
@@ -400,6 +400,13 @@ void CPU::showBacktrace() {
 void CPU::addBacktrace(Word PC) {
 	std::string ins;
 	disassembleAt(PC, ins);
+	backtrace.push_back(ins);
+}
+
+void CPU::addBacktraceInterrupt(Word PC) {
+	std::string ins;
+	disassembleAt(PC, ins);
+	ins += " [IRQ/NMI]";
 	backtrace.push_back(ins);
 }
 

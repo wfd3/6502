@@ -89,17 +89,17 @@ void CPU::Reset() {
 
 void CPU::interrupt() {
 
-	Flags.I = 1;
-
 	pushWord(PC);
 	pushPS();
-	addBacktrace(PC);
+
+	Flags.I = 1;
 	PC = readWord(INTERRUPT_VECTOR);
 	Cycles++;
 }
 
 bool CPU::NMI() {
 	if (_pendingNMI.load()) {
+		addBacktraceInterrupt(PC);
 		interrupt();
 		_pendingNMI = false;
 		return true;
@@ -110,6 +110,7 @@ bool CPU::NMI() {
 
 bool CPU::IRQ() {
 	if (_pendingIRQ && Flags.I == 0) {
+		addBacktraceInterrupt(PC);
 		interrupt();
 		_pendingIRQ = false;
 		return true;
