@@ -269,11 +269,11 @@ int main () {
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(disable_raw_mode, enable_raw_mode);
 
-	// Exit the CPU from reset
-	cpu.exitReset();
-
 	enable_raw_mode();	// Set the keyboard non-blocking
+
+	cpu.exitReset();	// Exit the CPU from reset
 	cpu.execute();		// Start the CPU running
+
 	disable_raw_mode();	// Set the keyboard blocking
 
 	return 0;
