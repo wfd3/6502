@@ -52,8 +52,7 @@ public:
 		return 0;
 	}
 
-	virtual void Write([[maybe_unused]] const Cell b) {
-	};
+	virtual void Write([[maybe_unused]] const Cell b) { };
 
 	virtual std::string type() const {
 		return "Unmapped";
