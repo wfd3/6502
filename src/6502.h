@@ -433,7 +433,7 @@ public:
 			  "Reset the CPU and jump through the reset vector"
 			},
 			{ "continue",  "c",  &CPU::continueCmd,
-			  "Exit the debugger and contunue running the CPU"
+			  "Exit the debugger and contunue running the CPU.  "
 			},
 			{ "loopdetect","ld", &CPU::loopdetectCmd,
 			  "Enable or disable loop detection (ie, 'jmp *'"},

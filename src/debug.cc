@@ -99,7 +99,9 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
 // readline helpers
 void getReadline(std::string &line) {
 	char *c_line = readline(":");
-	if (c_line == nullptr) {
+	if (c_line == nullptr) { // ^D
+		line = "continue";
+	} else if (c_line[0] == '\0') {
 		line = "";
 	} else {
 		line = c_line;
@@ -835,7 +837,8 @@ unsigned long CPU::debugPrompt() {
 			line = debug_lastCmd;
 		}
 
-		debug_lastCmd = line;
+		if (line != "continue") 
+			debug_lastCmd = line;
 
 		// Check if command is numbers, convert them to
 		// integer and return it.
