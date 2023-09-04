@@ -31,9 +31,10 @@ CPU::CPU(Memory<Address_t, Byte> *m) {
 	mem = m;
 	CPU::setupInstructionMap();
 	overrideResetVector = false;
-	pendingReset = true;
+	_pendingReset = true;
 	debugEntryFunc = NULL;
 	debugExitFunc = NULL;
+	Cycles.enableTimingEmulation();
 }
 
 void CPU::setResetVector(Word address) {
@@ -58,7 +59,10 @@ void CPU::exitReset() {
 	} else {
 		PC = readWord(RESET_VECTOR);
 	}
-	pendingReset = false;
+
+	_pendingIRQ = false;
+	_pendingNMI = false;
+	_pendingReset = false;
 	overrideResetVector = false;
 
 	// Do this last in case anything above ever changes Cycles by
@@ -70,16 +74,52 @@ void CPU::exitReset() {
 // TODO: Change this function name and update all the 6502 tests.
 void CPU::Reset(Word address) {
 	// TODO: these should be lock-protected.
-	pendingReset = true;
+	_pendingReset = true;
 	overrideResetVector = true;
 	pendingResetPC = address;
 	exitReset();
 }
 
 void CPU::Reset() {
-	pendingReset = true;
+	_pendingReset = true;
 }
 
+//////////
+// Interrupts
+
+void CPU::interrupt() {
+
+	Flags.I = 1;
+
+	pushWord(PC);
+	pushPS();
+	addBacktrace(PC);
+	PC = readWord(INTERRUPT_VECTOR);
+	Cycles++;
+}
+
+bool CPU::NMI() {
+	if (_pendingNMI.load()) {
+		interrupt();
+		_pendingNMI = false;
+		return true;
+	}
+
+	return false;
+}
+
+bool CPU::IRQ() {
+	if (_pendingIRQ && Flags.I == 0) {
+		interrupt();
+		_pendingIRQ = false;
+		return true;
+	}
+
+	return false;
+}
+
+//////////
+// CPU Exception
 void CPU::exception(const std::string &message) {
 	fmt::print("CPU Exception: {}\n", message);
 	fmt::print("Entering debugger\n");
@@ -318,6 +358,7 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	op = _instructions[opcode].opfn;
 
 	(this->*op)(opcode, expectedCyclesToUse);
+	auto usedCycles = Cycles - startCycles;
 
 	if (debug_loopDetection && startPC == PC) {
 		fmt::print("# Loop detected at {:04x}, entering debugger\n",
@@ -325,22 +366,28 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 		debugMode = true;
 	}
 
-	if (pendingReset) {
+	// Check for a pending Non-maskable interrupt.  If none then
+	// check for a pending interrupt request.  
+	if (!NMI())
+		IRQ();
+
+	if (pendingReset()) {
 		exitReset();
-		startCycles = Cycles; // startCycles is wrong, reset it.
+		usedCycles = expectedCyclesToUse; 
 	}
 	
-	return std::make_tuple(Cycles - startCycles, expectedCyclesToUse);
+	return std::make_tuple(usedCycles, expectedCyclesToUse);
 }
 
 void CPU::execute() {
 	while (1) {
-		if (CPU::debugMode || CPU::isBreakpoint(PC))
-			CPU::debug();
-		else if (CPU::isPCAtExitAddress())
+		if (debugMode || isBreakpoint(PC)) {
+			debug();
+		} else if (isPCAtExitAddress()) {
 			break;
-		else
-			CPU::executeOneInstruction();
+		} else {
+			executeOneInstruction();
+		}
 	}
 }
 

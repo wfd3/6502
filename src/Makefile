@@ -9,7 +9,7 @@ CXXFLAGS += -g -Wall -Wextra -std=gnu++23 -I.
 
 all: lib6502.a
 
-6502_HEADERS = 6502.h memory.h 
+6502_HEADERS = memory.h clock.h 6502.h
 6502_FILES = 6502.cc debug.cc instructions.cc opcode_map.cc 
 6502_OBJS  = 6502.o debug.o instructions.o opcode_map.o
 

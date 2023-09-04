@@ -43,6 +43,7 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 all: runtests 
 
 6502_HEADERS = $(USER_DIR)/6502.h \
+	$(USER_DIR)/clock.h \
 	$(USER_DIR)/memory.h 
 6502_FILES = $(USER_DIR)/6502.cc \
 	$(USER_DIR)/debug.cc \
@@ -110,6 +111,7 @@ TESTS_DIR = .
 	$(TESTS_DIR)/6502_tests_rti.cc \
 	$(TESTS_DIR)/6502_tests_rts.cc \
 	$(TESTS_DIR)/6502_tests_tx_ty.cc \
+	$(TESTS_DIR)/6502_tests_interrupt.cc \
 	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.cc
 
 6502_TESTS_OBJS = $(6502_OBJS) \
@@ -136,6 +138,7 @@ TESTS_DIR = .
 	$(TESTS_DIR)/6502_tests_rti.o \
 	$(TESTS_DIR)/6502_tests_rts.o \
 	$(TESTS_DIR)/6502_tests_tx_ty.o \
+	$(TESTS_DIR)/6502_tests_interrupt.o \
 	$(TESTS_DIR)/6502_tests_xxx_functional_test_suite.o
 
 MEMORY_TEST_FILES = $(MEMORY_FILES) \

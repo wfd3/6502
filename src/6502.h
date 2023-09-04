@@ -28,82 +28,13 @@
 #include <atomic>
 
 #include "memory.h"
+#include "clock.h"
 
 using Byte      = unsigned char;
 using SByte     = signed char;
 using Word      = unsigned int;
 using Address_t = unsigned int;
 using cMemory   = Memory<Address_t, Byte>;
-
-class Cycles_t {
-public:
-	Cycles_t() {
-		_c = 0;
-		_emulateTimings = true;
-	}
-
-	unsigned long get() {
-		return _c;
-	}
-
-	void operator=(const unsigned long c) {
-		_c = c;
-	}
-	
-	bool operator==(const Cycles_t &rhs) {
-		return _c == rhs._c;
-	}
-	
-	Cycles_t& operator++(int) {
-		return operator+=(1);
-	}
-
-	Cycles_t& operator+=(int i) {
-		_c += i;
-		if (_emulateTimings) {
-			std::chrono::microseconds delay(i);
-			std::this_thread::sleep_for(delay);
-		}
-		return *this;
-	}
-
-	Byte operator-(Cycles_t const& c) {
-		if (c._c > _c)
-			return 0;
-		return _c - c._c;
-	}
-
-	Cycles_t operator+(Cycles_t const& c) {
-		Cycles_t res;
-		res = _c + c._c;
-		return res;
-	}
-
-	bool operator>(const Cycles_t &c)  {
-		return _c > c._c;
-	}
-
-	bool operator>(unsigned char c) const {
-		return _c > c;
-	}
-
-	bool operator<(const Cycles_t &c) {
-		return _c < c._c;
-	}
-
-	void enableTimingEmulation() {
-		_emulateTimings = true;
-	}
-	
-	void disableTimingEmulation() {
-		_emulateTimings = false;
-	}
-	
-private:
-	unsigned long _c;
-	bool _emulateTimings;
-};
-
 
 // https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
 // http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
@@ -141,9 +72,17 @@ public:
 	void Reset(Word);
 	void Reset();
 	void exitReset();
+
 	void setResetVector(Word);
+	void setPendingReset() { _pendingReset = true; }
+	bool pendingReset() { return _pendingReset; }
+
 	void setInterruptVector(Word);
-	void setPendingReset() { pendingReset = true; }
+	void raiseIRQ() { _pendingIRQ = true; }
+	void raiseNMI() { _pendingNMI = true; }
+	bool pendingIRQ() { return _pendingIRQ; }
+	bool pendingNMI() { return _pendingNMI; }
+
 	void unsetExitAddress() { _exitAddressSet = false; }
 	void setExitAddress(Address_t _pc) {
 		_exitAddress = _pc;
@@ -163,6 +102,7 @@ public:
 	void debug();
 	std::tuple<Byte, Byte> traceOneInstruction();
 
+	// Callbacks to run before entering and exiting the debugger
 	typedef void (*debugEntryExitFn_t)(void);
 	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = NULL,
 				   debugEntryExitFn_t exitfn = NULL) {
@@ -172,10 +112,11 @@ public:
 	}
 
 private:
-
 	// Setup & reset
 	cMemory *mem;
-	std::atomic_bool pendingReset;
+	std::atomic_bool _pendingReset;
+	std::atomic_bool _pendingIRQ;
+	std::atomic_bool _pendingNMI;
 	bool overrideResetVector;
 	Word pendingResetPC;
 	Address_t _exitAddress;
@@ -227,6 +168,11 @@ private:
 	Word getAddress(Byte, Byte &);
 	Byte getData(Byte, Byte &);
 
+	// Interrupts
+	void interrupt();
+	bool NMI();
+	bool IRQ();
+
 	// Helper functions
 	void doBranch(bool, Word, Byte &);
 	void doADC(Byte);
@@ -263,6 +209,7 @@ private:
 	int autostateCmd(std::string &, unsigned long &);
 	int resetListPCCmd(std::string &, unsigned long &);
 	int memdumpCmd(std::string &, unsigned long &);
+	int memmapCmd(std::string &, unsigned long &);
 	int setCmd(std::string &, unsigned long &);
 	int resetCmd(std::string &, unsigned long &);
 	int continueCmd(std::string &, unsigned long &);
@@ -271,6 +218,7 @@ private:
 	int whereCmd(std::string &, unsigned long &);
 	int watchCmd(std::string &, unsigned long &);
 	int quitCmd(std::string &, unsigned long &);
+	int clockCmd(std::string &, unsigned long &);
 
 	// Breakpoints
 	std::vector<Word> breakpoints;
@@ -447,8 +395,8 @@ public:
 		const std::string helpMsg;
 	};
 
-	static const std::array<debugCommand,16>& getDebugCommands() {
-		static const std::array<debugCommand,16> debugCommands = {{
+	static const std::vector<debugCommand>& getDebugCommands() {
+		static const std::vector<debugCommand> debugCommands = {{
 			{ "help",      "h",  &CPU::helpCmd,
 			  "This help message" 
 			},
@@ -500,6 +448,12 @@ public:
 			  "xxxx, 'watch -xxxx' removes the watchpoint at "
 			  "memory address xxxx, and 'watch' alone will list "
 			  "active watchpoints"
+			},
+			{ "map",       "M",  &CPU::memmapCmd,
+			  "Display the current memory map"
+			},
+			{ "clock",     "",   &CPU::clockCmd,
+			  "Toggle CPU speed emulation"
 			},
 			}};
 		return debugCommands;

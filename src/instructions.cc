@@ -216,19 +216,12 @@ void CPU::ins_bpl(Byte opcode, Byte &expectedCyclesToUse) {
 void CPU::ins_brk([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Byte &expectedCyclesToUse) {
 
-	// From the internets, BRK pushes PC + 1 to the stack. See:
+	// push PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 
 	PC++;
-	pushWord(PC);
-
-	addBacktrace(PC);
-
-	pushPS();
-	PC = readWord(INTERRUPT_VECTOR);
+	interrupt();
 	Flags.B = 1;
-	Flags.I = 1;
-	Cycles++;
 }
 
 // BVC
