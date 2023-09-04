@@ -46,15 +46,12 @@ static auto commands = CPU::getDebugCommands();
 ///////////
 // Helper functions
 
-std::string stripSpaces(std::string s) {
-	std::string::iterator it;
-	std::string new_s;
-
-	for (it = s.begin(); it != s.end(); it++) {
-		if (*it != ' ')
-			new_s += *it;
-	}
-	return new_s;
+std::string stripSpaces(std::string input) {
+	std::string result = input;
+	
+	result.erase(std::remove(result.begin(), result.end(), ' '),
+		     result.end());
+	return result;
 }
 
 std::string split(std::string &input, const std::string &delim) {
@@ -71,12 +68,39 @@ std::string split(std::string &input, const std::string &delim) {
     return part;
 }
 
+std::string wrapText(const std::string& text, int width, int tabLength) {
+    std::string result;
+    std::string line;
+    int lineLength = 0;
+
+    for (char c : text) {
+        if (c == ' ' && lineLength >= width - tabLength) {
+            result += line + '\n';
+            line.clear();
+            lineLength = 0;
+	    // Add a tab on the new line
+            line.append(tabLength, ' ');
+            lineLength += tabLength;
+        } else if (c == '\t') {
+            int spacesToAdd = tabLength - (lineLength % tabLength);
+            line.append(spacesToAdd, ' '); // Add spaces for the tab
+            lineLength += spacesToAdd;
+        } else {
+            line += c;
+            lineLength++;
+        }
+    }
+
+    result += line; // Add any remaining text to the result
+    return result;
+}
+
 //////////
 // readline helpers
-void getline(std::string &line) {
+void getReadline(std::string &line) {
 	char *c_line = readline(":");
-	if (c_line == NULL) {
-		line.clear();
+	if (c_line == nullptr) {
+		line = "continue";
 	} else {
 		line = c_line;
 		add_history(c_line);
@@ -112,31 +136,11 @@ static char** completionCallback(const char* text, [[maybe_unused]] int start,
 
 }
 
-std::string wrapText(const std::string& text, int width, int tabLength) {
-    std::string result;
-    std::string line;
-    int lineLength = 0;
-
-    for (char c : text) {
-        if (c == ' ' && lineLength >= width - tabLength) {
-            result += line + '\n';
-            line.clear();
-            lineLength = 0;
-	    // Add a tab on the new line
-            line.append(tabLength, ' ');
-            lineLength += tabLength;
-        } else if (c == '\t') {
-            int spacesToAdd = tabLength - (lineLength % tabLength);
-            line.append(spacesToAdd, ' '); // Add spaces for the tab
-            lineLength += spacesToAdd;
-        } else {
-            line += c;
-            lineLength++;
-        }
-    }
-
-    result += line; // Add any remaining text to the result
-    return result;
+void setupReadline() {
+	// Setup GNU readline	
+	rl_completion_query_items = 0; // Disable file completion
+	rl_attempted_completion_function =
+		(rl_completion_func_t*) &completionCallback;
 }
 
 //////////
@@ -150,7 +154,9 @@ void CPU::printCPUState() {
 		   (int) Flags.B, (int) Flags._unused, (int) Flags.V,
 		   (int) Flags.N, PS);
 	fmt::print(" | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print(" | Cycle: {}\n", Cycles.get()); 
+	fmt::print(" | Cycle: {}\n", Cycles.get());
+	fmt::print(" | Pending IRQ: {}, Pending NMI: {}, Pending Reset: {}\n",
+		   pendingIRQ(), pendingNMI(), pendingReset());
 }
 
 void CPU::dumpStack() {
@@ -404,76 +410,14 @@ void CPU::removeBacktrace() {
 
 //////////
 // Debugger
-
-void CPU::parseMemCommand(std::string s) {
-	Word addr1, addr2;
-	Word value;		
-	char equal, colon;
-	
-	s = stripSpaces(s);
-	std::istringstream iss(s);
-
-	auto rangeCheckAddr = [](Word addr) {
-		return addr <= MAX_MEM;
-	};
-
-	auto rangeCheckValue =[](Word value) {
-		return value <= 0xff;
-	};
-		
-	// xxxx
-	iss.seekg(0);
-	iss >> std::hex >> addr1;
-	if (!iss.fail() && iss.eof() && rangeCheckAddr(addr1)) {
-		fmt::print("[{:04x}] {:02x}\n", addr1, mem->Read(addr1));
-		return;
-	}
-
-	// xxxx=val
-	iss.seekg(0);
-	iss >> std::hex >> addr1 >> equal >> std::hex >> value;
-	if (!iss.fail() && iss.eof() && equal == '=' &&
-	    rangeCheckAddr(addr1) && rangeCheckValue(value)) {
-		Byte oldval = mem->Read(addr1);
-		mem->Write(addr1, (Byte) value);
-		 fmt::print("# [{:04x}] {:02x} -> {:02x}\n",
-			    addr1, oldval, (Byte) value);
-		return;
-	}
-
-	// xxxx:yyyy
-	iss.seekg(0);
-	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2;
-	if (!iss.fail() && iss.eof() && colon == ':' &&
-	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
-		mem->hexdump(addr1, addr2);
-		return;
-	}
-
-	// xxxx:yyyy=val
-	iss.seekg(0);
-	value = 0;
-	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> equal
-	    >> std::hex >> value;
-	if (!iss.fail() && iss.eof() && colon == ':' && equal == '=' &&
-	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
-	    rangeCheckValue(value)) {
-		for (Address_t a = addr1; a <= addr2; a++)
-			mem->Write(a, (Byte) value);
-		return;
-	}
-
-	// Handle parsing errors
-	fmt::print("Parse error: '{}'\n", s);
-}
-
 int CPU::helpCmd([[maybe_unused]] std::string &line,
 		 [[maybe_unused]] unsigned long &returnValue) {
 
 	const auto debugCommands = getDebugCommands();
 	for (const auto& cmd : debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
-			   wrapText(cmd.helpMsg, 80, 10+2)); // Add ': '
+			   // Add ': '
+			   wrapText(cmd.helpMsg, 80 - (10 + 2), 10+2)); 
 	}
 	
 	return ACTION_CONTINUE;
@@ -587,8 +531,71 @@ int CPU::resetListPCCmd(std::string &line,
 
 int CPU::memdumpCmd(std::string &line,
 		    [[maybe_unused]] unsigned long &returnValue) {
+	Word addr1, addr2;
+	Word value;		
+	char equal, colon;
+	
+	auto s = stripSpaces(line);
+	std::istringstream iss(s);
 
-	parseMemCommand(line);
+	auto rangeCheckAddr = [](Word addr) {
+		return addr <= MAX_MEM;
+	};
+
+	auto rangeCheckValue =[](Word value) {
+		return value <= 0xff;
+	};
+		
+	// xxxx
+	iss.seekg(0);
+	iss >> std::hex >> addr1;
+	if (!iss.fail() && iss.eof() && rangeCheckAddr(addr1)) {
+		fmt::print("[{:04x}] {:02x}\n", addr1, mem->Read(addr1));
+		return ACTION_CONTINUE;
+	}
+
+	// xxxx=val
+	iss.seekg(0);
+	iss >> std::hex >> addr1 >> equal >> std::hex >> value;
+	if (!iss.fail() && iss.eof() && equal == '=' &&
+	    rangeCheckAddr(addr1) && rangeCheckValue(value)) {
+		Byte oldval = mem->Read(addr1);
+		mem->Write(addr1, (Byte) value);
+		 fmt::print("# [{:04x}] {:02x} -> {:02x}\n",
+			    addr1, oldval, (Byte) value);
+		return ACTION_CONTINUE;
+	}
+
+	// xxxx:yyyy
+	iss.seekg(0);
+	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2;
+	if (!iss.fail() && iss.eof() && colon == ':' &&
+	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
+		mem->hexdump(addr1, addr2);
+		return ACTION_CONTINUE;;
+	}
+
+	// xxxx:yyyy=val
+	iss.seekg(0);
+	value = 0;
+	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> equal
+	    >> std::hex >> value;
+	if (!iss.fail() && iss.eof() && colon == ':' && equal == '=' &&
+	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
+	    rangeCheckValue(value)) {
+		for (Address_t a = addr1; a <= addr2; a++)
+			mem->Write(a, (Byte) value);
+		return ACTION_CONTINUE;
+	}
+
+	// Handle parsing errors
+	fmt::print("Parse error: '{}'\n", s);
+	return ACTION_CONTINUE;
+}
+
+int CPU::memmapCmd([[maybe_unused]] std::string &line,
+		   [[maybe_unused]] unsigned long &returnValue) {
+	mem->printMap();
 	return ACTION_CONTINUE;
 }
 
@@ -774,6 +781,20 @@ int CPU::watchCmd(std::string &line,
 	return ACTION_CONTINUE;
 }
 
+int CPU::clockCmd([[maybe_unused]] std::string &line,
+	     [[maybe_unused]] unsigned long &returnValue) {
+
+	Cycles.toggleTimingEmulation();
+	fmt::print("CPU timing emulation is ");
+	if (Cycles.timingEmulation()) 
+		fmt::print("enabled, per-cycle delay is {} ns\n",
+			   Cycles.delayTimeNs());
+	else
+		fmt::print("disabled\n");
+
+	return ACTION_CONTINUE;
+}
+
 bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
 
 	auto debugCommands = getDebugCommands();
@@ -792,16 +813,13 @@ unsigned long CPU::debugPrompt() {
 	std::string line;
 	debugFn_t f;
 
-	// Setup GNU readline	
-	rl_completion_query_items = 0; // Disable file completion
-	rl_attempted_completion_function =
-		(rl_completion_func_t*) &completionCallback;
+	setupReadline();
 	
 	listPC = PC;
 	disassemble(PC, 1);
 
 	while(1) {
-		getline(line);
+		getReadline(line);
 
 		if (line.empty() && debug_lastCmd.empty()) // Blank input
 			continue;
