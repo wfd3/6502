@@ -219,6 +219,14 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	Byte flags;
 	SByte rel;
 
+	auto updateCycles = [&](Byte reg) {
+		if ((flags == CYCLE_PAGE) &&
+		    ((address + reg) >> 8) != (address >> 8)) {
+			expectedCycles++;
+			Cycles++;
+		}
+	};
+
 	flags = _instructions.at(opcode).flags;
 	
 	switch (_instructions.at(opcode).addrmode) {
@@ -257,11 +265,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	case ADDR_MODE_ABX:
 		address = readWordAtPC();
 		// Add a cycle if a page boundry is crossed
-		if ((flags == CYCLE_PAGE) && ((address + X) >> 8) !=
-		    (address >> 8)) {
-			expectedCycles++;
-			Cycles++;
-		}
+		updateCycles(X);
 		address += X;
 		break;
 
@@ -269,11 +273,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	case ADDR_MODE_ABY:
 		address = readWordAtPC();
 		// Add a cycle if a page boundry is crossed
-		if ((flags == CYCLE_PAGE) && ((address + Y) >> 8) !=
-		    (address >> 8)) {
-			expectedCycles++;
-			Cycles++;
-		}
+		updateCycles(Y);
 		address += Y;
 		break;
 
