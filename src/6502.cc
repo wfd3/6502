@@ -27,12 +27,10 @@
 
 //////////
 // CPU Setup and reset
-CPU::CPU(Memory<Address_t, Byte>& m) : mem(m) {
-	CPU::setupInstructionMap();
-	overrideResetVector = false;
-	_pendingReset = true;
-	debugEntryFunc = NULL;
-	debugExitFunc = NULL;
+CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
+				       _instructions(setupInstructionMap()),
+				       _debugCommands(setupDebugCommands()) {
+	
 	Cycles.enableTimingEmulation();
 }
 
@@ -79,7 +77,7 @@ void CPU::Reset(Word address) {
 	exitReset();
 }
 
-void CPU::Reset() {
+void CPU::Reset() {		// TODO: this looks wrong.
 	_pendingReset = true;
 }
 
@@ -221,9 +219,9 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	Byte flags;
 	SByte rel;
 
-	flags = _instructions[opcode].flags;
+	flags = _instructions.at(opcode).flags;
 	
-	switch (_instructions[opcode].addrmode) {
+	switch (_instructions.at(opcode).addrmode) {
 
         // ZeroPage mode
 	case ADDR_MODE_ZP:
@@ -259,7 +257,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	case ADDR_MODE_ABX:
 		address = readWordAtPC();
 		// Add a cycle if a page boundry is crossed
-		if ((flags == CYCLE_CROSS_PAGE) && ((address + X) >> 8) !=
+		if ((flags == CYCLE_PAGE) && ((address + X) >> 8) !=
 		    (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
@@ -271,7 +269,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	case ADDR_MODE_ABY:
 		address = readWordAtPC();
 		// Add a cycle if a page boundry is crossed
-		if ((flags == CYCLE_CROSS_PAGE) && ((address + Y) >> 8) !=
+		if ((flags == CYCLE_PAGE) && ((address + Y) >> 8) !=
 		    (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
@@ -300,7 +298,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 
 	default:
 		auto s = fmt::format("Invalid addressing mode: {:#04x}",
-				     _instructions[opcode].addrmode);
+				     _instructions.at(opcode).addrmode);
 		exception(s);
 		break;
 	}
@@ -312,7 +310,7 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 	Byte data;
 	Word address;
 
-	switch (_instructions[opcode].addrmode) {
+	switch (_instructions.at(opcode).addrmode) {
 
 	// Implied and Accumulator
 	case ADDR_MODE_IMP:
@@ -354,8 +352,8 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 		exception(s);
 	}
 
-	expectedCyclesToUse = _instructions[opcode].cycles;
-	op = _instructions[opcode].opfn;
+	expectedCyclesToUse = _instructions.at(opcode).cycles;
+	op = _instructions.at(opcode).opfn;
 
 	(this->*op)(opcode, expectedCyclesToUse);
 	auto usedCycles = Cycles - startCycles;

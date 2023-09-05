@@ -40,9 +40,6 @@ constexpr unsigned char ACTION_CONTINUE = 1;
 
 Word listPC;
 
-// Static variable to keep track of readline completion state
-static auto commands = CPU::getDebugCommands();
-
 ///////////
 // Helper functions
 
@@ -110,11 +107,13 @@ void getReadline(std::string &line) {
 	}
 }
 
-// Non-lambda completion generator function
-static char* commandGenerator(const char* text, int state) {
+// Non-lambda completion generator function.  This requires a non-class version
+// of setupDebugCommands.
+char* readlineCommandGenerator(const char* text, int state) {
     static size_t listIndex = 0;
     static size_t length;
-    
+    auto commands = CPU::setupDebugCommands();
+   
     if (!state) {
 	    listIndex = 0;
 	    length = strlen(text);
@@ -134,7 +133,7 @@ static char* commandGenerator(const char* text, int state) {
 static char** completionCallback(const char* text, [[maybe_unused]] int start,
 				 [[maybe_unused]] int end) {
 	rl_attempted_completion_over = 1;
-	return rl_completion_matches(text, commandGenerator);
+	return rl_completion_matches(text, readlineCommandGenerator);
 
 }
 
@@ -180,7 +179,7 @@ void CPU::dumpStack() {
 // Disassembler
 
 std::string CPU::decodeArgs(Byte ins, bool atPC) {
-	Byte mode = _instructions[ins].addrmode;
+	Byte mode = _instructions.at(ins).addrmode;
 	Byte byteval;
 	Word wordval;
 	SByte rel;
@@ -280,7 +279,7 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 		disassembly += fmt::format(".byte ${:02x}", opcode);
 	} else {
 		
-		disassembly += _instructions[opcode].name;
+		disassembly += _instructions.at(opcode).name;
 
 		auto args = decodeArgs(opcode, atPC);
 		if (!args.empty())
@@ -419,11 +418,73 @@ void CPU::removeBacktrace() {
 
 //////////
 // Debugger
+std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
+	return {
+		{ "help",      "h",  &CPU::helpCmd,
+		  "This help message" 
+		},
+		{ "list",      "l",  &CPU::listCmd,
+		  "List instructions at current Program Counter"
+		},
+		{ "run",   "r",  &CPU::runCmd,
+		  "Run program at current Program Counter.  Optionally "
+		  "run for [x] instructions then reutrn to debugger"
+		},
+		{ "stack",     "S",  &CPU::stackCmd,
+		  "Show current stack elements"
+		},
+		{ "break",     "b",  &CPU::breakpointCmd,
+		  "Add, remove or show current breakpoints.  'break  "
+		  "xxxx' adds a breakpoint at address xxxx, 'break "
+		  "-xxxx' removes the breakpoint at address xxxx, and "
+		  "'break' alone will list active breakpoints"
+		},
+		{ "state",     "p",  &CPU::cpustateCmd,
+		  "Show current CPU state"},
+		{ "autostate", "a",  &CPU::autostateCmd,
+		  "Display CPU state after every debugger command"
+		},
+		{ "listpc",   "P",  &CPU::resetListPCCmd,
+		  "Reset where the 'list' command start to disassembe"
+		},
+		{ "mem",       "m",  &CPU::memdumpCmd,
+		  "Examine or change memory"},
+		{ "set",       "s",  &CPU::setCmd,
+		  "set a register or CPU flag, (ex. 'set A=ff')"},
+		{ "reset",     "" ,  &CPU::resetCmd,
+		  "Reset the CPU and jump through the reset vector"
+		},
+		{ "continue",  "c",  &CPU::continueCmd,
+		  "Exit the debugger and contunue running the CPU.  "
+		},
+		{ "loopdetect","ld", &CPU::loopdetectCmd,
+		  "Enable or disable loop detection (ie, 'jmp *'"},
+		{ "backtrace", "t",  &CPU::backtraceCmd,
+		  "Show the current subroutine and break backtrace"
+		},
+		{ "where",     "w",  &CPU::whereCmd,
+		  "Display the instruction at the Program Counter"
+		},
+		{ "watch",     "W",  &CPU::watchCmd,
+		  "Add, remove or show current memory watchpoints. "
+		  "'watch xxxx' adds a watchpoint at memory address "
+		  "xxxx, 'watch -xxxx' removes the watchpoint at "
+		  "memory address xxxx, and 'watch' alone will list "
+		  "active watchpoints"
+		},
+		{ "map",       "M",  &CPU::memmapCmd,
+		  "Display the current memory map"
+		},
+		{ "clock",     "",   &CPU::clockCmd,
+		  "Toggle CPU speed emulation"
+		},
+	};
+}
+
 int CPU::helpCmd([[maybe_unused]] std::string &line,
 		 [[maybe_unused]] unsigned long &returnValue) {
 
-	const auto debugCommands = getDebugCommands();
-	for (const auto& cmd : debugCommands) {
+	for (const auto& cmd : _debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
 			   // Add ': '
 			   wrapText(cmd.helpMsg, 80 - (10 + 2), 10+2)); 
@@ -806,8 +867,7 @@ int CPU::clockCmd([[maybe_unused]] std::string &line,
 
 bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
 
-	auto debugCommands = getDebugCommands();
-	for (const auto &cmd : debugCommands) {
+	for (const auto &cmd : _debugCommands) {
 		if (std::strcmp(cmd.command, input.c_str()) == 0 ||
 		    std::strcmp(cmd.shortcut, input.c_str()) == 0) {
 			func = cmd.func;

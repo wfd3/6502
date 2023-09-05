@@ -131,7 +131,7 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) {
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -143,14 +143,14 @@ void CPU::ins_asl(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagN(data);
 	setFlagZ(data);
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) {
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) {
 		A = data;
 	} else {
 		writeByte(address, data);
 	}
 	
 	Cycles++;
-	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
 		Cycles++;	
 }
 
@@ -310,7 +310,7 @@ void CPU::ins_dec(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 	Cycles++;
-	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
@@ -354,7 +354,7 @@ void CPU::ins_inc(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 	Cycles++;
-	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
@@ -382,7 +382,7 @@ void CPU::ins_jmp(Byte opcode, Byte &expectedCyclesToUse) {
 
 	addBacktrace(PC - 1);
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_IND) {
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_IND) {
 		address = getAddress(opcode, expectedCyclesToUse);
 	}
 
@@ -429,7 +429,7 @@ void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) 
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) 
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -441,13 +441,13 @@ void CPU::ins_lsr(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		writeByte(address, data);
 
 	Cycles++;
-	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
 		Cycles++;	
 }
 
@@ -504,7 +504,7 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data, carry;
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) {
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -519,13 +519,13 @@ void CPU::ins_rol(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		writeByte(address, data);
 
 	Cycles++;
-	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 
@@ -534,7 +534,7 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 	Word address;
 	Byte data, zero;
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC) 
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) 
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -549,13 +549,13 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 	setFlagZ(data);
 	Flags.C = (zero == 1);
 
-	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC)
 		A = data;
 	else 
 		writeByte(address, data);
 
 	Cycles++;
-	if (_instructions[opcode].addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
 		Cycles++;
 }
 

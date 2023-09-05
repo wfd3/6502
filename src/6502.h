@@ -36,18 +36,25 @@ using Word      = unsigned int;
 using Address_t = unsigned int;
 using cMemory   = Memory<Address_t, Byte>;
 
+//
+// The CPU class is broken up into three different sections:
+// 1) Core CPU public and private API
+// 2) CPU constants, public and private
+// 3) Debugger public and private API
+//
+// Each section is separated by a comment block.
+//
+// Reference materials:
 // https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
 // http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
-	
+
+
 class CPU {
 
+////////////////////
+// CPU
+////////////////////	
 public:
-
-	constexpr static Word MAX_MEM          = 0xFFFF;
-	constexpr static Byte INITIAL_SP       = 0xFF;
-	constexpr static Word RESET_VECTOR     = 0xFFFC;
-	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
-
 	Word PC = 0;		// Program counter
 	Byte SP = 0;		// Stack pointer
 	Byte A = 0;
@@ -76,7 +83,10 @@ public:
 	void exitReset();
 
 	void setResetVector(Word);
-	void setPendingReset() { _pendingReset = true; }
+	void setPendingReset() {
+		if (!debugMode)
+			_pendingReset = true;
+	}
 	bool pendingReset() { return _pendingReset; }
 
 	void setInterruptVector(Word);
@@ -98,21 +108,6 @@ public:
 	std::tuple<Byte, Byte> executeOneInstruction();
 	void execute();
 
-	// Debugging
-	void setDebug(bool);
-	bool isDebugEnabled() { return debugMode; }
-	void debug();
-	std::tuple<Byte, Byte> traceOneInstruction();
-
-	// Callbacks to run before entering and exiting the debugger
-	typedef void (*debugEntryExitFn_t)(void);
-	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = NULL,
-				   debugEntryExitFn_t exitfn = NULL) {
-
-		debugEntryFunc = entryfn;
-		debugExitFunc = exitfn;
-	}
-
 private:
 	// Setup & reset
 	cMemory& mem;
@@ -132,15 +127,15 @@ private:
 	struct instruction {
 		const char *name;
 	        Byte addrmode;
-		Byte flags;
 		Byte bytes;
 		Byte cycles;
+		Byte flags;
 		opfn_t opfn;
 	};
-	std::map<Byte, instruction> _instructions;
+	const std::map<Byte, instruction> _instructions;
 
 	CPU::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
-	void setupInstructionMap();
+	static std::map<Byte, instruction> setupInstructionMap();
 
 	// CPU functions
 	void exception(const std::string &);
@@ -181,63 +176,20 @@ private:
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
 
-	// Disassembler
-	std::string decodeArgs(Byte, bool);
-	Address_t disassemble(Address_t, unsigned long);
-	Address_t disassembleAt(Address_t dPC, std::string &);
-
-	// Debugger
-	bool debugMode = false;
-	debugEntryExitFn_t debugEntryFunc = NULL;
-	debugEntryExitFn_t debugExitFunc = NULL;
-	std::string debug_lastCmd = "";
-	bool debug_alwaysShowPS = false;
-	bool debug_loopDetection = false;
-
-	void toggleDebug();
-	unsigned long debugPrompt();
-	void dumpStack();
-	void printCPUState();
-	void parseMemCommand(std::string);
-
-	typedef int (CPU::*debugFn_t)(std::string &, unsigned long &);
-
-	bool matchCommand(const std::string &, debugFn_t &);
-	int helpCmd(std::string &, unsigned long &);
-	int listCmd(std::string &, unsigned long &);
-	int runCmd(std::string &, unsigned long &);
-	int stackCmd(std::string &, unsigned long &);
-	int breakpointCmd(std::string &, unsigned long &);
-	int cpustateCmd(std::string &, unsigned long &);
-	int autostateCmd(std::string &, unsigned long &);
-	int resetListPCCmd(std::string &, unsigned long &);
-	int memdumpCmd(std::string &, unsigned long &);
-	int memmapCmd(std::string &, unsigned long &);
-	int setCmd(std::string &, unsigned long &);
-	int resetCmd(std::string &, unsigned long &);
-	int continueCmd(std::string &, unsigned long &);
-	int loopdetectCmd(std::string &, unsigned long &);
-	int backtraceCmd(std::string &, unsigned long &);
-	int whereCmd(std::string &, unsigned long &);
-	int watchCmd(std::string &, unsigned long &);
-	int quitCmd(std::string &, unsigned long &);
-	int clockCmd(std::string &, unsigned long &);
-
-	// Breakpoints
-	std::vector<Word> breakpoints;
-	void listBreakpoints();
-	bool isBreakpoint(Word);
-	void deleteBreakpoint(Word);
-	void addBreakpoint(Word);
-
-	// Backtrace
-	std::vector<std::string> backtrace;
-	void showBacktrace();
-	void addBacktrace(Word);
-	void addBacktraceInterrupt(Word);
-	void removeBacktrace();
-
+////////////////////
+// CPU constants
+////////////////////
 public:
+	// CPU addressable memory
+	constexpr static Word MAX_MEM          = 0xFFFF;
+
+	// CPU initial vectors
+	// TODO: These could be private, will need
+	// some way for the tests to access
+	constexpr static Byte INITIAL_SP       = 0xFF; 
+	constexpr static Word RESET_VECTOR     = 0xFFFC;
+	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
+
 	// 6502 Opcode definitions
 	constexpr static Byte INS_BRK_IMP = 0x00;
 	constexpr static Byte INS_ORA_IDX = 0x01;
@@ -391,79 +343,6 @@ public:
 	constexpr static Byte INS_ADC_IDX = 0x61;
 	constexpr static Byte INS_PLA_IMP = 0x68;
 
-	// Debugger commands
-	struct debugCommand {
-		const char *command;
-		const char *shortcut;
-		const CPU::debugFn_t func;
-		const std::string helpMsg;
-	};
-
-	static const std::vector<debugCommand>& getDebugCommands() {
-		static const std::vector<debugCommand> debugCommands = {{
-			{ "help",      "h",  &CPU::helpCmd,
-			  "This help message" 
-			},
-			{ "list",      "l",  &CPU::listCmd,
-			  "List instructions at current Program Counter"
-			},
-			{ "run",   "r",  &CPU::runCmd,
-			  "Run program at current Program Counter.  Optionally "
-			  "run for [x] instructions then reutrn to debugger"
-			},
-			{ "stack",     "S",  &CPU::stackCmd,
-			  "Show current stack elements"
-			},
-			{ "break",     "b",  &CPU::breakpointCmd,
-			  "Add, remove or show current breakpoints.  'break  "
-			  "xxxx' adds a breakpoint at address xxxx, 'break "
-			  "-xxxx' removes the breakpoint at address xxxx, and "
-			  "'break' alone will list active breakpoints"
-			},
-			{ "state",     "p",  &CPU::cpustateCmd,
-			  "Show current CPU state"},
-			{ "autostate", "a",  &CPU::autostateCmd,
-			  "Display CPU state after every debugger command"
-			},
-			{ "listpc",   "P",  &CPU::resetListPCCmd,
-			  "Reset where the 'list' command start to disassembe"
-			},
-			{ "mem",       "m",  &CPU::memdumpCmd,
-			  "Examine or change memory"},
-			{ "set",       "s",  &CPU::setCmd,
-			  "set a register or CPU flag, (ex. 'set A=ff')"},
-			{ "reset",     "" ,  &CPU::resetCmd,
-			  "Reset the CPU and jump through the reset vector"
-			},
-			{ "continue",  "c",  &CPU::continueCmd,
-			  "Exit the debugger and contunue running the CPU.  "
-			},
-			{ "loopdetect","ld", &CPU::loopdetectCmd,
-			  "Enable or disable loop detection (ie, 'jmp *'"},
-			{ "backtrace", "t",  &CPU::backtraceCmd,
-			  "Show the current subroutine and break backtrace"
-			},
-			{ "where",     "w",  &CPU::whereCmd,
-			  "Display the instruction at the Program Counter"
-			},
-			{ "watch",     "W",  &CPU::watchCmd,
-			  "Add, remove or show current memory watchpoints. "
-			  "'watch xxxx' adds a watchpoint at memory address "
-			  "xxxx, 'watch -xxxx' removes the watchpoint at "
-			  "memory address xxxx, and 'watch' alone will list "
-			  "active watchpoints"
-			},
-			{ "map",       "M",  &CPU::memmapCmd,
-			  "Display the current memory map"
-			},
-			{ "clock",     "",   &CPU::clockCmd,
-			  "Toggle CPU speed emulation"
-			},
-			}};
-		return debugCommands;
-	};
-
-
 private:
 	// Addressing modes
 	constexpr static Byte ADDR_MODE_IMM = 0;  // Immediate
@@ -482,9 +361,9 @@ private:
 
         // How the CPU should add cycle counts on branches and when
         // instructions fetch data across page boundries.
-	constexpr static Byte NONE             = 0;
-	constexpr static Byte CYCLE_BRANCH     = 1;
-	constexpr static Byte CYCLE_CROSS_PAGE = 2;
+	constexpr static Byte NONE         = 0;
+	constexpr static Byte CYCLE_BRANCH = 1;
+	constexpr static Byte CYCLE_PAGE   = 2;
 
 	// Bits for PS byte
 	constexpr static Byte BreakBit    = 1 << 4;
@@ -552,4 +431,93 @@ private:
 	void ins_txa(Byte, Byte &);
 	void ins_txs(Byte, Byte &);
 	void ins_tya(Byte, Byte &);
+
+///////////////////////////////
+// Debugger
+///////////////////////////////
+public:
+	void setDebug(bool);
+	bool isDebugEnabled() { return debugMode; }
+	void debug();
+	std::tuple<Byte, Byte> traceOneInstruction();
+
+	// Callbacks to run before entering and exiting the debugger
+	typedef void (*debugEntryExitFn_t)(void);
+	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = NULL,
+				   debugEntryExitFn_t exitfn = NULL) {
+
+		debugEntryFunc = entryfn;
+		debugExitFunc = exitfn;
+	}
+
+	// The GNU readline command completion needs access to the
+	// _debugCommands vector.
+	friend char *readlineCommandGenerator(const char* text, int state);
+
+private:
+	// Disassembler
+	std::string decodeArgs(Byte, bool);
+	Address_t disassemble(Address_t, unsigned long);
+	Address_t disassembleAt(Address_t dPC, std::string &);
+
+	// Debugger
+	bool debugMode = false;
+	debugEntryExitFn_t debugEntryFunc = NULL;
+	debugEntryExitFn_t debugExitFunc = NULL;
+	std::string debug_lastCmd = "";
+	bool debug_alwaysShowPS = false;
+	bool debug_loopDetection = false;
+
+	void toggleDebug();
+	unsigned long debugPrompt();
+	void dumpStack();
+	void printCPUState();
+	void parseMemCommand(std::string);
+
+	typedef int (CPU::*debugFn_t)(std::string &, unsigned long &);
+
+	// Debugger commands
+	struct debugCommand {
+		const char *command;
+		const char *shortcut;
+		const CPU::debugFn_t func;
+		const std::string helpMsg;
+	};
+	const std::vector<debugCommand> _debugCommands;
+
+	static std::vector<debugCommand> setupDebugCommands();
+	bool matchCommand(const std::string &, debugFn_t &);
+	int helpCmd(std::string &, unsigned long &);
+	int listCmd(std::string &, unsigned long &);
+	int runCmd(std::string &, unsigned long &);
+	int stackCmd(std::string &, unsigned long &);
+	int breakpointCmd(std::string &, unsigned long &);
+	int cpustateCmd(std::string &, unsigned long &);
+	int autostateCmd(std::string &, unsigned long &);
+	int resetListPCCmd(std::string &, unsigned long &);
+	int memdumpCmd(std::string &, unsigned long &);
+	int memmapCmd(std::string &, unsigned long &);
+	int setCmd(std::string &, unsigned long &);
+	int resetCmd(std::string &, unsigned long &);
+	int continueCmd(std::string &, unsigned long &);
+	int loopdetectCmd(std::string &, unsigned long &);
+	int backtraceCmd(std::string &, unsigned long &);
+	int whereCmd(std::string &, unsigned long &);
+	int watchCmd(std::string &, unsigned long &);
+	int quitCmd(std::string &, unsigned long &);
+	int clockCmd(std::string &, unsigned long &);
+
+	// Breakpoints
+	std::vector<Word> breakpoints;
+	void listBreakpoints();
+	bool isBreakpoint(Word);
+	void deleteBreakpoint(Word);
+	void addBreakpoint(Word);
+
+	// Backtrace
+	std::vector<std::string> backtrace;
+	void showBacktrace();
+	void addBacktrace(Word);
+	void addBacktraceInterrupt(Word);
+	void removeBacktrace();
 };	
