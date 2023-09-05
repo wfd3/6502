@@ -5,7 +5,7 @@ CXX=g++
 CPPFLAGS += 
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -std=gnu++23 -I.
+CXXFLAGS += -g -Wall -Wextra -pedantic -Wuninitialized -Wshadow -Wconversion -std=gnu++23 -I. # -Weffc++
 
 all: lib6502.a
 
@@ -19,8 +19,8 @@ clean :
 	rm -f *.a
 
 
-%.o: %.cc $(6502_HEADERS)
+%.o: %.cc $(6502_HEADERS) Makefile
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $*.o $<
 
-lib6502.a: $(6502_OBJS) 
+lib6502.a: $(6502_OBJS) Makefile
 	$(AR) -rcs $@ $(6502_OBJS)

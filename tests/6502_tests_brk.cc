@@ -5,7 +5,7 @@ class MOS6502BRKTests : public testing::Test {
 public:
 
 	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{&mem};
+	CPU cpu{mem};
 
 	virtual void SetUp() {
 		cpu.exitReset();

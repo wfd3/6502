@@ -6,7 +6,7 @@ static const char *fileName = "../binfiles/6502_functional_test.bin";
 class MOS6502XXXFunctionalTestSuite : public testing::Test {
 public:	
 	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{&mem};
+	CPU cpu{mem};
 
 	virtual void SetUp() {
 		cpu.exitReset();

@@ -171,7 +171,7 @@ void CPU::dumpStack() {
 
 	while (p != SP) {
 		a = STACK_FRAME | p;
-		fmt::print("# [{:04x}] {:02x}\n", a, mem->Read(a));
+		fmt::print("# [{:04x}] {:02x}\n", a, mem.Read(a));
 		p--;
 	}
 }
@@ -399,15 +399,15 @@ void CPU::showBacktrace() {
 
 }
 
-void CPU::addBacktrace(Word PC) {
+void CPU::addBacktrace(Word backtracePC) {
 	std::string ins;
-	disassembleAt(PC, ins);
+	disassembleAt(backtracePC, ins);
 	backtrace.push_back(ins);
 }
 
-void CPU::addBacktraceInterrupt(Word PC) {
+void CPU::addBacktraceInterrupt(Word backtracePC) {
 	std::string ins;
-	disassembleAt(PC, ins);
+	disassembleAt(backtracePC, ins);
 	ins += " [IRQ/NMI]";
 	backtrace.push_back(ins);
 }
@@ -483,7 +483,7 @@ int CPU::breakpointCmd(std::string &line,
 	} 
 
 	try {
-		addr = std::stoul(line, nullptr, 16);
+		addr = (Word) std::stoul(line, nullptr, 16);
 		if (remove)
 			deleteBreakpoint(addr);
 		else
@@ -521,7 +521,7 @@ int CPU::resetListPCCmd(std::string &line,
 	Word i;
 
 	try {
-		i = std::stoul(line, nullptr, 16);
+		i = (Word) std::stoul(line, nullptr, 16);
 		if (i > MAX_MEM) {
 			fmt::print("Error: Program Counter address outside of "
 				   "available address range\n");
@@ -547,19 +547,19 @@ int CPU::memdumpCmd(std::string &line,
 	auto s = stripSpaces(line);
 	std::istringstream iss(s);
 
-	auto rangeCheckAddr = [](Word addr) {
-		return addr <= MAX_MEM;
+	auto rangeCheckAddr = [](Word a) {
+		return a <= MAX_MEM;
 	};
 
-	auto rangeCheckValue =[](Word value) {
-		return value <= 0xff;
+	auto rangeCheckValue =[](Word v) {
+		return v <= 0xff;
 	};
 		
 	// xxxx
 	iss.seekg(0);
 	iss >> std::hex >> addr1;
 	if (!iss.fail() && iss.eof() && rangeCheckAddr(addr1)) {
-		fmt::print("[{:04x}] {:02x}\n", addr1, mem->Read(addr1));
+		fmt::print("[{:04x}] {:02x}\n", addr1, mem.Read(addr1));
 		return ACTION_CONTINUE;
 	}
 
@@ -568,8 +568,8 @@ int CPU::memdumpCmd(std::string &line,
 	iss >> std::hex >> addr1 >> equal >> std::hex >> value;
 	if (!iss.fail() && iss.eof() && equal == '=' &&
 	    rangeCheckAddr(addr1) && rangeCheckValue(value)) {
-		Byte oldval = mem->Read(addr1);
-		mem->Write(addr1, (Byte) value);
+		Byte oldval = mem.Read(addr1);
+		mem.Write(addr1, (Byte) value);
 		 fmt::print("# [{:04x}] {:02x} -> {:02x}\n",
 			    addr1, oldval, (Byte) value);
 		return ACTION_CONTINUE;
@@ -580,7 +580,7 @@ int CPU::memdumpCmd(std::string &line,
 	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2;
 	if (!iss.fail() && iss.eof() && colon == ':' &&
 	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
-		mem->hexdump(addr1, addr2);
+		mem.hexdump(addr1, addr2);
 		return ACTION_CONTINUE;;
 	}
 
@@ -593,7 +593,7 @@ int CPU::memdumpCmd(std::string &line,
 	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
 	    rangeCheckValue(value)) {
 		for (Address_t a = addr1; a <= addr2; a++)
-			mem->Write(a, (Byte) value);
+			mem.Write(a, (Byte) value);
 		return ACTION_CONTINUE;
 	}
 
@@ -604,7 +604,7 @@ int CPU::memdumpCmd(std::string &line,
 
 int CPU::memmapCmd([[maybe_unused]] std::string &line,
 		   [[maybe_unused]] unsigned long &returnValue) {
-	mem->printMap();
+	mem.printMap();
 	return ACTION_CONTINUE;
 }
 
@@ -612,7 +612,7 @@ int CPU::setCmd(std::string &line,
 		[[maybe_unused]] unsigned long &returnValue) {
 	std::string v;
 	std::string reg;					
-	unsigned int value;
+	Word value;
 	bool flipFlag = false;
 
 	// TODO:  make 'set x 5' and 'set x=5' work.
@@ -628,7 +628,7 @@ int CPU::setCmd(std::string &line,
 	// reg contains the register, s is the value.
 	std::transform(reg.begin(), reg.end(), reg.begin(), ::toupper);
 	try {
-		value = std::stoul(v, nullptr, 16);
+		value = (Word) std::stoul(v, nullptr, 16);
 		if ((reg != "PC" && value > 0xff) ||
 		    (reg == "PC" && value > 0xffff)) {
 			fmt::print("Error: value would overflow register {}\n",
@@ -757,7 +757,7 @@ int CPU::watchCmd(std::string &line,
 	bool remove = false;
 
 	if (line.empty()) {
-		mem->listWatch();
+		mem.listWatch();
 		return ACTION_CONTINUE;
 	}
 	
@@ -767,18 +767,18 @@ int CPU::watchCmd(std::string &line,
 	}
 
 	try {
-		addr = std::stoul(line, nullptr, 16);
+		addr = (Word) std::stoul(line, nullptr, 16);
 		if (addr > MAX_MEM) {
 			fmt::print("Error: Watchpoint address outside of "
 				   "available address range\n");
 			return ACTION_CONTINUE;
 		}
 		if (remove) {
-			mem->clearWatch(addr);
+			mem.clearWatch(addr);
 			fmt::print("Watchpoint at memory address {:04x} "
 				   "removed\n", addr);
 		} else {
-			mem->enableWatch(addr);
+			mem.enableWatch(addr);
 			fmt::print("Watchpoint at memory address {:04x} "
 				   "added\n", addr);
 		}

@@ -185,11 +185,10 @@ public:
 	using readfn_t  = Cell (*)(void);
 	using writefn_t = void (*)(Cell);
 
-	MIO() {	}
+//	MIO() {	}
 
-	MIO(readfn_t readfn, writefn_t writefn) {
-		setMIO(readfn, writefn);
-	}
+	MIO(readfn_t readfn = NULL, writefn_t writefn = NULL) :
+		_readfn(readfn), _writefn(writefn) { }
 	
 	void setMIO(readfn_t readfn = NULL, writefn_t writefn = NULL) {
 		_readfn = readfn;
@@ -226,8 +225,7 @@ template<class Address = unsigned long, class Cell = unsigned char>
 class Memory {
 public:
 
-	Memory(const Address endAddress) {
-		_endAddress = endAddress;
+	Memory(const Address endAddress) : _endAddress(endAddress) {
 		auto _size = _endAddress + 1;
 
 		if (_size > _mem.max_size()) {
@@ -389,11 +387,11 @@ public:
 			  ((*next_it)->getType() != (*range_start)->getType())){
 
 				range_end = it;
-				Address bytes = 1 +
+				Address bytes = 1 + (Address) 
 					std::distance(range_start, range_end);
-				Address start = 
+				Address start = (Address)
 				       std::distance(_mem.begin(), range_start);
-				Address end =
+				Address end = (Address)
 					std::distance(_mem.begin(), range_end);
 				auto type = (*range_end)->type();
 

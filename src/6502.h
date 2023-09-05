@@ -48,9 +48,11 @@ public:
 	constexpr static Word RESET_VECTOR     = 0xFFFC;
 	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
 
-	Word PC;		// Program counter
-	Byte SP;		// Stack pointer
-	Byte A, X, Y;		// Registers
+	Word PC = 0;		// Program counter
+	Byte SP = 0;		// Stack pointer
+	Byte A = 0;
+	Byte X = 0;
+	Byte Y = 0;		// Registers
 	Cycles_t Cycles;	// Cycle counter
 	struct ProcessorStatusBits {
 		Byte C:1; 	// Carry (bit 0)
@@ -63,12 +65,12 @@ public:
 		Byte N:1;	// Negative (bit 7)
 	};
 	union {
-		Byte PS;
+		Byte PS = 0;
 		struct ProcessorStatusBits Flags;
 	};
 
 	// CPU Setup & reset
-        CPU(cMemory *);
+        CPU(cMemory &);
 	void Reset(Word);
 	void Reset();
 	void exitReset();
@@ -113,14 +115,14 @@ public:
 
 private:
 	// Setup & reset
-	cMemory *mem;
-	std::atomic_bool _pendingReset;
-	std::atomic_bool _pendingIRQ;
-	std::atomic_bool _pendingNMI;
-	bool overrideResetVector;
-	Word pendingResetPC;
-	Address_t _exitAddress;
-	bool _exitAddressSet;
+	cMemory& mem;
+	std::atomic_bool _pendingReset = false;
+	std::atomic_bool _pendingIRQ = false;
+	std::atomic_bool _pendingNMI = false;
+	bool overrideResetVector = false;
+	Word pendingResetPC = 0;
+	Address_t _exitAddress = 0;
+	bool _exitAddressSet = false;
 	bool isPCAtExitAddress() {
 		return _exitAddressSet && (PC == _exitAddress);
 	}
@@ -185,11 +187,12 @@ private:
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
 	// Debugger
-	bool debugMode;
-	debugEntryExitFn_t debugEntryFunc, debugExitFunc;
-	std::string debug_lastCmd;
-	bool debug_alwaysShowPS;
-	bool debug_loopDetection;
+	bool debugMode = false;
+	debugEntryExitFn_t debugEntryFunc = NULL;
+	debugEntryExitFn_t debugExitFunc = NULL;
+	std::string debug_lastCmd = "";
+	bool debug_alwaysShowPS = false;
+	bool debug_loopDetection = false;
 
 	void toggleDebug();
 	unsigned long debugPrompt();

@@ -4,7 +4,7 @@
 class MOS6502ADCTests : public testing::Test {
 public:
 	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{&mem};
+	CPU cpu{mem};
 
 
 	virtual void SetUp() {

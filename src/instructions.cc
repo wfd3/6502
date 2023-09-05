@@ -47,7 +47,7 @@ void CPU::bcdADC(Byte operand) {
 	carry = Flags.C;
 
 	// Low nibble first
-	a_low = (addend & 0x0f) + (operand & 0x0f) + carry;
+	a_low = (Byte) ((addend & 0x0f) + (operand & 0x0f) + carry);
 	if (a_low >= 0x0a) 
 		a_low = ((a_low + 0x06) & 0x0f) + 0x10;
 
@@ -55,10 +55,10 @@ void CPU::bcdADC(Byte operand) {
 	if (answer >= 0xa0) 
 		answer += 0x60;
 	
-	A = answer & 0xff;
+	A = (Word) (answer & 0xff);
 	
-	setFlagN(answer);
-	setFlagZ(answer);
+	setFlagN(A);
+	setFlagZ(A);
 	Flags.C = (answer >= 0x100);
 	Flags.V = (answer < -128) || (answer > 127);
 }
@@ -72,7 +72,7 @@ void CPU::bcdSBC(Byte subtrahend) {
 	carry = (Flags.C == 0);
 
 	// Low nibble first
-	op_l = (operand & 0x0f) - (subtrahend & 0x0f) - carry;
+	op_l = (SByte) ((operand & 0x0f) - (subtrahend & 0x0f) - carry);
 	if (op_l < 0) 
 		op_l = ((op_l - 0x06) & 0x0f) - 0x10;
 					
@@ -547,7 +547,7 @@ void CPU::ins_ror(Byte opcode, Byte &expectedCyclesToUse) {
 		data |= NegativeBit;
 	setFlagN(data);
 	setFlagZ(data);
-	Flags.C = zero;
+	Flags.C = (zero == 1);
 
 	if (_instructions[opcode].addrmode == ADDR_MODE_ACC)
 		A = data;

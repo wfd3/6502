@@ -27,8 +27,7 @@
 
 //////////
 // CPU Setup and reset
-CPU::CPU(Memory<Address_t, Byte> *m) {
-	mem = m;
+CPU::CPU(Memory<Address_t, Byte>& m) : mem(m) {
 	CPU::setupInstructionMap();
 	overrideResetVector = false;
 	_pendingReset = true;
@@ -145,13 +144,13 @@ void CPU::setFlagZ(Byte val) {
 //////////
 // Memory access
 Byte CPU::readByte(Word address) {
-	Byte data = mem->Read(address);
+	Byte data = mem.Read(address);
 	Cycles++;
 	return data;
 }
 
 void CPU::writeByte(Word address, Byte value) {
-	mem->Write(address, value);
+	mem.Write(address, value);
 	Cycles++;
 }
 
@@ -162,7 +161,7 @@ Word CPU::readWord(Word address) {
 
 void CPU::writeWord(Word address, Word word) {
 	writeByte(address, word & 0xff);
-	writeByte(address + 1, (word >> 8));
+	writeByte(address + 1, (Byte) (word >> 8));
 }
 
 Word CPU::readWordAtPC() {
@@ -248,7 +247,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	// Relative
 	case ADDR_MODE_REL:
 		rel = SByte(readByteAtPC());
-		address = PC + rel;
+		address = (Word) (PC + rel);
 		break;
 
 	// Absolute

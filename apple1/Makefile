@@ -5,7 +5,7 @@ CXX=g++
 CPPFLAGS += -I../src
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra -std=gnu++23 
+CXXFLAGS += -Wall -Wextra -pedantic -Wuninitialized -Wshadow -Wconversion -std=gnu++23 -I. 
 
 all: apple1
 

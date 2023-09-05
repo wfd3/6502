@@ -2,11 +2,8 @@
 
 class Cycles_t {
 public:
-	Cycles_t() {
-		_c = 0;
-		_emulateTiming = false;
-		_cycleDelay = std::chrono::nanoseconds(nsInMHz); // 1us == 1MHz
-	}
+Cycles_t() : _c(0), _emulateTiming(false),
+		_cycleDelay(std::chrono::nanoseconds(nsInMHz)) { } 
 
 	unsigned long delayTimeNs() {
 		return _cycleDelay.count();
@@ -32,15 +29,16 @@ public:
 		return _c;
 	}
 
-	void operator=(const unsigned long c) {
+	Cycles_t& operator=(const unsigned long c) {
 		_c = c;
+		return *this;
 	}
 	
 	bool operator==(const Cycles_t &rhs) {
 		return _c == rhs._c;
 	}
 	
-	Cycles_t& operator++(int) {
+	Cycles_t operator++(int) {
 		_c++;
 		clockDelay();
 		return *this;
@@ -55,7 +53,7 @@ public:
 	unsigned char operator-(Cycles_t const& c) {
 		if (c._c > _c)
 			return 0;
-		return _c - c._c;
+		return (unsigned char) (_c - c._c);
 	}
 
 	Cycles_t operator+(Cycles_t const& c) {

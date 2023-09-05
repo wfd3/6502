@@ -82,7 +82,7 @@ char kbdCharacter = 0;
 
 // Create the memory and CPU
 Memory mem(CPU::MAX_MEM);
-CPU cpu(&mem);
+CPU cpu(mem);
 
 void signalHandler( int signum ) {
 	switch (signum) {
@@ -184,7 +184,9 @@ unsigned char kbdcr_read() {
 		cpu.setDebug(true);
 		return 0;
 	default:
-		kbdCharacter = toupper(kbdCharacter);
+		kbdCharacter =
+			static_cast<char>(std::toupper(static_cast<unsigned char>(kbdCharacter)));
+		//		std::toupper(kbdCharacter);
 		break;
 	}
 
@@ -194,7 +196,7 @@ unsigned char kbdcr_read() {
 	// pending read from the keyboard, hence the bitwise or with
 	// 0x80.
 	
-	kbdCharacter |= 0x80;
+	kbdCharacter |= (char) 0x80;
 	kbdCharPending = true;
 		
 	return kbdCharacter;
