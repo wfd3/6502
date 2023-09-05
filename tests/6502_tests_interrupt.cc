@@ -17,14 +17,13 @@ public:
 	}
 };
 
-// label:
-//  dex
-//  iny
-//  dex
-//  iny
-//  dex
-//  iny
-//  jmp label
+// label: dex
+//        iny
+//        dex
+//        iny
+//        dex
+//        iny
+//        jmp label
 std::vector<Byte> interruptTestProgram = {
 	0xca, 0xc8, 0xca, 0xc8, 0xca, 0xc8, 0xc4, 0x00, 0x10
 };
@@ -146,4 +145,38 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.Flags.I);
+}
+
+TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
+
+	// 1000 loop: dex
+	// 1001       cpy #0
+	// 1003       bne loop
+	// 1005       dex
+	std::vector<Byte> thisProgram = { 0xca, 0xc0, 0x00, 0xd0, 0xfb, 0xca };
+
+	// 4000       ldy #0
+	// 4002       rti
+	std::vector<Byte> rtiProgram  = { 0xa0, 0x00, 0x40 };
+
+	//Given:
+	mem.loadData(thisProgram, 0x1000);
+	cpu.PC = 0x1000;
+	cpu.setExitAddress(0x1005);
+	cpu.setInterruptVector(0x4000);
+	mem.loadData(rtiProgram, 0x4000);
+
+	// When
+	std::thread runProgram(&CPU::execute, &cpu);
+	usleep(250);
+	cpu.raiseIRQ();
+	usleep(250);
+	runProgram.join();
+
+	// Expect
+	EXPECT_EQ(cpu.PC, 0x1005);
+	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP);
+	EXPECT_FALSE(cpu.pendingIRQ());
+	EXPECT_FALSE(cpu.pendingNMI());
+	EXPECT_FALSE(cpu.Flags.I);
 }
