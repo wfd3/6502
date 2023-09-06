@@ -7,13 +7,19 @@ std::vector<Byte> testProgram = {
 
 ///
 // Test Program
-//
-// $4000: lda #$FF
-// $4001: sta $90
-// $4002: sta $8000
-// $4003: eor #$CC
-// $4004: jmp #$4000
-//
+//      LDA #$00
+//      STA $C000
+//      LDX #$00
+//      LDY #$00
+//loop: INX
+//      BNE loop
+//      INY     
+//      BNE loop
+//      LDA $C000
+//      CLC
+//      ADC #$01
+//      STA $C000
+//      JMP loop
 
 static const unsigned long programLen = 12;
 constexpr Address_t startAddress = 0x4000;
