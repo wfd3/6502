@@ -148,6 +148,10 @@ void setupReadline() {
 // CPU State information 
 
 void CPU::printCPUState() {
+	auto yesno = [](bool b) -> std::string {
+		return b ? "Yes" : "No";
+	};
+	
 	fmt::print(" | PC: {:04x} SP: {:02x}\n", PC, SP );
 	// fmt::print() doesn't like to print out union/bit-field members?
 	fmt::print(" | C:{} Z:{} I:{} D:{} B:{} U:{} V:{} N:{} (PS: {:#x})\n",
@@ -155,9 +159,10 @@ void CPU::printCPUState() {
 		   (int) Flags.B, (int) Flags._unused, (int) Flags.V,
 		   (int) Flags.N, PS);
 	fmt::print(" | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print(" | Pending: IRQ - {}, NMI - {}, Reset - {}\n",
+		   yesno(pendingIRQ()), yesno(pendingNMI()),
+		   yesno(pendingReset()));
 	fmt::print(" | Cycle: {}\n", Cycles.get());
-	fmt::print(" | Pending IRQ: {}, Pending NMI: {}, Pending Reset: {}\n",
-		   pendingIRQ(), pendingNMI(), pendingReset());
 }
 
 void CPU::dumpStack() {
@@ -424,7 +429,15 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "This help message" 
 		},
 		{ "list",      "l",  &CPU::listCmd,
-		  "List instructions at current Program Counter"
+		  "List next 10 instructions.  'list xxxx' lists from address "
+		  "xxxx. 'list' without an address either lists from current "
+		  "program counter or continues the last listing."
+		},
+		{ "load",      "L",  &CPU::loadCmd,
+		  "'load <file> <address>' loads the file named 'file' at "
+		  "memory address 'address', overwriting any data.  This "
+		  "command will fail if it attempts to load data on non-RAM "
+		  "memory."
 		},
 		{ "run",   "r",  &CPU::runCmd,
 		  "Run program at current Program Counter.  Optionally "
@@ -495,16 +508,41 @@ int CPU::helpCmd([[maybe_unused]] std::string &line,
 
 int CPU::listCmd(std::string &line,
 		 [[maybe_unused]] unsigned long &returnValue) {
-	unsigned long count;
-
 	try {
-		count = std::stoul(line);
+		listPC = std::stoul(line, nullptr, 16);
 	}
 	catch (...) {
-		count = 10;
 	}
 
-	listPC = disassemble(listPC, count);
+	listPC = disassemble(listPC, 10);
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::loadCmd(std::string &line,
+		 [[maybe_unused]] unsigned long &returnValue) {
+	std::string fname;
+	Address_t address;
+
+	std::istringstream iss(line);
+	iss >> fname >> std::hex >> address;
+
+	if (address > CPU::MAX_MEM) {
+		fmt::print("Invalid address: {:04x}\n", address);
+		return ACTION_CONTINUE;
+	}
+
+	fmt::print("Loading file {} at address {:04x}\n", fname, address);
+
+	try {
+		mem.loadDataFromFile(fname, address);
+	}
+	catch (std::exception &e) {
+		fmt::print("Load failed: {}\n", e.what());
+	}
+	catch(...) {
+		fmt::print("Load error: unknown exception\n");
+	}
 	
 	return ACTION_CONTINUE;
 }
@@ -917,7 +955,6 @@ unsigned long CPU::debugPrompt() {
 			continue;
 		}
 
-		line = stripSpaces(line);
 		auto action = (this->*f)(line, returnValue);
 		if (action == ACTION_CONTINUE)
 			continue;

@@ -489,6 +489,7 @@ private:
 	bool matchCommand(const std::string &, debugFn_t &);
 	int helpCmd(std::string &, unsigned long &);
 	int listCmd(std::string &, unsigned long &);
+	int loadCmd(std::string &, unsigned long &);
 	int runCmd(std::string &, unsigned long &);
 	int stackCmd(std::string &, unsigned long &);
 	int breakpointCmd(std::string &, unsigned long &);

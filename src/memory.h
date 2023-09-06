@@ -429,8 +429,7 @@ public:
 		file.seekg(0, std::ios::beg);
 
 		if (fileSize == -1) {
-			auto s = fmt::format("Can't load file '{}': not found",
-					     filename);
+			auto s = fmt::format("File {} not found", filename);
 			exception(s);
 		}
 		
@@ -443,6 +442,10 @@ public:
 			   std::istream_iterator<unsigned char>(file),
 			   std::istream_iterator<unsigned char>());
 		loadData(vec, start);
+	}
+
+	void loadDataFromFile(std::string& filename, Address start) {
+		loadDataFromFile(filename.c_str(), start);
 	}
 	
 	void loadData(std::vector<Cell> &data, Address startAddress) {
@@ -460,9 +463,8 @@ public:
 			exception(s);
 		}
 
-		for (auto a = _mem.begin() + startAddress, i = data.begin();
-		     a != _mem.end() && i != data.end(); a++, i++)  {
-			
+		auto a = _mem.begin() + startAddress;
+		for (auto i = data.begin(); i != data.end(); a++, i++)  {
 			if ((*a)->getType() != Element<Cell>::RAM) {
 				auto s = fmt::format("Data attempted to load "
 						     "on non-RAM memory "
