@@ -167,10 +167,8 @@ TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
 	mem.loadData(rtiProgram, 0x4000);
 
 	// When
-	std::thread runProgram(&CPU::execute, &cpu);
-	usleep(250);
 	cpu.raiseIRQ();
-	usleep(250);
+	std::thread runProgram(&CPU::execute, &cpu);
 	runProgram.join();
 
 	// Expect

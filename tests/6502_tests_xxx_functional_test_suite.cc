@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <6502.h>
 
-static const char *fileName = "../binfiles/6502_functional_test.bin";
+static const char *fileName = BINFILE_PATH "/6502_functional_test.bin";
 
 class MOS6502XXXFunctionalTestSuite : public testing::Test {
 public:	

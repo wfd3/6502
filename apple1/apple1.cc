@@ -42,18 +42,18 @@
 // Load addresses and data locations for various built in programs
 constexpr Address_t wozmonAddress              = 0xff00;
 static const char *WOZMON_FILE =
-	"../binfiles/wozmon.bin";
+	BINFILE_PATH "/wozmon.bin";
 
 #ifdef APPLE_INTEGER_BASIC
 constexpr Address_t appleBasicAddress          = 0xe000;
 static const char *APPLESOFT_BASIC_FILE =
-	"../binfiles/Apple-1_Integer_BASIC.bin";
+	BINFILE_PATH "Apple-1_Integer_BASIC.bin";
 #endif
 
 #ifdef APPLESOFT_BASIC_LITE
 constexpr Address_t applesoftBasicLiteAddress  = 0x6000;
 static const char *APPLE_INTEGER_BASIC_FILE =
-	"../binfiles/applesoft-lite-0.4-ram.bin";
+	BINFILE_PATH "/applesoft-lite-0.4-ram.bin";
 #endif
 
 // bytecode for the sample program from the Apple 1 Manual

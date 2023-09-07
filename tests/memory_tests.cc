@@ -18,7 +18,7 @@ TEST_F(MemoryTests, CanMapRAMAndReadWriteIt) {
 	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapRAM(0, 0x1000);
-	EXPECT_EQ(mem.size(), 0x1000+1);
+	EXPECT_EQ(mem.size(), (Address) 0x1000 + 1);
 	mem[1] = 10;
 	EXPECT_EQ(mem[1], 10);
 }
@@ -27,7 +27,7 @@ TEST_F(MemoryTests, CantWriteUnmapedMemory) {
 	Memory<Address, Cell> mem(0x2000);
 
 	mem.mapRAM(0, 0x1000);
-	EXPECT_EQ(mem.size(), 0x2000+1);
+	EXPECT_EQ(mem.size(), (Address)  0x2000+1);
 	mem[0x1001] = 10;
 	EXPECT_EQ(mem[0x1001], 0);
 }
@@ -36,7 +36,7 @@ TEST_F(MemoryTests, WriteInBoundsDoesntThrowException) {
 	Memory<Address, Cell> mem(0x1000);
 
 	mem.mapRAM(0, 0x1000);
-	EXPECT_EQ(mem.size(), 0x1000+1);
+	EXPECT_EQ(mem.size(),(Address) 0x1000+1);
 	EXPECT_NO_THROW({mem[0x1000] = 10; });
 }
 
@@ -78,7 +78,7 @@ TEST_F(MemoryTests, WriteOutOfBoundsThrowsOuMemoryException) {
 	bool caughtMemoryException = false;
 
 	mem.mapRAM(0, 0x1000);
-	EXPECT_EQ(mem.size(), 0x1000+1);
+	EXPECT_EQ(mem.size(), (Address) 0x1000+1);
 
 	try {
 		mem[0x1001] = 10;
