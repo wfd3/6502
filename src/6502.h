@@ -36,6 +36,11 @@ using Word      = unsigned int;
 using Address_t = unsigned int;
 using cMemory   = Memory<Address_t, Byte>;
 
+// Forward declaration with extern "C" linkage for later use as a
+// friend in class CPU. This is for GNU Readline.
+extern "C" char **readlineCompletionCallback(const char* text, int start,
+					     int end);
+
 //
 // The CPU class is broken up into three different sections:
 // 1) Core CPU public and private API
@@ -47,7 +52,6 @@ using cMemory   = Memory<Address_t, Byte>;
 // Reference materials:
 // https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
 // http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
-
 
 class CPU {
 
@@ -169,6 +173,9 @@ private:
 	void interrupt();
 	bool NMI();
 	bool IRQ();
+	unsigned long _IRQCount = 0;
+	unsigned long _NMICount = 0;
+	unsigned long _BRKCount = 0;
 
 	// Helper functions
 	void doBranch(bool, Word, Byte &);
@@ -452,7 +459,8 @@ public:
 
 	// The GNU readline command completion needs access to the
 	// _debugCommands vector.
-	friend char *readlineCommandGenerator(const char* text, int state);
+	friend char *readlineCommandGenerator(const char*, int);
+	friend char **readlineCompletionCallback(const char*, int, int);
 
 private:
 	// Disassembler
@@ -481,6 +489,7 @@ private:
 		const char *command;
 		const char *shortcut;
 		const CPU::debugFn_t func;
+		const bool doFileCompletion;
 		const std::string helpMsg;
 	};
 	const std::vector<debugCommand> _debugCommands;

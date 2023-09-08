@@ -97,6 +97,7 @@ void CPU::interrupt() {
 bool CPU::NMI() {
 	if (_pendingNMI.load()) {
 		addBacktraceInterrupt(PC);
+		_IRQCount++;
 		interrupt();
 		_pendingNMI = false;
 		return true;
@@ -108,6 +109,7 @@ bool CPU::NMI() {
 bool CPU::IRQ() {
 	if (_pendingIRQ && Flags.I == 0) {
 		addBacktraceInterrupt(PC);
+		_NMICount++;
 		interrupt();
 		_pendingIRQ = false;
 		return true;

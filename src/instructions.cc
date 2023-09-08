@@ -219,6 +219,7 @@ void CPU::ins_brk([[maybe_unused]] Byte opcode,
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 	addBacktrace(PC - 1);
 	PC++;
+	_BRKCount++;
 	interrupt();
 	Flags.B = 1;
 }

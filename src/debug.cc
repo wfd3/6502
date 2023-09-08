@@ -130,18 +130,35 @@ char* readlineCommandGenerator(const char* text, int state) {
 }
 
 // Static completion callback function outside the class
-static char** completionCallback(const char* text, [[maybe_unused]] int start,
-				 [[maybe_unused]] int end) {
-	rl_attempted_completion_over = 1;
-	return rl_completion_matches(text, readlineCommandGenerator);
+extern "C" char **readlineCompletionCallback(const char* text,
+					     [[maybe_unused]] int start,
+					     [[maybe_unused]] int end) {
+	auto commands = CPU::setupDebugCommands();
 
+	rl_attempted_completion_over = 1;
+
+	// See if the text so far is a command that wants file completion
+	for(const auto& cmd : commands) {
+		size_t cmd_len = strlen(cmd.command);
+		if(start >= (int) cmd_len &&
+		   strncmp(rl_line_buffer, cmd.command, cmd_len) == 0 &&
+		   rl_line_buffer[cmd_len] == ' ' &&			
+		   cmd.doFileCompletion) {
+			rl_attempted_completion_over = 0;
+			return rl_completion_matches(text,
+					      rl_filename_completion_function);
+		}
+	}
+	
+	// Otherwise use custom command generator
+	return rl_completion_matches(text,
+				     readlineCommandGenerator);
 }
 
 void setupReadline() {
 	// Setup GNU readline	
-	rl_completion_query_items = 0; // Disable file completion
-	rl_attempted_completion_function =
-		(rl_completion_func_t*) &completionCallback;
+	rl_completion_query_items = 50;
+	rl_attempted_completion_function = readlineCompletionCallback;
 }
 
 //////////
@@ -162,6 +179,8 @@ void CPU::printCPUState() {
 	fmt::print(" | Pending: IRQ - {}, NMI - {}, Reset - {}\n",
 		   yesno(pendingIRQ()), yesno(pendingNMI()),
 		   yesno(pendingReset()));
+	fmt::print(" | IRQs: {}, NMIs: {}, BRKs: {}\n",
+		    _IRQCount, _NMICount, _BRKCount);
 	fmt::print(" | Cycle: {}\n", Cycles.get());
 }
 
@@ -425,70 +444,70 @@ void CPU::removeBacktrace() {
 // Debugger
 std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 	return {
-		{ "help",      "h",  &CPU::helpCmd,
+		{ "help",      "h",  &CPU::helpCmd, false,
 		  "This help message" 
 		},
-		{ "list",      "l",  &CPU::listCmd,
+		{ "list",      "l",  &CPU::listCmd, false,
 		  "List next 10 instructions.  'list xxxx' lists from address "
 		  "xxxx. 'list' without an address either lists from current "
 		  "program counter or continues the last listing."
 		},
-		{ "load",      "L",  &CPU::loadCmd,
+		{ "load",      "L",  &CPU::loadCmd, true,
 		  "'load <file> <address>' loads the file named 'file' at "
 		  "memory address 'address', overwriting any data.  This "
 		  "command will fail if it attempts to load data on non-RAM "
 		  "memory."
 		},
-		{ "run",   "r",  &CPU::runCmd,
+		{ "run",   "r",  &CPU::runCmd, false,
 		  "Run program at current Program Counter.  Optionally "
 		  "run for [x] instructions then reutrn to debugger"
 		},
-		{ "stack",     "S",  &CPU::stackCmd,
+		{ "stack",     "S",  &CPU::stackCmd, false,
 		  "Show current stack elements"
 		},
-		{ "break",     "b",  &CPU::breakpointCmd,
+		{ "break",     "b",  &CPU::breakpointCmd, false,
 		  "Add, remove or show current breakpoints.  'break  "
 		  "xxxx' adds a breakpoint at address xxxx, 'break "
 		  "-xxxx' removes the breakpoint at address xxxx, and "
 		  "'break' alone will list active breakpoints"
 		},
-		{ "state",     "p",  &CPU::cpustateCmd,
+		{ "state",     "p",  &CPU::cpustateCmd, false,
 		  "Show current CPU state"},
-		{ "autostate", "a",  &CPU::autostateCmd,
+		{ "autostate", "a",  &CPU::autostateCmd, false,
 		  "Display CPU state after every debugger command"
 		},
-		{ "listpc",   "P",  &CPU::resetListPCCmd,
+		{ "listpc",   "P",  &CPU::resetListPCCmd, false,
 		  "Reset where the 'list' command start to disassembe"
 		},
-		{ "mem",       "m",  &CPU::memdumpCmd,
+		{ "mem",       "m",  &CPU::memdumpCmd, false,
 		  "Examine or change memory"},
-		{ "set",       "s",  &CPU::setCmd,
+		{ "set",       "s",  &CPU::setCmd, false,
 		  "set a register or CPU flag, (ex. 'set A=ff')"},
-		{ "reset",     "" ,  &CPU::resetCmd,
+		{ "reset",     "" ,  &CPU::resetCmd, false,
 		  "Reset the CPU and jump through the reset vector"
 		},
-		{ "continue",  "c",  &CPU::continueCmd,
+		{ "continue",  "c",  &CPU::continueCmd, false,
 		  "Exit the debugger and contunue running the CPU.  "
 		},
-		{ "loopdetect","ld", &CPU::loopdetectCmd,
+		{ "loopdetect","ld", &CPU::loopdetectCmd, false,
 		  "Enable or disable loop detection (ie, 'jmp *'"},
-		{ "backtrace", "t",  &CPU::backtraceCmd,
+		{ "backtrace", "t",  &CPU::backtraceCmd, false,
 		  "Show the current subroutine and break backtrace"
 		},
-		{ "where",     "w",  &CPU::whereCmd,
+		{ "where",     "w",  &CPU::whereCmd, false,
 		  "Display the instruction at the Program Counter"
 		},
-		{ "watch",     "W",  &CPU::watchCmd,
+		{ "watch",     "W",  &CPU::watchCmd, false,
 		  "Add, remove or show current memory watchpoints. "
 		  "'watch xxxx' adds a watchpoint at memory address "
 		  "xxxx, 'watch -xxxx' removes the watchpoint at "
 		  "memory address xxxx, and 'watch' alone will list "
 		  "active watchpoints"
 		},
-		{ "map",       "M",  &CPU::memmapCmd,
+		{ "map",       "M",  &CPU::memmapCmd, false,
 		  "Display the current memory map"
 		},
-		{ "clock",     "",   &CPU::clockCmd,
+		{ "clock",     "",   &CPU::clockCmd, false,
 		  "Toggle CPU speed emulation"
 		},
 	};
