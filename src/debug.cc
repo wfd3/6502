@@ -28,6 +28,7 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <stdio.h>
 #include <readline/readline.h>
