@@ -1,11 +1,16 @@
 #pragma once
 
+#include <cstdint>
+#ifdef _WIN64
+#include <windows.h>
+#endif
+
 class Cycles_t {
 public:
 Cycles_t() : _c(0), _emulateTiming(false),
 		_cycleDelay(std::chrono::nanoseconds(nsInMHz)) { } 
 
-	unsigned long delayTimeNs() {
+	int64_t delayTimeNs() {
 		return _cycleDelay.count();
 	}
 
@@ -25,11 +30,11 @@ Cycles_t() : _c(0), _emulateTiming(false),
 		return _emulateTiming;
 	}
 
-	unsigned long get() {
+	uint64_t get() {
 		return _c;
 	}
 
-	Cycles_t& operator=(const unsigned long c) {
+	Cycles_t& operator=(const uint64_t c) {
 		_c = c;
 		return *this;
 	}
@@ -44,13 +49,14 @@ Cycles_t() : _c(0), _emulateTiming(false),
 		return *this;
 	}
 
-	Cycles_t& operator+=(int i) {
+	Cycles_t& operator+=(uint64_t i) {
 		_c += i;
-		clockDelay();
+		while (i--)
+			clockDelay();
 		return *this;
 	}
 
-	unsigned char operator-(Cycles_t const& c) {
+	uint64_t operator-(Cycles_t const& c) {
 		if (c._c > _c)
 			return 0;
 		return (unsigned char) (_c - c._c);
@@ -66,7 +72,7 @@ Cycles_t() : _c(0), _emulateTiming(false),
 		return _c > c._c;
 	}
 
-	bool operator>(unsigned char c) const {
+	bool operator>(uint64_t c) const {
 		return _c > c;
 	}
 
@@ -76,18 +82,52 @@ Cycles_t() : _c(0), _emulateTiming(false),
 
 private:
 	void clockDelay() {
+		if (!_emulateTiming)
+			return;
+
+#if defined(_WIN64)
+		// Use the Windows high-performance counter to busy-wait a
+		//certian number of nanoseconds.
+		LARGE_INTEGER frequency;
+		QueryPerformanceFrequency(&frequency);
+
+		LARGE_INTEGER start;
+		QueryPerformanceCounter(&start);
+		LONGLONG target_counts = _cycleDelay.count() * 
+			frequency.QuadPart / 1000000000LL;
+
+		LARGE_INTEGER current;
+		do {
+			QueryPerformanceCounter(&current);
+		} while (current.QuadPart - start.QuadPart < target_counts);
+
+#elif defined(LINUX)
+		// Use Linux clock_gettime() to busy-wait a certian number of 
+		// nanoseconds.
+		struct timespec start, current;
+		clock_gettime(CLOCK_MONOTONIC, &start);
+
+		long long target_ns = start.tv_nsec + nanoseconds;
+		long long target_s = start.tv_sec + target_ns / 1000000000LL;
+		target_ns = target_ns % 1000000000LL;
+
+		do {
+			clock_gettime(CLOCK_MONOTONIC, &current);
+		} while (current.tv_sec < target_s || (current.tv_sec == target_s && current.tv_nsec < target_ns));
+#else 
+
 		// The minimum sleep_for() resolution (and clock_nanosleep())
 		// seems to be about 1000 nanoseconds, or 1 microsecond.  That's
 		// unfortnate as it means we're only ever going to be able to
-		// emulate a 1 MHz 6502 using this method.
-		if (_emulateTiming) {
-			std::this_thread::sleep_for(_cycleDelay);
-		}
+		// emulate a 1 MHz 6502 using this method.  But it works as a 
+		// fallback method.  
+		std::this_thread::sleep_for(_cycleDelay);
+#endif
 	}
 
 	static constexpr int nsInMHz = 1000;
 
-	unsigned long _c;
+	uint64_t _c;
 	bool _emulateTiming;
 	std::chrono::nanoseconds _cycleDelay;
 };

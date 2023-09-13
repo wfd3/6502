@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -41,7 +41,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ZP;
 
 	//Given:
@@ -67,7 +67,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ZPX;
 
 	//Given:
@@ -94,7 +94,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABS;
 
 	//Given:
@@ -121,7 +121,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABX;
 
 	//Given:
@@ -149,7 +149,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundryAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABX;
 
 	//Given:
@@ -177,7 +177,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundryAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABY;
 
 	//Given:
@@ -205,7 +205,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundryAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABY;
 
 	//Given:
@@ -233,7 +233,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundryAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IDX;
 
 	//Given:
@@ -262,7 +262,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IDY;
 
 	//Given:
@@ -291,7 +291,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IDY;
 
 	//Given:
@@ -320,7 +320,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -346,7 +346,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -372,7 +372,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -398,7 +398,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -424,7 +424,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -450,7 +450,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -477,7 +477,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 
 // SBC tests
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -503,7 +503,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -529,7 +529,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 
 }
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -556,7 +556,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -583,7 +583,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 
 // BCD ADC tests
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -609,7 +609,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -636,7 +636,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -662,7 +662,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:
@@ -691,7 +691,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 // BCD SBC
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -718,7 +718,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -745,7 +745,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNotSet) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -772,7 +772,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarrySet) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -799,7 +799,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SBC_IMM;
 
 	//Given:
@@ -826,7 +826,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 }
 
 TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_IMM;
 
 	//Given:

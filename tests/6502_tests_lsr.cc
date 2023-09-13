@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502LSRTests, LsrAccumulator) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ACC;
 
 	//Given:
@@ -38,7 +38,7 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ZP;
 
 	//Given:
@@ -60,7 +60,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPageX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ZPX;
 
 	//Given:
@@ -83,7 +83,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoltute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ABS;
 
 	//Given:
@@ -106,7 +106,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoltute) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoltuteX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ABX;
 
 	//Given:

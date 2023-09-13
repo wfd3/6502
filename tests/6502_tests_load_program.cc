@@ -53,7 +53,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadProgram) {
 
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 
 	// Given:
 
@@ -72,7 +72,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 
 	// Given:
 
@@ -92,7 +92,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	// Given:
 	constexpr unsigned long loops = 2;
 

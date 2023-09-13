@@ -26,14 +26,15 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <cstdint>
 
 #include "memory.h"
 #include "clock.h"
 
-using Byte      = unsigned char;
-using SByte     = signed char;
-using Word      = unsigned int;
-using Address_t = unsigned int;
+using Byte      = uint8_t;
+using SByte     = int8_t;
+using Word      = uint16_t;
+using Address_t = uint16_t;
 using cMemory   = Memory<Address_t, Byte>;
 
 // Forward declaration with extern "C" linkage for later use as a
@@ -109,7 +110,7 @@ public:
 	}
 
 	// Execution
-	std::tuple<Byte, Byte> executeOneInstruction();
+	std::tuple<uint64_t, uint64_t> executeOneInstruction();
 	void execute();
 
 private:
@@ -118,6 +119,7 @@ private:
 	std::atomic_bool _pendingReset = false;
 	std::atomic_bool _pendingIRQ = false;
 	std::atomic_bool _pendingNMI = false;
+	bool _hitException = false;
 	bool overrideResetVector = false;
 	Word pendingResetPC = 0;
 	Address_t _exitAddress = 0;
@@ -127,10 +129,10 @@ private:
 	}
 
 	// Instruction map
-	typedef void (CPU::*opfn_t)(Byte, Byte &);
+	typedef void (CPU::*opfn_t)(Byte, uint64_t &);
 	struct instruction {
 		const char *name;
-	        Byte addrmode;
+	    Byte addrmode;
 		Byte bytes;
 		Byte cycles;
 		Byte flags;
@@ -166,19 +168,19 @@ private:
 	Word readWord(Word);
 
 	// Address decoding
-	Word getAddress(Byte, Byte &);
-	Byte getData(Byte, Byte &);
+	Word getAddress(Byte, uint64_t &);
+	Byte getData(Byte, uint64_t &);
 
 	// Interrupts
 	void interrupt();
 	bool NMI();
 	bool IRQ();
-	unsigned long _IRQCount = 0;
-	unsigned long _NMICount = 0;
-	unsigned long _BRKCount = 0;
+	uint64_t _IRQCount = 0;
+	uint64_t _NMICount = 0;
+	uint64_t _BRKCount = 0;
 
 	// Helper functions
-	void doBranch(bool, Word, Byte &);
+	void doBranch(bool, Word, uint64_t &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
@@ -198,6 +200,8 @@ public:
 	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
 
 	// 6502 Opcode definitions
+	//  These are public because they're needed by the 
+	//  tests. 
 	constexpr static Byte INS_BRK_IMP = 0x00;
 	constexpr static Byte INS_ORA_IDX = 0x01;
 	constexpr static Byte INS_ASL_ACC = 0x0a;
@@ -382,62 +386,62 @@ private:
 	constexpr static Word STACK_FRAME = 0x0100;
 
 	// Instruction implementations
-	void ins_adc(Byte, Byte &);
-	void ins_and(Byte, Byte &);
-	void ins_asl(Byte, Byte &);
-	void ins_bcc(Byte, Byte &);
-	void ins_bcs(Byte, Byte &);
-	void ins_beq(Byte, Byte &);
-	void ins_bit(Byte, Byte &);
-	void ins_bmi(Byte, Byte &);
-	void ins_bne(Byte, Byte &);
-	void ins_bpl(Byte, Byte &);
-	void ins_brk(Byte, Byte &);
-	void ins_bvc(Byte, Byte &);
-	void ins_bvs(Byte, Byte &);
-	void ins_clc(Byte, Byte &);
-	void ins_cld(Byte, Byte &);
-	void ins_cli(Byte, Byte &);
-	void ins_clv(Byte, Byte &);
-	void ins_cmp(Byte, Byte &);
-	void ins_cpx(Byte, Byte &);
-	void ins_cpy(Byte, Byte &);
-	void ins_dec(Byte, Byte &);
-	void ins_dex(Byte, Byte &);
-	void ins_dey(Byte, Byte &);
-	void ins_eor(Byte, Byte &);
-	void ins_inc(Byte, Byte &);
-	void ins_inx(Byte, Byte &);
-	void ins_iny(Byte, Byte &);
-	void ins_jmp(Byte, Byte &);
-	void ins_jsr(Byte, Byte &);
-	void ins_lda(Byte, Byte &);
-	void ins_ldx(Byte, Byte &);
-	void ins_ldy(Byte, Byte &);
-	void ins_lsr(Byte, Byte &);
-	void ins_nop(Byte, Byte &);
-	void ins_ora(Byte, Byte &);
-	void ins_pha(Byte, Byte &);
-	void ins_pla(Byte, Byte &);
-	void ins_php(Byte, Byte &);
-	void ins_plp(Byte, Byte &);
-	void ins_rol(Byte, Byte &);
-	void ins_ror(Byte, Byte &);
-	void ins_rti(Byte, Byte &);
-	void ins_rts(Byte, Byte &);
-	void ins_sbc(Byte, Byte &);
-	void ins_sec(Byte, Byte &);
-	void ins_sed(Byte, Byte &);
-	void ins_sei(Byte, Byte &);
-	void ins_sta(Byte, Byte &);
-	void ins_stx(Byte, Byte &);
-	void ins_sty(Byte, Byte &);
-	void ins_tax(Byte, Byte &);
-	void ins_tay(Byte, Byte &);
-	void ins_tsx(Byte, Byte &);
-	void ins_txa(Byte, Byte &);
-	void ins_txs(Byte, Byte &);
-	void ins_tya(Byte, Byte &);
+	void ins_adc(Byte, uint64_t &);
+	void ins_and(Byte, uint64_t &);
+	void ins_asl(Byte, uint64_t &);
+	void ins_bcc(Byte, uint64_t &);
+	void ins_bcs(Byte, uint64_t &);
+	void ins_beq(Byte, uint64_t &);
+	void ins_bit(Byte, uint64_t &);
+	void ins_bmi(Byte, uint64_t &);
+	void ins_bne(Byte, uint64_t &);
+	void ins_bpl(Byte, uint64_t &);
+	void ins_brk(Byte, uint64_t &);
+	void ins_bvc(Byte, uint64_t &);
+	void ins_bvs(Byte, uint64_t &);
+	void ins_clc(Byte, uint64_t &);
+	void ins_cld(Byte, uint64_t &);
+	void ins_cli(Byte, uint64_t &);
+	void ins_clv(Byte, uint64_t &);
+	void ins_cmp(Byte, uint64_t &);
+	void ins_cpx(Byte, uint64_t &);
+	void ins_cpy(Byte, uint64_t &);
+	void ins_dec(Byte, uint64_t &);
+	void ins_dex(Byte, uint64_t &);
+	void ins_dey(Byte, uint64_t &);
+	void ins_eor(Byte, uint64_t &);
+	void ins_inc(Byte, uint64_t &);
+	void ins_inx(Byte, uint64_t &);
+	void ins_iny(Byte, uint64_t &);
+	void ins_jmp(Byte, uint64_t &);
+	void ins_jsr(Byte, uint64_t &);
+	void ins_lda(Byte, uint64_t &);
+	void ins_ldx(Byte, uint64_t &);
+	void ins_ldy(Byte, uint64_t &);
+	void ins_lsr(Byte, uint64_t &);
+	void ins_nop(Byte, uint64_t &);
+	void ins_ora(Byte, uint64_t &);
+	void ins_pha(Byte, uint64_t &);
+	void ins_pla(Byte, uint64_t &);
+	void ins_php(Byte, uint64_t &);
+	void ins_plp(Byte, uint64_t &);
+	void ins_rol(Byte, uint64_t &);
+	void ins_ror(Byte, uint64_t &);
+	void ins_rti(Byte, uint64_t &);
+	void ins_rts(Byte, uint64_t &);
+	void ins_sbc(Byte, uint64_t &);
+	void ins_sec(Byte, uint64_t &);
+	void ins_sed(Byte, uint64_t &);
+	void ins_sei(Byte, uint64_t &);
+	void ins_sta(Byte, uint64_t &);
+	void ins_stx(Byte, uint64_t &);
+	void ins_sty(Byte, uint64_t &);
+	void ins_tax(Byte, uint64_t &);
+	void ins_tay(Byte, uint64_t &);
+	void ins_tsx(Byte, uint64_t &);
+	void ins_txa(Byte, uint64_t &);
+	void ins_txs(Byte, uint64_t &);
+	void ins_tya(Byte, uint64_t &);
 
 ///////////////////////////////
 // Debugger
@@ -446,7 +450,7 @@ public:
 	void setDebug(bool);
 	bool isDebugEnabled() { return debugMode; }
 	void debug();
-	std::tuple<Byte, Byte> traceOneInstruction();
+	std::tuple<uint64_t, uint64_t> traceOneInstruction();
 
 	// Callbacks to run before entering and exiting the debugger
 	typedef void (*debugEntryExitFn_t)(void);
@@ -465,7 +469,7 @@ public:
 private:
 	// Disassembler
 	std::string decodeArgs(Byte, bool);
-	Address_t disassemble(Address_t, unsigned long);
+	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
 	// Debugger
@@ -477,12 +481,12 @@ private:
 	bool debug_loopDetection = false;
 
 	void toggleDebug();
-	unsigned long debugPrompt();
+	uint64_t debugPrompt();
 	void dumpStack();
 	void printCPUState();
 	void parseMemCommand(std::string);
 
-	typedef int (CPU::*debugFn_t)(std::string &, unsigned long &);
+	typedef int (CPU::*debugFn_t)(std::string &, uint64_t &);
 
 	// Debugger commands
 	struct debugCommand {
@@ -496,26 +500,26 @@ private:
 
 	static std::vector<debugCommand> setupDebugCommands();
 	bool matchCommand(const std::string &, debugFn_t &);
-	int helpCmd(std::string &, unsigned long &);
-	int listCmd(std::string &, unsigned long &);
-	int loadCmd(std::string &, unsigned long &);
-	int runCmd(std::string &, unsigned long &);
-	int stackCmd(std::string &, unsigned long &);
-	int breakpointCmd(std::string &, unsigned long &);
-	int cpustateCmd(std::string &, unsigned long &);
-	int autostateCmd(std::string &, unsigned long &);
-	int resetListPCCmd(std::string &, unsigned long &);
-	int memdumpCmd(std::string &, unsigned long &);
-	int memmapCmd(std::string &, unsigned long &);
-	int setCmd(std::string &, unsigned long &);
-	int resetCmd(std::string &, unsigned long &);
-	int continueCmd(std::string &, unsigned long &);
-	int loopdetectCmd(std::string &, unsigned long &);
-	int backtraceCmd(std::string &, unsigned long &);
-	int whereCmd(std::string &, unsigned long &);
-	int watchCmd(std::string &, unsigned long &);
-	int quitCmd(std::string &, unsigned long &);
-	int clockCmd(std::string &, unsigned long &);
+	int helpCmd(std::string &, uint64_t &);
+	int listCmd(std::string &, uint64_t &);
+	int loadCmd(std::string &, uint64_t &);
+	int runCmd(std::string &, uint64_t &);
+	int stackCmd(std::string &, uint64_t &);
+	int breakpointCmd(std::string &, uint64_t &);
+	int cpustateCmd(std::string &, uint64_t &);
+	int autostateCmd(std::string &, uint64_t &);
+	int resetListPCCmd(std::string &, uint64_t &);
+	int memdumpCmd(std::string &, uint64_t &);
+	int memmapCmd(std::string &, uint64_t &);
+	int setCmd(std::string &, uint64_t &);
+	int resetCmd(std::string &, uint64_t &);
+	int continueCmd(std::string &, uint64_t &);
+	int loopdetectCmd(std::string &, uint64_t &);
+	int backtraceCmd(std::string &, uint64_t &);
+	int whereCmd(std::string &, uint64_t &);
+	int watchCmd(std::string &, uint64_t &);
+	int quitCmd(std::string &, uint64_t &);
+	int clockCmd(std::string &, uint64_t &);
 
 	// Breakpoints
 	std::vector<Word> breakpoints;

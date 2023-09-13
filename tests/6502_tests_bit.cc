@@ -16,7 +16,7 @@ public:
 };
 
 TEST_F(MOS6502BITTests, BitAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ABS;
 
 	//Given:
@@ -41,7 +41,7 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
@@ -65,7 +65,7 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
@@ -89,7 +89,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
@@ -113,7 +113,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:

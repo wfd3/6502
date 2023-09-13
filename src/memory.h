@@ -65,7 +65,7 @@ public:
 	Element<Cell>& operator=(const Cell b) {
 		this->Write(b);
 		return *this;
-	}	
+	}
 
 	Element<Cell>& operator=(const int i) {
 		this->Write(i & 0xff);
@@ -288,6 +288,7 @@ public:
 	bool mapROM(const Address start,
 		    const std::vector<unsigned char> &rom,
 		    const bool overwriteExistingElements = false) {
+		
 		boundsCheck(start + rom.size());
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(start, start+rom.size())) {
@@ -302,7 +303,7 @@ public:
 		auto endIdx   = _mem.begin() + rom.size();
 		unsigned long i = 0;
 
-		for (auto it = startIdx; it <= endIdx; it++, i++) {
+		for (auto it = startIdx; it != endIdx; it++, i++) {
 			if ((*it) != &_unmapped)
 				delete (*it);
 			(*it) = new ::ROM<Cell>(rom[i]);
@@ -312,8 +313,8 @@ public:
 	}
 	
 	bool mapMIO(const Address address,
-		    const ::MIO<Cell>::readfn_t readfn,
-		    const ::MIO<Cell>::writefn_t writefn,
+		    const typename ::MIO<Cell>::readfn_t readfn,
+		    const typename ::MIO<Cell>::writefn_t writefn,
 		    const bool overwriteExistingElements = false) {
 
 		boundsCheck(address);
@@ -403,7 +404,7 @@ public:
 
 			it = next_it;
 		}
-		unsigned long mappedBytes = 
+		auto mappedBytes = 
 			std::count_if(_mem.begin(), _mem.end(),
 				      [](Element<Cell> *e) {
 			    return e->getType() != Element<Cell>::UNMAPPED;

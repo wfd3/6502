@@ -17,13 +17,26 @@ cmake_minimum_required(VERSION 3.7)
 project( apple1 )
 
 # source for the  executable
-set (APPLE1_SOURCES "apple1.cc")
-
+set (APPLE1_SOURCES "apple1.cc" "apple1.h")
 source_group("src" FILE ${APPLE1_SOURCES})
+
+if (MSVC)
+	list(APPEND APPLE1_SOURCES "windows.cc")
+elseif(UNIX)
+	list(APPEND APPLE1_SOURCES "unix.cc")
+else()
+	message(FATAL_ERROR "Unsupported platform")
+endif()
+
 add_executable(apple1 ${APPLE1_SOURCES})
-target_link_libraries(apple1 6502 readline fmt)
+target_link_libraries(apple1 6502 fmt::fmt-header-only) #fmt::fmt-header-only
+
+if(UNIX)
+	target_link_libraries(apple1 readline)
+endif()
 
 # Copy apple1 to {BUILDDIR}/bin
 add_custom_command(TARGET apple1 POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:apple1>" "${BINDIR}")
+

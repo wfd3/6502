@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502JMPTests, JmpAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_JMP_ABS;
 
 	//Given:
@@ -37,7 +37,7 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 }
 
 TEST_F(MOS6502JMPTests, JmpIndirect) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_JMP_IND;
 
 	//Given:

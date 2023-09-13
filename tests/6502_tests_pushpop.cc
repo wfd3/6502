@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502PushPopTests, PhaImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PHA_IMP;
 
 	//Given:
@@ -39,7 +39,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 
 
 TEST_F(MOS6502PushPopTests, PlaImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PLA_IMP;
 
 	//Given:
@@ -64,7 +64,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 }
 
 TEST_F(MOS6502PushPopTests, PhpImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PHP_IMP;
 
 	//Given:
@@ -87,7 +87,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 }
 
 TEST_F(MOS6502PushPopTests, PlpImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_PLP_IMP;
 
 	//Given:

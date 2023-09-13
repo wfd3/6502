@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <memory.h>
+#include <cstdint>
 
 class MemoryTests : public testing::Test {
 public:
@@ -11,8 +12,8 @@ public:
 	}
 };
 
-using Address  = unsigned long;
-using Cell = unsigned char;
+using Address  = uint64_t;
+using Cell = uint8_t;
 
 TEST_F(MemoryTests, CanMapRAMAndReadWriteIt) {
 	Memory<Address, Cell> mem(0x1000);
@@ -44,17 +45,20 @@ TEST_F(MemoryTests, InsaneMemorySizeThrowsMemoryException) {
 	std::vector<unsigned long> v;
 	size_t bignum = v.max_size();
 	bool caughtMemoryException = false;
+	bool caughtOtherException = false;
 	
 	try {
 		Memory<Address, Cell> mem(bignum + 100);
 	}
-	catch(Memory<Address, Cell>::Exception &e) {
+	catch([[maybe_unused]] Memory<Address, Cell>::Exception &e) {
 		caughtMemoryException = true;
 	}
 	catch(...) {
+		caughtOtherException = true;
 	}
 
 	EXPECT_TRUE(caughtMemoryException);
+	EXPECT_FALSE(caughtOtherException);
 }
 
 TEST_F(MemoryTests, MapBeyondEndAddressThrowsMemoryException) {
@@ -64,7 +68,7 @@ TEST_F(MemoryTests, MapBeyondEndAddressThrowsMemoryException) {
 	try {
 		mem.mapRAM(0, 0x1000); 
 	}
-	catch (Memory<Address, Cell>::Exception &e) {
+	catch ([[maybe_unused]] Memory<Address, Cell>::Exception &e) {
 		caughtMemoryException = true;
 	}
 	catch (...) {
@@ -83,7 +87,7 @@ TEST_F(MemoryTests, WriteOutOfBoundsThrowsOuMemoryException) {
 	try {
 		mem[0x1001] = 10;
 	}
-	catch(Memory<Address, Cell>::Exception &e) {
+	catch([[maybe_unused]] Memory<Address, Cell>::Exception &e) {
 		caughtMemoryException = true;
 	}
 	catch(...) {

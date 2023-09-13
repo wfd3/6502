@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502RTITests, RtiImplied) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_RTI_IMP;
 
 	//Given:

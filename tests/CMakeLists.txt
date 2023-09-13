@@ -44,7 +44,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/includ
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/include/gtest)
 
 # source for the test executable
-set (CPU_SOURCES
+set (6502_TEST_SOURCES
   "6502_tests_adc.cc"
   "6502_tests_and.cc"
   "6502_tests_asl.cc"
@@ -69,25 +69,32 @@ set (CPU_SOURCES
   "6502_tests_rti.cc"
   "6502_tests_rts.cc"
   "6502_tests_tx_ty.cc"
-  "6502_tests_xxx_functional_test_suite.cc")
+  "6502_tests_xxx_functional_test_suite.cc"
+)
 
+set (MEMORY_TEST_SOURCES
+  "memory_tests.cc"
+)
 
-set (MEMORY_SOURCES
-  "memory_tests.cc")
-
-source_group("src" FILE ${MEMORY_SOURCES})
-add_executable(memory_tests ${MEMORY_SOURCES})
+source_group("src" FILE ${MEMORY_TEST_SOURCES})
+add_executable(memory_tests ${MEMORY_TEST_SOURCES})
 add_dependencies(memory_tests gtest_main)
-target_link_libraries(memory_tests gtest_main readline fmt)
+target_link_libraries(memory_tests gtest_main fmt::fmt-header-only)
+if(NOT MSVC)
+	target_link_libraries(memory_tests readline)
+endif()
 add_custom_target(run_memory_tests
   DEPENDS memory_tests
   COMMAND memory_tests)
 
-source_group("src" FILES ${CPU_SOURCES})
-add_executable( 6502_tests ${CPU_SOURCES})
+source_group("src" FILES ${6502_TEST_SOURCES})
+add_executable( 6502_tests ${6502_TEST_SOURCES})
 add_dependencies(6502_tests 6502)
 add_dependencies(6502_tests gtest_main)
-target_link_libraries(6502_tests gtest_main 6502 readline fmt)
+target_link_libraries(6502_tests gtest_main 6502 fmt::fmt-header-only)
+if(NOT MSVC)
+	target_link_libraries(6502_tests readline)
+endif()
 
 add_custom_target(run_6502_tests
   DEPENDS 6502_tests

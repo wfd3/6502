@@ -2,6 +2,25 @@
 #include <6502.h>
 #include <thread>
 
+#ifdef _WIN64
+#include <Windows.h>
+
+void usleep(__int64 usec)
+{
+	HANDLE timer;
+	LARGE_INTEGER ft;
+
+	// Convert to 100 nanosecond interval, negative value
+	// indicates relative time
+	ft.QuadPart = -(10 * usec); 
+
+	timer = CreateWaitableTimer(NULL, TRUE, NULL);
+	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	WaitForSingleObject(timer, INFINITE);
+	CloseHandle(timer);
+}
+#endif
+
 class MOS6502InterruptTests : public testing::Test {
 public:
 

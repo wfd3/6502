@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502ANDTests, AndImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_IMM;
 
 	//Given:
@@ -39,10 +39,10 @@ TEST_F(MOS6502ANDTests, AndImmediate) {
 }
 
 TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_IMM;
 
-	Byte c = cpu.Cycles.get(); 
+	auto c = cpu.Cycles.get(); 
 
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
@@ -64,7 +64,7 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 }
 
 TEST_F(MOS6502ANDTests, AndZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ZP;
 	
 	// Given:
@@ -87,7 +87,7 @@ TEST_F(MOS6502ANDTests, AndZeroPage) {
 }
 
 TEST_F(MOS6502ANDTests, AndZeroPageX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ZPX;
 	
 	// Given:
@@ -111,7 +111,7 @@ TEST_F(MOS6502ANDTests, AndZeroPageX) {
 }
 
 TEST_F(MOS6502ANDTests, AndAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ABS;
 	
 	// Given:
@@ -135,7 +135,7 @@ TEST_F(MOS6502ANDTests, AndAbsolute) {
 }
 
 TEST_F(MOS6502ANDTests, AndAbsoluteX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ABX;
 	
 	// Given:
@@ -160,7 +160,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteX) {
 }
 
 TEST_F(MOS6502ANDTests, AndAbsoluteXCrossesPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ABX;
 	
 	// Given:
@@ -185,7 +185,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteXCrossesPage) {
 }
 
 TEST_F(MOS6502ANDTests, AndAbsoluteY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ABY;
 	
 	// Given:
@@ -210,7 +210,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteY) {
 }
 
 TEST_F(MOS6502ANDTests, AndAbsoluteYCrossesPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_ABY;
 	
 	// Given:
@@ -235,7 +235,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteYCrossesPage) {
 }
 
 TEST_F(MOS6502ANDTests, AndIndirectX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_IDX;
 
 	//Given:
@@ -261,7 +261,7 @@ TEST_F(MOS6502ANDTests, AndIndirectX) {
 }
 
 TEST_F(MOS6502ANDTests, AndIndirectY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_IDY;
 
 	//Given:

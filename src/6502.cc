@@ -21,7 +21,9 @@
 #include <memory>
 #include <cstdarg>
 
+#ifdef LINUX // TODO: Do I need this header?
 #include <unistd.h>
+#endif
 
 #include <6502.h>
 
@@ -60,6 +62,7 @@ void CPU::exitReset() {
 	_pendingIRQ = false;
 	_pendingNMI = false;
 	_pendingReset = false;
+	_hitException = false;
 	overrideResetVector = false;
 
 	// Do this last in case anything above ever changes Cycles by
@@ -124,6 +127,7 @@ void CPU::exception(const std::string &message) {
 	fmt::print("CPU Exception: {}\n", message);
 	fmt::print("Entering debugger\n");
 	debugMode = true;
+	_hitException = true;
 	debug();
 }
 
@@ -215,7 +219,7 @@ void CPU::popPS() {
 
 //////////
 // Address decoding
-Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
+Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	Word address;
 	Byte zpaddr;
 	Byte flags;
@@ -308,7 +312,7 @@ Word CPU::getAddress(Byte opcode, Byte &expectedCycles) {
 	return address;
 }
 
-Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
+Byte CPU::getData(Byte opcode, uint64_t &expectedCycles) {
 	Byte data;
 	Word address;
 
@@ -336,13 +340,17 @@ Byte CPU::getData(Byte opcode, Byte &expectedCycles) {
 
 //////////
 // Instruction execution
-std::tuple<Byte, Byte> CPU::executeOneInstruction() {
+std::tuple<uint64_t, uint64_t> CPU::executeOneInstruction() {
 	Byte opcode;
 	Cycles_t startCycles;
-	Byte expectedCyclesToUse;
+	uint64_t expectedCyclesToUse;
 	Word startPC;
 	opfn_t op;
 
+	if (pendingReset()) {
+		exitReset();
+	}
+	
 	startPC = PC;
 	startCycles = Cycles;
 
@@ -352,6 +360,7 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 		auto s = fmt::format("Invalid opcode {:04x} at PC {:#04x}",
 				     opcode, PC);
 		exception(s);
+		return std::make_tuple(0, 0);
 	}
 
 	expectedCyclesToUse = _instructions.at(opcode).cycles;
@@ -371,11 +380,6 @@ std::tuple<Byte, Byte> CPU::executeOneInstruction() {
 	if (!NMI())
 		IRQ();
 
-	if (pendingReset()) {
-		exitReset();
-		usedCycles = expectedCyclesToUse; 
-	}
-	
 	return std::make_tuple(usedCycles, expectedCyclesToUse);
 }
 

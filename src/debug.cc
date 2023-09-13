@@ -26,18 +26,19 @@
 #include <vector>
 #include <cstdarg>
 
-#include <fmt/core.h>
 #include <fmt/format.h>
 #include <fmt/core.h>
 
 #include <stdio.h>
+#ifdef LINUX
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 
 #include "6502.h"
 
-constexpr unsigned char ACTION_RETURN = 0;
-constexpr unsigned char ACTION_CONTINUE = 1;
+constexpr uint8_t ACTION_RETURN = 0;
+constexpr uint8_t ACTION_CONTINUE = 1;
 
 Word listPC;
 
@@ -93,6 +94,7 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
     return result;
 }
 
+#ifdef LINUX
 //////////
 // readline helpers
 void getReadline(std::string &line) {
@@ -161,6 +163,16 @@ void setupReadline() {
 	rl_completion_query_items = 50;
 	rl_attempted_completion_function = readlineCompletionCallback;
 }
+#endif
+
+#ifdef _WIN64
+void setupReadline() { }
+
+void getReadline(std::string& line) {
+	fmt::print(": ");
+	std::getline(std::cin, line);
+}
+#endif
 
 //////////
 // CPU State information 
@@ -204,6 +216,7 @@ void CPU::dumpStack() {
 // Disassembler
 
 std::string CPU::decodeArgs(Byte ins, bool atPC) {
+
 	Byte mode = _instructions.at(ins).addrmode;
 	Byte byteval;
 	Word wordval;
@@ -302,8 +315,9 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 	// start of an instruction sequence.
 	if (_instructions.count(opcode) == 0) {
 		disassembly += fmt::format(".byte ${:02x}", opcode);
-	} else {
-		
+	}
+	else {
+
 		disassembly += _instructions.at(opcode).name;
 
 		auto args = decodeArgs(opcode, atPC);
@@ -318,7 +332,7 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 	return returnPC;
 }
 
-Address_t CPU::disassemble(Address_t dPC, unsigned long cnt) {
+Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
 	std::string ins;
 
 	if (dPC > MAX_MEM) {
@@ -511,11 +525,14 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		{ "clock",     "",   &CPU::clockCmd, false,
 		  "Toggle CPU speed emulation"
 		},
+		{ "quit",      "",   &CPU::quitCmd, false, 
+		  "Quit the emulator"
+		}
 	};
 }
 
 int CPU::helpCmd([[maybe_unused]] std::string &line,
-		 [[maybe_unused]] unsigned long &returnValue) {
+		 [[maybe_unused]] uint64_t &returnValue) {
 
 	for (const auto& cmd : _debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
@@ -527,9 +544,12 @@ int CPU::helpCmd([[maybe_unused]] std::string &line,
 }
 
 int CPU::listCmd(std::string &line,
-		 [[maybe_unused]] unsigned long &returnValue) {
+		 [[maybe_unused]] uint64_t &returnValue) {
 	try {
-		listPC = std::stoul(line, nullptr, 16);
+		listPC = std::stoi(line, nullptr, 16);
+	}
+	catch (std::out_of_range& e) {
+		fmt::print("Parse error: {}\n", e.what());
 	}
 	catch (...) {
 	}
@@ -540,7 +560,7 @@ int CPU::listCmd(std::string &line,
 }
 
 int CPU::loadCmd(std::string &line,
-		 [[maybe_unused]] unsigned long &returnValue) {
+		 [[maybe_unused]] uint64_t &returnValue) {
 	std::string fname;
 	Address_t address;
 
@@ -567,7 +587,7 @@ int CPU::loadCmd(std::string &line,
 	return ACTION_CONTINUE;
 }
 
-int CPU::runCmd(std::string &line, unsigned long &returnValue) {
+int CPU::runCmd(std::string &line, uint64_t &returnValue) {
 
 	try {
 		returnValue = std::stoul(line);
@@ -579,14 +599,14 @@ int CPU::runCmd(std::string &line, unsigned long &returnValue) {
 }
 
 int CPU::stackCmd([[maybe_unused]] std::string &line,
-		  [[maybe_unused]] unsigned long &returnValue) {
+		  [[maybe_unused]] uint64_t &returnValue) {
 
 	dumpStack();
 	return ACTION_CONTINUE;
 }
 
 int CPU::breakpointCmd(std::string &line,
-		       [[maybe_unused]] unsigned long &returnValue) {
+		       [[maybe_unused]] uint64_t &returnValue) {
 
 	Word addr;
 	bool remove = false;
@@ -616,14 +636,14 @@ int CPU::breakpointCmd(std::string &line,
 }
 
 int CPU::cpustateCmd([[maybe_unused]] std::string &line,
-		     [[maybe_unused]] unsigned long &returnValue) {
+		     [[maybe_unused]] uint64_t &returnValue) {
 
 	printCPUState(); 
 	return ACTION_CONTINUE;
 }
 
 int CPU::autostateCmd([[maybe_unused]] std::string &line,
-		      [[maybe_unused]] unsigned long &returnValue) {
+		      [[maybe_unused]] uint64_t &returnValue) {
 
 	debug_alwaysShowPS = !debug_alwaysShowPS;
 	fmt::print("# Processor status auto-display ");
@@ -636,7 +656,7 @@ int CPU::autostateCmd([[maybe_unused]] std::string &line,
 }
 
 int CPU::resetListPCCmd(std::string &line,
-			[[maybe_unused]] unsigned long &returnValue) {
+			[[maybe_unused]] uint64_t &returnValue) {
 	Word i;
 
 	try {
@@ -658,7 +678,7 @@ int CPU::resetListPCCmd(std::string &line,
 }
 
 int CPU::memdumpCmd(std::string &line,
-		    [[maybe_unused]] unsigned long &returnValue) {
+		    [[maybe_unused]] uint64_t &returnValue) {
 	Word addr1, addr2;
 	Word value;		
 	char equal, colon;
@@ -722,13 +742,13 @@ int CPU::memdumpCmd(std::string &line,
 }
 
 int CPU::memmapCmd([[maybe_unused]] std::string &line,
-		   [[maybe_unused]] unsigned long &returnValue) {
+		   [[maybe_unused]] uint64_t &returnValue) {
 	mem.printMap();
 	return ACTION_CONTINUE;
 }
 
 int CPU::setCmd(std::string &line,
-		[[maybe_unused]] unsigned long &returnValue) {
+		[[maybe_unused]] uint64_t &returnValue) {
 	std::string v;
 	std::string reg;					
 	Word value;
@@ -826,7 +846,7 @@ int CPU::setCmd(std::string &line,
 }
 
 int CPU::resetCmd([[maybe_unused]] std::string &line,
-		  [[maybe_unused]] unsigned long &returnValue) {
+		  [[maybe_unused]] uint64_t &returnValue) {
 
 	fmt::print("# Resetting 6502\n");
 	setDebug(false);
@@ -836,15 +856,18 @@ int CPU::resetCmd([[maybe_unused]] std::string &line,
 }
 		
 int CPU::continueCmd([[maybe_unused]] std::string &line,
-		     [[maybe_unused]] unsigned long &returnValue) {
-
+		     [[maybe_unused]] uint64_t &returnValue) {
+	if (_hitException) {
+		fmt::print("CPU Exception hit; can't continue.  Reset CPU to clear.\n");
+		return ACTION_CONTINUE;
+	}
 	toggleDebug();
 	returnValue = 1;
 	return ACTION_RETURN;
 }
 
 int CPU::loopdetectCmd([[maybe_unused]] std::string &line,
-		       [[maybe_unused]] unsigned long &returnValue) {
+		       [[maybe_unused]] uint64_t &returnValue) {
 
 	toggleLoopDetection();
 	fmt::print("# Loop detection ");
@@ -857,21 +880,21 @@ int CPU::loopdetectCmd([[maybe_unused]] std::string &line,
 }
 
 int CPU::backtraceCmd([[maybe_unused]] std::string &line,
-		      [[maybe_unused]] unsigned long &returnValue) {
+		      [[maybe_unused]] uint64_t &returnValue) {
 
 	showBacktrace();
 	return ACTION_CONTINUE;
 }
 
 int CPU::whereCmd([[maybe_unused]] std::string &line,
-		  [[maybe_unused]] unsigned long &returnValue) {
+		  [[maybe_unused]] uint64_t &returnValue) {
 
 	disassemble(PC, 1);
 	return ACTION_CONTINUE;
 }
 
 int CPU::watchCmd(std::string &line,
-		  [[maybe_unused]] unsigned long &returnValue) {
+		  [[maybe_unused]] uint64_t &returnValue) {
 	Word addr;
 	bool remove = false;
 
@@ -910,7 +933,7 @@ int CPU::watchCmd(std::string &line,
 }
 
 int CPU::clockCmd([[maybe_unused]] std::string &line,
-	     [[maybe_unused]] unsigned long &returnValue) {
+	     [[maybe_unused]] uint64_t &returnValue) {
 
 	Cycles.toggleTimingEmulation();
 	fmt::print("CPU timing emulation is ");
@@ -921,6 +944,12 @@ int CPU::clockCmd([[maybe_unused]] std::string &line,
 		fmt::print("disabled\n");
 
 	return ACTION_CONTINUE;
+}
+
+int CPU::quitCmd([[maybe_unused]] std::string& line,
+	[[maybe_unused]] uint64_t& returnValue) {
+	fmt::print("Exiting emulator\n");
+	exit(0);
 }
 
 bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
@@ -935,8 +964,8 @@ bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
 	return false;
 }
 
-unsigned long CPU::debugPrompt() {
-	unsigned long returnValue, count = 1;
+uint64_t CPU::debugPrompt() {
+	uint64_t returnValue, count = 1;
 	std::string line;
 	debugFn_t f;
 
@@ -955,13 +984,11 @@ unsigned long CPU::debugPrompt() {
 			line = debug_lastCmd;
 		}
 
-		if (line != "continue") 
-			debug_lastCmd = line;
-
 		// Check if command is numbers, convert them to
 		// integer and return it.
 		try {
-			count = stol(line);
+			count = std::stol(line);
+			debug_lastCmd = line;
 			return count;
 		}
 		catch(...) {
@@ -975,6 +1002,9 @@ unsigned long CPU::debugPrompt() {
 			continue;
 		}
 
+		if (line != "continue")
+			debug_lastCmd = line;
+
 		auto action = (this->*f)(line, returnValue);
 		if (action == ACTION_CONTINUE)
 			continue;
@@ -986,7 +1016,7 @@ unsigned long CPU::debugPrompt() {
 }
 
 void CPU::debug() {
-	unsigned long count;
+	uint64_t count;
 
 	if (debugEntryFunc)
 		debugEntryFunc();
@@ -1010,7 +1040,7 @@ void CPU::debug() {
 		debugExitFunc();
 }
 
-std::tuple<Byte, Byte> CPU::traceOneInstruction() {
+std::tuple<uint64_t, uint64_t> CPU::traceOneInstruction() {
 	disassemble(PC, 1);
 	return executeOneInstruction();
 }

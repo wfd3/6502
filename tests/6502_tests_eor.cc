@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502EORTests, EorImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
@@ -40,7 +40,7 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 }
 
 TEST_F(MOS6502EORTests, EorZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ZP;
 
 	//Given:
@@ -64,7 +64,7 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 }
 
 TEST_F(MOS6502EORTests, EorZeroPageX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ZPX;
 
 	//Given:
@@ -89,7 +89,7 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ABS;
 
 	//Given:
@@ -114,7 +114,7 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsoluteX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ABX;
 
 	//Given:
@@ -140,7 +140,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsoluteY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_ABY;
 
 	//Given:
@@ -166,7 +166,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 }
 
 TEST_F(MOS6502EORTests, EorIndirectX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IDX;
 
 	//Given:
@@ -193,7 +193,7 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 }
 
 TEST_F(MOS6502EORTests, EorIndirectY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IDY;
 
 	//Given:
@@ -221,7 +221,7 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 }
 
 TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
@@ -244,7 +244,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 }
 
 TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:

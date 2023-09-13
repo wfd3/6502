@@ -26,6 +26,7 @@ set  (SOURCES
   "instructions.cc" )
 		
 source_group("src" FILES ${SOURCES})
-		
+include_directories(AFTER ${fmt_INCLUDE_DIRS})
 add_library( 6502 ${SOURCES} )
+target_compile_definitions(6502 PRIVATE FMT_HEADER_ONLY)
 

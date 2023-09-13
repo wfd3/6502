@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502CMPTests, CmpImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
@@ -40,7 +40,7 @@ TEST_F(MOS6502CMPTests, CmpImmediate) {
 }
 
 TEST_F(MOS6502CMPTests, CmpImmediateSetsCFlagFalse) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
@@ -63,7 +63,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsCFlagFalse) {
 }
 
 TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
@@ -86,7 +86,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CmpImmediateSetsNFlagTrue) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IMM;
 
 	//Given:
@@ -109,7 +109,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsNFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CmpZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ZP;
 
 	//Given:
@@ -133,7 +133,7 @@ TEST_F(MOS6502CMPTests, CmpZeroPage) {
 }
 
 TEST_F(MOS6502CMPTests, CmpZeroPageX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ZPX;
 
 	//Given:
@@ -158,7 +158,7 @@ TEST_F(MOS6502CMPTests, CmpZeroPageX) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ABS;
 
 	//Given:
@@ -183,7 +183,7 @@ TEST_F(MOS6502CMPTests, CmpAbsolute) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ABX;
 
 	//Given:
@@ -209,7 +209,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteX) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteXCrossesPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ABX;
 
 	//Given:
@@ -235,7 +235,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteXCrossesPage) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ABY;
 
 	//Given:
@@ -261,7 +261,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteY) {
 }
 
 TEST_F(MOS6502CMPTests, CmpAbsoluteYCrossesPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_ABY;
 
 	//Given:
@@ -287,7 +287,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteYCrossesPage) {
 }
 
 TEST_F(MOS6502CMPTests, CmpIndirectX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IDX;
 
 	//Given:
@@ -314,7 +314,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectX) {
 }
 
 TEST_F(MOS6502CMPTests, CmpIndirectY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IDY;
 
 	//Given:
@@ -341,7 +341,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectY) {
 }
 
 TEST_F(MOS6502CMPTests, CmpIndirectYCrossesPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CMP_IDY;
 
 	//Given:
@@ -369,7 +369,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectYCrossesPage) {
 
 // CPX
 TEST_F(MOS6502CMPTests, CpxImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
@@ -392,7 +392,7 @@ TEST_F(MOS6502CMPTests, CpxImmediate) {
 }
 
 TEST_F(MOS6502CMPTests, CpxImmediateSetsCFlagFalse) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
@@ -415,7 +415,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsCFlagFalse) {
 }
 
 TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
@@ -438,7 +438,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpxImmediateSetsNFlagTrue) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPX_IMM;
 
 	//Given:
@@ -461,7 +461,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsNFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpxZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPX_ZP;
 
 	//Given:
@@ -485,7 +485,7 @@ TEST_F(MOS6502CMPTests, CpxZeroPage) {
 }
 
 TEST_F(MOS6502CMPTests, CpxAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPX_ABS;
 
 	//Given:
@@ -511,7 +511,7 @@ TEST_F(MOS6502CMPTests, CpxAbsolute) {
 
 // CPY
 TEST_F(MOS6502CMPTests, CpyImmediate) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
@@ -534,7 +534,7 @@ TEST_F(MOS6502CMPTests, CpyImmediate) {
 }
 
 TEST_F(MOS6502CMPTests, CpyImmediateSetsCFlagFalse) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
@@ -557,7 +557,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsCFlagFalse) {
 }
 
 TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
@@ -580,7 +580,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpyImmediateSetsNFlagTrue) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPY_IMM;
 
 	//Given:
@@ -603,7 +603,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsNFlagTrue) {
 }
 
 TEST_F(MOS6502CMPTests, CpyZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPY_ZP;
 
 	//Given:
@@ -627,7 +627,7 @@ TEST_F(MOS6502CMPTests, CpyZeroPage) {
 }
 
 TEST_F(MOS6502CMPTests, CpyAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CPY_ABS;
 
 	//Given:

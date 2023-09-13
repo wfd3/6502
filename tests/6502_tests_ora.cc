@@ -17,7 +17,7 @@ public:
 };
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ORA_IMM;
 
 	//Given:
@@ -41,7 +41,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ORA_IMM;
 
 	//Given:

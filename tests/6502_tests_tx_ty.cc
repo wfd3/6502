@@ -19,7 +19,7 @@ public:
 // TAX
 
 TEST_F(MOS6502TXTYTests, TAX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
@@ -41,7 +41,7 @@ TEST_F(MOS6502TXTYTests, TAX) {
 }
 
 TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
@@ -63,7 +63,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAX_IMP;
 
 	//Given:
@@ -88,7 +88,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 // TXA
 
 TEST_F(MOS6502TXTYTests, TXA) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
@@ -110,7 +110,7 @@ TEST_F(MOS6502TXTYTests, TXA) {
 }
 
 TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
@@ -132,7 +132,7 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXA_IMP;
 
 	//Given:
@@ -156,7 +156,7 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 // TAY
 
 TEST_F(MOS6502TXTYTests, TAY) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
@@ -178,7 +178,7 @@ TEST_F(MOS6502TXTYTests, TAY) {
 }
 
 TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
@@ -200,7 +200,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TAY_IMP;
 
 	//Given:
@@ -224,7 +224,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 // TYA
 
 TEST_F(MOS6502TXTYTests, TYA) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
@@ -246,7 +246,7 @@ TEST_F(MOS6502TXTYTests, TYA) {
 }
 
 TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
@@ -268,7 +268,7 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TYA_IMP;
 
 	//Given:
@@ -292,7 +292,7 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 // TSX
 
 TEST_F(MOS6502TXTYTests, TSX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
@@ -314,7 +314,7 @@ TEST_F(MOS6502TXTYTests, TSX) {
 }
 
 TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
@@ -336,7 +336,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
@@ -360,7 +360,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 // TXS
 
 TEST_F(MOS6502TXTYTests, TXS) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_TXS_IMP;
 
 	//Given:

@@ -20,7 +20,7 @@ public:
 };
 
 void MOS6502LDTests::TestLD(Byte ins, Byte &reg) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 
 	//Given:
 
@@ -40,7 +40,7 @@ void MOS6502LDTests::TestLD(Byte ins, Byte &reg) {
 
 // Test STA, STX and STY
 void MOS6502LDTests::TestST(Byte ins, Word addr, Byte &reg) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 
 	//Given:
 	mem[0xFFFC] = ins;

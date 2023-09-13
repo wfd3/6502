@@ -19,7 +19,7 @@ public:
 };
 
 void MOS6502BranchTests::BranchesWhenFlagSet(Word saddr, Byte rel, Byte ins) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 
 	//Given:
 	mem[saddr]   = ins;

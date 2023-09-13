@@ -18,7 +18,7 @@ public:
 
 // DEC 
 TEST_F(MOS6502INCTests, IncZeroPage) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
@@ -42,7 +42,7 @@ TEST_F(MOS6502INCTests, IncZeroPage) {
 }
 
 TEST_F(MOS6502INCTests, IncZeroPageX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZPX;
 
 	//Given:
@@ -67,7 +67,7 @@ TEST_F(MOS6502INCTests, IncZeroPageX) {
 }
 
 TEST_F(MOS6502INCTests, IncAbsolute) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ABS;
 
 	//Given:
@@ -92,7 +92,7 @@ TEST_F(MOS6502INCTests, IncAbsolute) {
 }
 
 TEST_F(MOS6502INCTests, IncAbsoluteX) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ABX;
 
 	//Given:
@@ -118,7 +118,7 @@ TEST_F(MOS6502INCTests, IncAbsoluteX) {
 }
 
 TEST_F(MOS6502INCTests, IncZeroPageSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
@@ -142,7 +142,7 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsZeroFlag) {
 
 
 TEST_F(MOS6502INCTests, IncZeroPageSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INC_ZP;
 
 	//Given:
@@ -167,7 +167,7 @@ TEST_F(MOS6502INCTests, IncZeroPageSetsNegativeFlag) {
 
 // INX
 TEST_F(MOS6502INCTests, InxImplied) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
@@ -190,7 +190,7 @@ TEST_F(MOS6502INCTests, InxImplied) {
 }
 
 TEST_F(MOS6502INCTests, InxImpliedSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
@@ -212,7 +212,7 @@ TEST_F(MOS6502INCTests, InxImpliedSetsZeroFlag) {
 }
 
 TEST_F(MOS6502INCTests, InxImpliedSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INX_IMP;
 
 	//Given:
@@ -235,7 +235,7 @@ TEST_F(MOS6502INCTests, InxImpliedSetsNegativeFlag) {
 
 // INY
 TEST_F(MOS6502INCTests, InyImplied) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
@@ -258,7 +258,7 @@ TEST_F(MOS6502INCTests, InyImplied) {
 }
 
 TEST_F(MOS6502INCTests, InyImpliedSetsZeroFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
@@ -280,7 +280,7 @@ TEST_F(MOS6502INCTests, InyImpliedSetsZeroFlag) {
 }
 
 TEST_F(MOS6502INCTests, InyImpliedSetsNegativeFlag) {
-	Byte UsedCycles, ExpectedCycles;
+	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_INY_IMP;
 
 	//Given:
