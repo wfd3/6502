@@ -226,7 +226,7 @@ class Memory {
 public:
 
 	Memory(const Address endAddress) : _endAddress(endAddress) {
-		auto _size = _endAddress + 1;
+		uint64_t _size = _endAddress + 1;
 
 		if (_size > _mem.max_size()) {
 			auto s = fmt::format("End address {:#04x} exceeds host "

@@ -23,16 +23,18 @@ source_group("src" FILE ${APPLE1_SOURCES})
 if (MSVC)
 	list(APPEND APPLE1_SOURCES "windows.cc")
 elseif(UNIX)
-	list(APPEND APPLE1_SOURCES "unix.cc")
+	list(APPEND APPLE1_SOURCES "posix.cc")
 else()
 	message(FATAL_ERROR "Unsupported platform")
 endif()
 
 add_executable(apple1 ${APPLE1_SOURCES})
-target_link_libraries(apple1 6502 fmt::fmt-header-only) #fmt::fmt-header-only
+target_link_libraries(apple1 6502) 
 
 if(UNIX)
-	target_link_libraries(apple1 readline)
+	target_link_libraries(apple1 readline fmt)
+elseif(MSVC)
+	target_link_libraries(apple1 fmt::fmt-header-only)
 endif()
 
 # Copy apple1 to {BUILDDIR}/bin

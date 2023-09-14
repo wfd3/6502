@@ -44,7 +44,7 @@ public:
 //        iny
 //        jmp label
 std::vector<Byte> interruptTestProgram = {
-	0xca, 0xc8, 0xca, 0xc8, 0xca, 0xc8, 0xc4, 0x00, 0x10
+	0xca, 0xc8, 0xca, 0xc8, 0xca, 0xc8, 0x4c, 0x00, 0x10
 };
 
 TEST_F(MOS6502InterruptTests, InlineMaskableInterrupt) {
@@ -103,6 +103,8 @@ TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
 	cpu.PC = 0x1000;
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
+	EXPECT_FALSE(cpu.pendingIRQ());
+	EXPECT_FALSE(cpu.pendingNMI());
 
 	// When
 	std::thread runProgram(&CPU::execute, &cpu);

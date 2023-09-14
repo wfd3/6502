@@ -30,7 +30,7 @@
 #include <fmt/core.h>
 
 #include <stdio.h>
-#ifdef LINUX
+#ifdef __linux__
 #include <readline/readline.h>
 #include <readline/history.h>
 #endif
@@ -94,7 +94,7 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
     return result;
 }
 
-#ifdef LINUX
+#ifdef __linux__
 //////////
 // readline helpers
 void getReadline(std::string &line) {
@@ -751,7 +751,7 @@ int CPU::setCmd(std::string &line,
 		[[maybe_unused]] uint64_t &returnValue) {
 	std::string v;
 	std::string reg;					
-	Word value;
+	uint64_t value;
 	bool flipFlag = false;
 
 	// TODO:  make 'set x 5' and 'set x=5' work.
@@ -767,7 +767,7 @@ int CPU::setCmd(std::string &line,
 	// reg contains the register, s is the value.
 	std::transform(reg.begin(), reg.end(), reg.begin(), ::toupper);
 	try {
-		value = (Word) std::stoul(v, nullptr, 16);
+		value = std::stoul(v, nullptr, 16);
 		if ((reg != "PC" && value > 0xff) ||
 		    (reg == "PC" && value > 0xffff)) {
 			fmt::print("Error: value would overflow register {}\n",
@@ -793,17 +793,17 @@ int CPU::setCmd(std::string &line,
 	}
 
 	if (reg == "A") 
-		A = (Byte) value;
+		A = (Byte) value & 0xff;
 	else if (reg == "Y")
-		Y = (Byte) value;
+		Y = (Byte) value & 0xff;
 	else if (reg == "X")
-		X = (Byte) value;
+		X = (Byte) value & 0xff;
 	else if (reg == "PC")
-		PC = (Word) value;
+		PC = (Word) value & 0xffff;
 	else if (reg == "SP")
-		SP = (Byte) value;
+		SP = (Byte) value & 0xff;
 	else if (reg == "PS")
-		PS = (Byte) value;
+		PS = (Byte) value & 0xff;
 	else if (reg == "C")
 		if (flipFlag)
 			Flags.C = !Flags.C;
