@@ -215,7 +215,8 @@ void CPU::dumpStack() {
 //////////
 // Disassembler
 
-std::string CPU::decodeArgs(Byte ins, bool atPC) {
+void CPU::decodeArgs(bool atPC, Byte ins, std::string &disassembly, 
+					 std::string &opcodes) {
 
 	Byte mode = _instructions.at(ins).addrmode;
 	Byte byteval;
@@ -225,91 +226,121 @@ std::string CPU::decodeArgs(Byte ins, bool atPC) {
 
 	switch (mode) {
 	case ADDR_MODE_IMP:
-		return "";
+		break;
 
 	case ADDR_MODE_ACC:
-		return "A";
+		disassembly += "A";
+		break;
 
-	case ADDR_MODE_IMM: 
-		return fmt::format("#${:02x}", readByteAtPC());
+	case ADDR_MODE_IMM:
+		byteval = readByteAtPC();
+		disassembly += fmt::format("#${:02x}", byteval);
+		opcodes += fmt::format("{:02x} ", byteval);
+		break;
 
 	case ADDR_MODE_ZP:
-		return fmt::format("${:02x}", readByteAtPC());
+		byteval = readByteAtPC();
+		opcodes += fmt::format("{:02x} ", byteval);
+		break;
 
 	case ADDR_MODE_ZPX:
 		byteval = readByteAtPC();
-		out = fmt::format("${:02x},X",  byteval);
+		disassembly += fmt::format("${:02x},X",  byteval);
 		if (atPC)
-			out += fmt::format(" [address {:04x}]", byteval + X);
-		return out;
+			disassembly += fmt::format(" [address {:04x}]", byteval + X);
+		opcodes += fmt::format("{:02x} ", byteval);
+		break;
 
 	case ADDR_MODE_ZPY:
 		byteval = readByteAtPC();
-		out = fmt::format("${:02x},Y", byteval);
+		disassembly += fmt::format("${:02x},Y", byteval);
 		if (atPC)
-			out += fmt::format("[address {:04x}]", byteval + Y);
-		return out;
+			disassembly += fmt::format("[address {:04x}]", byteval + Y);
+		opcodes += fmt::format("{:02x} ", byteval);
+		break;
 
 	case ADDR_MODE_REL:
 		rel = SByte(readByteAtPC());
-		return fmt::format("${:04x}", PC + rel);
+		disassembly += fmt::format("${:04x}", PC + rel);
+		opcodes += fmt::format("{:02x} ", byteval);
+		break;
 
 	case ADDR_MODE_ABS:
-		return fmt::format("${:04x}", readWordAtPC());
+		wordval = readWordAtPC();
+		disassembly += fmt::format("${:04x}", wordval);
+		opcodes += fmt::format("{:02x} {:02x}", 
+							  wordval & 0xff, (wordval >> 8) & 0xff);
+		break;
 
 	case ADDR_MODE_ABX:
 		wordval = readWordAtPC();
-		out = fmt::format("${:04x},X", wordval);
+		disassembly += fmt::format("${:04x},X", wordval);
 		if (atPC)
-			out += fmt::format("[address {:04x}]", wordval + X);
-		return out;
+			disassembly += fmt::format("[address {:04x}]", wordval + X);
+		opcodes += fmt::format("{:02x} {:02x}", 
+							  wordval & 0xff, (wordval >> 8) & 0xff);
+		break;		
 
 	case ADDR_MODE_ABY:
 		wordval = readWordAtPC();
-		out = fmt::format("${:04x},Y", wordval);
+		disassembly += fmt::format("${:04x},Y", wordval);
 		if (atPC)
-			out += fmt::format("[address {:04x}]", wordval + Y);
-		return out;
+			disassembly += fmt::format("[address {:04x}]", wordval + Y);
+		opcodes += fmt::format("{:02x} {:02x}", 
+							  wordval & 0xff, (wordval >> 8) & 0xff);
+		break;
 		
 	case ADDR_MODE_IND:
-		return fmt::format("(${:04x})", readWordAtPC());
+		wordval = readWordAtPC();
+		disassembly += fmt::format("(${:04x})", wordval);
+		opcodes += fmt::format("{:02x} {:02x}", 
+							  wordval & 0xff, (wordval >> 8) & 0xff);
+		break;
 
 	case ADDR_MODE_IDX:
 		byteval = readByteAtPC();
+		opcodes += fmt::format("{:02x}", byteval);
 		wordval = byteval + X;
 		if (wordval > 0xFF)
 			wordval -= 0xFF;
 		wordval = readWord(wordval);
-		out = fmt::format("(${:02x},X)", byteval);
+		disassembly += fmt::format("(${:02x},X)", byteval);
 		if (atPC)
-			out += fmt::format("[address {:04x}]", wordval);
-		return out;
+			disassembly += fmt::format("[address {:04x}]", wordval);
+		break;
 		
 	case ADDR_MODE_IDY:
 		byteval = readByteAtPC();
 		wordval = readWord(byteval);
 		wordval += Y;
-		out = fmt::format("(${:02x}),Y", byteval);
+		disassembly += fmt::format("(${:02x}),Y", byteval);
 		if (atPC)
-			out += fmt::format("[address {:04x}]", wordval);
-		return out;
+			disassembly += fmt::format("[address {:04x}]", wordval);
+		opcodes += fmt::format("{:02x}", byteval);
+		break;
+	
+	default:
+		disassembly += fmt::format("[Invalid addressing mode {}]",
+			   					   mode);
 	}
-
-	return fmt::format("[Invalid addressing mode {}, opcode {:02x}]",
-			   mode, ins);
 }
 
 Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 	Address_t savePC = PC;
 	Cycles_t saveCycles = Cycles;
+	std::string bkpoint, args, opcodes;
 
 	// Are we looking at the next address to execute?  If we are, then
 	// the processor state is correct to calculate address offsets.
 	bool atPC = (PC == dPC);
 
 	PC = dPC;
-	disassembly = fmt::format("{:04x}: ", PC);
+	if (isBreakpoint(PC))
+		bkpoint = "B";
+
 	Byte opcode = readByteAtPC();
+	opcodes = fmt::format("{:02x} ", opcode);
+	disassembly = "";
 
 	// Assume that, while debugging, the PC must be at the
 	// start of an instruction sequence.
@@ -317,34 +348,38 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 		disassembly += fmt::format(".byte ${:02x}", opcode);
 	}
 	else {
-
 		disassembly += _instructions.at(opcode).name;
-
-		auto args = decodeArgs(opcode, atPC);
-		if (!args.empty())
-			disassembly += "     " + args;
+		decodeArgs(atPC, opcode, args, opcodes);
 	}
+	disassembly = fmt::format("{:04x}: {:1.1} | {:9.9}| {}     {}", 
+				              dPC, bkpoint, opcodes, disassembly, args);
 
-	Address_t returnPC = PC;
+	dPC = PC;
 	PC = savePC;
 	Cycles = saveCycles;
 
-	return returnPC;
+	return dPC;
 }
 
 Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
-	std::string ins;
+	std::string disassembly;
 
+	bool emulatedTimings = Cycles.timingEmulation();
+	Cycles.disableTimingEmulation();
+	
 	if (dPC > MAX_MEM) {
 		fmt::print("PC at end of memory");
 		return dPC;
 	}
 
 	do {
-		dPC = disassembleAt(dPC, ins);
-		fmt::print("{}\n", ins);
+		dPC = disassembleAt(dPC, disassembly);
+		fmt::print("{}\n", disassembly);
 	} while (--cnt && dPC < MAX_MEM);
 	
+	if (emulatedTimings)
+		Cycles.enableTimingEmulation();
+
 	return dPC;
 }
 

@@ -468,7 +468,7 @@ public:
 
 private:
 	// Disassembler
-	std::string decodeArgs(Byte, bool);
+	void decodeArgs(bool, Byte, std::string &, std::string&);
 	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
