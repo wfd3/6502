@@ -137,7 +137,7 @@ public:
 		_cell = b;
 	}
 
-	Element<Cell>::Type getType() const override {
+	typename Element<Cell>::Type getType() const override {
 		return Element<Cell>::RAM;
 	}
 
@@ -166,7 +166,7 @@ public:
 		;
 	}
 
-	Element<Cell>::Type getType() const override {
+	typename Element<Cell>::Type getType() const override {
 		return Element<Cell>::ROM;
 	}
 
@@ -206,7 +206,7 @@ public:
 		return 0;
 	}
 
-	Element<Cell>::Type getType() const override {
+	typename Element<Cell>::Type getType() const override {
 		return Element<Cell>::MIO;
 	}
 

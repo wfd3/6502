@@ -12,7 +12,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.0...3.7)
 
 project( 6502_tests )
 
@@ -82,6 +82,9 @@ add_dependencies(memory_tests gtest_main)
 target_link_libraries(memory_tests gtest_main)
 if(MSVC)
   target_link_libraries(memory_tests fmt::fmt-header-only)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  message(STATUS "Adding ${LIBCXXABI_LIBRARY} to link_libraries for memory_test")
+  target_link_libraries(memory_tests ${LIBCXXABI_LIBRARY})
 else()
   target_compile_definitions(memory_tests PRIVATE FMT_HEADER_ONLY)
   target_link_libraries(memory_tests readline)

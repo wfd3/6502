@@ -16,16 +16,7 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <string>
-#include <cstring>
-#include <memory>
-#include <cstdarg>
-
-#ifdef LINUX // TODO: Do I need this header?
-#include <unistd.h>
-#endif
-
-#include <6502.h>
+#include "6502.h"
 
 //////////
 // CPU Setup and reset

@@ -18,10 +18,6 @@
 #include <iostream>
 #include <csignal>
 #include <sstream>
-
-#include <stdio.h>
-
-//#define FMT_HEADER_ONLY
 #include <fmt/core.h>
 
 #include <6502.h>

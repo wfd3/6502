@@ -12,26 +12,36 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.0...3.7)
 
 project( 6502 )
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if(MSVC)
-#  set_target_properties(${name} PROPERTIES VS_USER_PROPS do_not_import_user.props)
-#  set_target_properties(${name} PROPERTIES VS_GLOBALVcpkgEnabled false)
-  #add_compile_options(/MP)	
-  #add_compile_options(/wd4201 /WX)	
-  add_compile_options(/std:c++20)
-  find_package(fmt CONFIG REQUIRED)
-  include_directories(AFTER "C:\\Users\\walt\\Source\\Repos\\vcpkg\\installed\\x64-windows\\include")
-	
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message(STATUS "Using GCC version: ${CMAKE_CXX_COMPILER_VERSION}")
+
+    add_compile_options(-std=gnu++23) 
+    add_compile_options(-W -Wall -pedantic -Wuninitialized -Wshadow)
+    #add_compile_options(-Weffc++)
+    add_compile_options(-Werror)	#Comment this out if -Weffc++ is enabled
+
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    message(STATUS "Using MSVC version: ${CMAKE_CXX_COMPILER_VERSION}")
+
+    add_compile_options(/std:c++20)
+    set_target_properties(${name} PROPERTIES VS_USER_PROPS do_not_import_user.props)
+    #  set_target_properties(${name} PROPERTIES VS_GLOBALVcpkgEnabled false)
+    #add_compile_options(/MP)	
+    #add_compile_options(/wd4201 /WX)	
+    find_package(fmt CONFIG REQUIRED)
+    # Tnis path will have to change depending on where vcpkg is.
+    #  Also, this is a hack to make this work on Windows.
+    include_directories(AFTER "..\\vcpkg\\installed\\x64-windows\\include")
+
 else()
-  add_compile_options(-W -Wall -pedantic -Wuninitialized -Wshadow)
-#  add_compile_options(-Weffc++)
-  add_compile_options(-Werror)	#Comment this out if -Weffc++ is enabled
-  add_compile_options(-std=gnu++23) 
+  message(STATUS "Using unknown compiler")
+
 endif()
 
 add_definitions(-DBINFILE_PATH=\"${CMAKE_SOURCE_DIR}/binfiles\")
