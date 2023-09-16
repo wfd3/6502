@@ -18,15 +18,8 @@
 
 #pragma once
 
-#include <vector>
 #include <algorithm>
-#include <stdarg.h>
 #include <fstream>
-#include <iterator>
-#include <string>
-#include <sstream>
-#include <stdexcept>
-
 #include <fmt/core.h>
 
 //
@@ -67,50 +60,12 @@ public:
 		return *this;
 	}
 
-	Element<Cell>& operator=(const int i) {
-		this->Write(i & 0xff);
-		return *this;
-	}
-
-	Element<Cell>& operator=(const long unsigned int i) {
-		this->Write(i & 0xff);
-		return *this;
-	}
-
 	bool operator==(const Element<Cell> &e) const {
 		return Read() == e.Read();
 	}
 
 	bool operator==(const int i) const {
-		return this->Read() == i;
-	}
-
-	bool operator==(const unsigned int i) const {
-		return this->Read() == i;
-	}
-
-	bool operator==(const unsigned char i) const {
-		return this->Read() == i;
-	}
-
-	operator char() const {
-		return this->Read();
-	}
-
-	operator unsigned char() const {
-		return this->Read();
-	}
-
-	operator int() const {
-		return this->Read();
-	}
-
-	operator long() const {
-		return this->Read();
-	}
-	
-	operator unsigned long() const {
-		return this->Read();
+		return this->Read() == (Cell) i;
 	}
 
 private:
@@ -286,7 +241,7 @@ public:
 	}
 
 	bool mapROM(const Address start,
-		    const std::vector<unsigned char> &rom,
+		    const std::vector<Cell> &rom,
 		    const bool overwriteExistingElements = false) {
 		
 		boundsCheck(start + rom.size());
@@ -438,7 +393,7 @@ public:
 		std::vector<Cell> vec;
 		vec.reserve(fileSize);
 		
-		// read the data:
+		// read the data
 		vec.insert(vec.begin(),
 			   std::istream_iterator<unsigned char>(file),
 			   std::istream_iterator<unsigned char>());
@@ -548,8 +503,7 @@ private:
 	}
 
 	void exception(const std::string &message) {
-		std::string error = "Memory Exception: " + message + 
-			"; Halting\n";
+		std::string error = "Memory Exception: " + message; 
 		throw Exception(error);
 	}
 };

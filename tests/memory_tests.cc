@@ -13,7 +13,7 @@ public:
 };
 
 using Address  = uint64_t;
-using Cell = uint8_t;
+using Cell = uint64_t;
 
 TEST_F(MemoryTests, CanMapRAMAndReadWriteIt) {
 	Memory<Address, Cell> mem(0x1000);
@@ -97,7 +97,7 @@ TEST_F(MemoryTests, WriteOutOfBoundsThrowsOuMemoryException) {
 }
 TEST_F(MemoryTests,CanLoadDataIntoMemory) {
 	Memory<Address, Cell> mem(0x1000);
-	std::vector<unsigned char> data;
+	std::vector<Cell> data;
 
 	data.reserve(100);
 	data.assign(100, 0xef);
@@ -113,7 +113,7 @@ TEST_F(MemoryTests,CanLoadDataIntoMemory) {
 TEST_F(MemoryTests, ROMRead) {
 	Memory<Address, Cell> mem(0x1000);
 	constexpr size_t ROMSZ = 100;
-	std::vector<unsigned char> rom;
+	std::vector<Cell> rom;
 	rom.reserve(ROMSZ);
 	rom.assign(ROMSZ, 0x10);
 
@@ -124,7 +124,7 @@ TEST_F(MemoryTests, ROMRead) {
 TEST_F(MemoryTests, ROMThrowsAwayReads) {
 	Memory<Address, Cell> mem(0x1000);
 	constexpr size_t ROMSZ = 100;
-	std::vector<unsigned char> rom;
+	std::vector<Cell> rom;
 	rom.reserve(ROMSZ);
 	rom.assign(ROMSZ, 0x10);
 
@@ -151,12 +151,12 @@ TEST_F(MemoryTests, MIONullReadReturnsZero) {
 	EXPECT_EQ(mem[0x100], 0x0);
 }
 
-unsigned char mio_byte;
-void miowrite(unsigned char b) {
+Cell mio_byte;
+void miowrite(Cell b) {
 	mio_byte = b;
 }
 
-unsigned char mioread() {
+Cell mioread() {
 	return mio_byte;
 }
 
