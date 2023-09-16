@@ -111,7 +111,7 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502RORROLTests, RolAbsoltute) {
+TEST_F(MOS6502RORROLTests, RolAbsolute) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ABS;
 	Byte data = 0b01010101;
@@ -136,7 +136,7 @@ TEST_F(MOS6502RORROLTests, RolAbsoltute) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502RORROLTests, RolAbsoltuteX) {
+TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROL_ABX;
 	Byte data = 0b01010101;
@@ -283,7 +283,7 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 }
 
 //HERE
-TEST_F(MOS6502RORROLTests, RorAbsoltute) {
+TEST_F(MOS6502RORROLTests, RorAbsolute) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ABS;
 	Byte data = 0b01010101;
@@ -308,7 +308,7 @@ TEST_F(MOS6502RORROLTests, RorAbsoltute) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502RORROLTests, RorAbsoltuteX) {
+TEST_F(MOS6502RORROLTests, RorAbsoluteX) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ROR_ABX;
 	Byte data = 0b01010101;

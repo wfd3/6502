@@ -148,7 +148,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundryAddsPositiveNumbers) {
+TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABX;
 
@@ -204,7 +204,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundryAddsPositiveNumbers) {
+TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_ADC_ABY;
 

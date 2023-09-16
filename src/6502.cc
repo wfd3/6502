@@ -261,7 +261,7 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	// Absolute,X 
 	case ADDR_MODE_ABX:
 		address = readWordAtPC();
-		// Add a cycle if a page boundry is crossed
+		// Add a cycle if a page boundary is crossed
 		updateCycles(X);
 		address += X;
 		break;
@@ -269,7 +269,7 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	// Absolute,Y 
 	case ADDR_MODE_ABY:
 		address = readWordAtPC();
-		// Add a cycle if a page boundry is crossed
+		// Add a cycle if a page boundary is crossed
 		updateCycles(Y);
 		address += Y;
 		break;

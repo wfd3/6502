@@ -24,7 +24,7 @@ TEST_F(MemoryTests, CanMapRAMAndReadWriteIt) {
 	EXPECT_EQ(mem[1], 10);
 }
 
-TEST_F(MemoryTests, CantWriteUnmapedMemory) {
+TEST_F(MemoryTests, CantWriteUnmappedMemory) {
 	Memory<Address, Cell> mem(0x2000);
 
 	mem.mapRAM(0, 0x1000);

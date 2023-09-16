@@ -510,7 +510,7 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		},
 		{ "run",   "r",  &CPU::runCmd, false,
 		  "Run program at current Program Counter.  Optionally "
-		  "run for [x] instructions then reutrn to debugger"
+		  "run for [x] instructions then return to debugger"
 		},
 		{ "stack",     "S",  &CPU::stackCmd, false,
 		  "Show current stack elements"
@@ -527,7 +527,7 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "Display CPU state after every debugger command"
 		},
 		{ "listpc",   "P",  &CPU::resetListPCCmd, false,
-		  "Reset where the 'list' command start to disassembe"
+		  "Reset where the 'list' command starts to disassemble"
 		},
 		{ "mem",       "m",  &CPU::memdumpCmd, false,
 		  "Examine or change memory"},

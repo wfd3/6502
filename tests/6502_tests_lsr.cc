@@ -82,7 +82,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502LSRTests, LsrAbsoltute) {
+TEST_F(MOS6502LSRTests, LsrAbsolute) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ABS;
 
@@ -105,7 +105,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoltute) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(MOS6502LSRTests, LsrAbsoltuteX) {
+TEST_F(MOS6502LSRTests, LsrAbsoluteX) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_LSR_ABX;
 

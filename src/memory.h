@@ -104,7 +104,7 @@ private:
 	Cell _cell;
 };
 
-// ROM elemenet
+// ROM element
 template<class Cell>
 class ROM : public Element<Cell> {
 public:
@@ -133,7 +133,7 @@ private:
 	Cell _cell;
 };
 
-// Memory mapped devices, ie. a keyboard and termial.
+// Memory mapped devices, ie. a keyboard and terminal.
 template<class Cell>
 class MIO : public Element<Cell> {
 public:

@@ -102,7 +102,7 @@ private:
 #ifdef _WIN64
 	void windowsDelay(unt64_t delayNs) {
 		// Use the Windows high-performance counter to busy-wait a
-		//certian number of nanoseconds.
+		//certain number of nanoseconds.
 		LARGE_INTEGER frequency;
 		QueryPerformanceFrequency(&frequency);
 
@@ -120,7 +120,7 @@ private:
 
 #ifdef __linux__
 	void linuxDelay(uint64_t delayNs) {
-		// Use Linux clock_gettime() to busy-wait a certian number of 
+		// Use Linux clock_gettime() to busy-wait a certain number of 
 		// nanoseconds.
 		struct timespec start, current;
 		clock_gettime(CLOCK_MONOTONIC, &start);
@@ -149,7 +149,7 @@ private:
 
 		// The minimum sleep_for() resolution (and clock_nanosleep())
 		// seems to be about 1000 nanoseconds, or 1 microsecond.  That's
-		// unfortnate as it means we're only ever going to be able to
+		// unfortunate as it means we're only ever going to be able to
 		// emulate a 1 MHz 6502 using this method.  But it works as a 
 		// fallback method.  
 		std::this_thread::sleep_for(_cycleDelay);

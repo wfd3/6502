@@ -27,7 +27,7 @@ void CPU::doBranch(bool condition, Word address, uint64_t &expectedCyclesToUse) 
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;
 
-		if ((PC >> 8) != (address >> 8)) { // Crossed page boundry
+		if ((PC >> 8) != (address >> 8)) { // Crossed page boundary
 			Cycles += 2;
 			expectedCyclesToUse += 2;
 		}
@@ -36,7 +36,7 @@ void CPU::doBranch(bool condition, Word address, uint64_t &expectedCyclesToUse) 
 	}
 }
 
-// BCD addition and substraction functions.
+// BCD addition and subtraction functions.
 // See:
 // https://www.electrical4u.com/bcd-or-binary-coded-decimal-bcd-conversion-addition-subtraction/
 void CPU::bcdADC(Byte operand) {
