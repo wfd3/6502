@@ -137,7 +137,7 @@ TEST_F(MemoryTests, ROMThrowsAwayReads) {
 TEST_F(MemoryTests, MIONullWriteThrowsAwayWrite) {
 	Memory<Address, Cell> mem(0x1000);
 
-	mem.mapMIO(0x100, NULL, NULL);
+	mem.mapMIO(0x100, nullptr, nullptr);
 
 	mem[0x100] = 0x42;
 	EXPECT_EQ(mem[0x100], 0x0);
@@ -146,7 +146,7 @@ TEST_F(MemoryTests, MIONullWriteThrowsAwayWrite) {
 TEST_F(MemoryTests, MIONullReadReturnsZero) {
 	Memory<Address, Cell> mem(0x1000);
 
-	mem.mapMIO(0x100, NULL, NULL);
+	mem.mapMIO(0x100, nullptr, nullptr);
 
 	EXPECT_EQ(mem[0x100], 0x0);
 }
@@ -164,7 +164,7 @@ TEST_F(MemoryTests, MIOWrite) {
 	Memory<Address, Cell> mem(0x1000);
 
 	mio_byte = 0;
-	mem.mapMIO(0x100, NULL, miowrite);
+	mem.mapMIO(0x100, nullptr, miowrite);
 
 	mem[0x100] = 0x42;
 	EXPECT_EQ(mio_byte, 0x42);
@@ -174,7 +174,7 @@ TEST_F(MemoryTests, MIORead) {
 	Memory<Address, Cell> mem(0x1000);
 
 	mio_byte = 0x45;
-	mem.mapMIO(0x100, NULL, miowrite);
+	mem.mapMIO(0x100, nullptr, miowrite);
 
 	EXPECT_EQ(mio_byte, 0x45);
 }

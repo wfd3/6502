@@ -138,10 +138,10 @@ int main() {
 
 	// Keyboard and display memory-mapped IO, overwriting existing
 	// addresses if needed.
-	mem.mapMIO(KEYBOARD, kbdread, NULL, true);
-	mem.mapMIO(KEYBOARDCR, kbdcr_read, NULL, true);
+	mem.mapMIO(KEYBOARD, kbdread, nullptr, true);
+	mem.mapMIO(KEYBOARDCR, kbdcr_read, nullptr, true);
 	mem.mapMIO(DISPLAY, dspread, dspwrite, true);
-	mem.mapMIO(DISPLAYCR, NULL, NULL, true);
+	mem.mapMIO(DISPLAYCR, nullptr, nullptr, true);
 
 	fmt::print("A Very Simple Apple I\n");
 	// Load Wozmon, Apple Basic, Applesoft Basic Lite and the

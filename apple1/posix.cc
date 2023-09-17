@@ -58,8 +58,8 @@ void enable_raw_mode()
 	term.c_cc[VMIN] = 1;
 	term.c_cc[VTIME] = 0;
 	tcsetattr(STDIN_FILENO, TCSANOW, &term);
-	setbuf(stdin, NULL);
-	setbuf(stdout, NULL);
+	setbuf(stdin, nullptr);
+	setbuf(stdout, nullptr);
 	tcflush(0, TCIFLUSH);
 }
 

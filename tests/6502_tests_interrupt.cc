@@ -14,8 +14,8 @@ void usleep(__int64 usec)
 	// indicates relative time
 	ft.QuadPart = -(10 * usec); 
 
-	timer = CreateWaitableTimer(NULL, TRUE, NULL);
-	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
+	SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
 	WaitForSingleObject(timer, INFINITE);
 	CloseHandle(timer);
 }

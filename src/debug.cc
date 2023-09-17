@@ -129,7 +129,7 @@ char* readlineCommandGenerator(const char* text, int state) {
 	    }
     }
     
-    return NULL;
+    return nullptr;
 }
 
 // Static completion callback function outside the class

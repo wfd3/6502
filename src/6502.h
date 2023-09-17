@@ -454,8 +454,8 @@ public:
 
 	// Callbacks to run before entering and exiting the debugger
 	typedef void (*debugEntryExitFn_t)(void);
-	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = NULL,
-				   debugEntryExitFn_t exitfn = NULL) {
+	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = nullptr,
+				   debugEntryExitFn_t exitfn = nullptr) {
 
 		debugEntryFunc = entryfn;
 		debugExitFunc = exitfn;
@@ -474,8 +474,8 @@ private:
 
 	// Debugger
 	bool debugMode = false;
-	debugEntryExitFn_t debugEntryFunc = NULL;
-	debugEntryExitFn_t debugExitFunc = NULL;
+	debugEntryExitFn_t debugEntryFunc = nullptr;
+	debugEntryExitFn_t debugExitFunc = nullptr;
 	std::string debug_lastCmd = "";
 	bool debug_alwaysShowPS = false;
 	bool debug_loopDetection = false;

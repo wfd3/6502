@@ -142,10 +142,10 @@ public:
 
 //	MIO() {	}
 
-	MIO(readfn_t readfn = NULL, writefn_t writefn = NULL) :
+	MIO(readfn_t readfn = nullptr, writefn_t writefn = nullptr) :
 		_readfn(readfn), _writefn(writefn) { }
 	
-	void setMIO(readfn_t readfn = NULL, writefn_t writefn = NULL) {
+	void setMIO(readfn_t readfn = nullptr, writefn_t writefn = nullptr) {
 		_readfn = readfn;
 		_writefn = writefn;
 	}
