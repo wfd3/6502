@@ -7,7 +7,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 

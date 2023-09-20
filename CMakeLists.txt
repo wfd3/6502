@@ -25,6 +25,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-W -Wall -pedantic -Wuninitialized -Wshadow)
     #add_compile_options(-Weffc++)
     add_compile_options(-Werror)	#Comment this out if -Weffc++ is enabled
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+      message(STATUS " -- DEBUG build")
+      add_compile_options(-g)
+    endif()
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message(STATUS "Using MSVC version: ${CMAKE_CXX_COMPILER_VERSION}")

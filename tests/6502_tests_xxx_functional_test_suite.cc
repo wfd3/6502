@@ -9,7 +9,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 
@@ -31,13 +30,13 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	// When:
 	mem.loadDataFromFile(fileName, 0x0000);
 	cpu.setResetVector(0x0400);
-	cpu.exitReset();
 	cpu.setExitAddress(exitAddress);
 	cpu.toggleLoopDetection(); // Force break on 'jmp *'
 	cpu.Cycles.disableTimingEmulation();
+	cpu.Reset();
 
 	//Then:
-	std::cout << "# This test takes some time..." << std::endl;
+	std::cout << "# This test takes about 20 seconds..." << std::endl;
 
 // Uncomment to start in debugger
 //	cpu.SetDebug(true);

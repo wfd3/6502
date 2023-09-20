@@ -8,7 +8,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
@@ -21,10 +20,9 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 	Byte ins = CPU::INS_RTS_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 2);
 	mem[0x01FF] = 0x20;
 	mem[0x01FE] = 0x00;
-	cpu.SP -= 2;
 
 	mem[0xFFFC] = ins;
 

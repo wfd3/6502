@@ -381,8 +381,6 @@ void CPU::ins_iny([[maybe_unused]] Byte opcode,
 void CPU::ins_jmp(Byte opcode, uint64_t &expectedCyclesToUse) {
 	Word address = PC;
 
-	addBacktrace(PC - 1);
-
 	if (_instructions.at(opcode).addrmode == ADDR_MODE_IND) {
 		address = getAddress(opcode, expectedCyclesToUse);
 	}

@@ -24,7 +24,8 @@ CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
 				       _instructions(setupInstructionMap()),
 				       _debugCommands(setupDebugCommands()) {
 	
-	Cycles.enableTimingEmulation();
+	Cycles.disableTimingEmulation();
+	_inReset = true;
 }
 
 void CPU::setResetVector(Word address) {
@@ -36,43 +37,36 @@ void CPU::setInterruptVector(Word address) {
 }
 
 void CPU::exitReset() {
-	SP = INITIAL_SP;
-	A = X = Y = 0;
-	PS = 0; //C = Z = I = D = B = V = N = 0;
+	SP = pendingResetSP;
+	PC = pendingResetPC;
 
 	debugMode = false;
 	debug_alwaysShowPS = false;
-	debug_lastCmd = "";
-	_exitAddressSet = false;
-	if (overrideResetVector) {
-		PC = pendingResetPC;
-	} else {
-		PC = readWord(RESET_VECTOR);
-	}
 
-	_pendingIRQ = false;
-	_pendingNMI = false;
-	_pendingReset = false;
 	_hitException = false;
-	overrideResetVector = false;
 
-	// Do this last in case anything above ever changes Cycles by
-	// side-effect.
-	Cycles = 7;		
+	_inReset = false;
+	_pendingReset = false;
+
+	Cycles += 7;		
 }	
 
 // This is only intended for testing, not for emulation.
 // TODO: Change this function name and update all the 6502 tests.
-void CPU::Reset(Word address) {
-	// TODO: these should be lock-protected.
-	_pendingReset = true;
-	overrideResetVector = true;
-	pendingResetPC = address;
-	exitReset();
+void CPU::Reset(Word initialPC, Byte initialSP)  {
+	if (!_inReset) {
+		_inReset = true;
+	} else {
+		_inReset = false;
+		_pendingReset = true;
+		pendingResetPC = initialPC;
+		pendingResetSP = initialSP;
+	} 
 }
 
-void CPU::Reset() {		// TODO: this looks wrong.
-	_pendingReset = true;
+void CPU::Reset() {
+	Address_t resetVector = readWord(RESET_VECTOR);
+	Reset(resetVector, INITIAL_SP);
 }
 
 //////////
@@ -115,11 +109,16 @@ bool CPU::IRQ() {
 //////////
 // CPU Exception
 void CPU::exception(const std::string &message) {
-	fmt::print("CPU Exception: {}\n", message);
-	fmt::print("Entering debugger\n");
-	debugMode = true;
+	std::string msg = "6502 CPU Exception: " + message;
 	_hitException = true;
-	debug();
+	if (debug_OnException) {
+		fmt::print("{}\n", message);
+		fmt::print("Entering debugger\n");
+		debugMode = true;
+		debug();
+	} else {
+		throw std::runtime_error(msg); 
+	}
 }
 
 //////////
@@ -338,7 +337,10 @@ std::tuple<uint64_t, uint64_t> CPU::executeOneInstruction() {
 	Word startPC;
 	opfn_t op;
 
-	if (pendingReset()) {
+	if (_inReset)
+		return std::make_tuple(0, 0);
+
+	if (_pendingReset) {
 		exitReset();
 	}
 	

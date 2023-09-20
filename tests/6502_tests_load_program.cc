@@ -31,7 +31,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 
@@ -60,7 +59,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 	// When:
 
 	mem.loadData(testProgram, startAddress);
-	cpu.PC = startAddress;
+	cpu.Reset(startAddress);
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
@@ -79,7 +78,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 	// When:
 
 	mem.loadDataFromFile(testProgramFile, startAddress);
-	cpu.PC = startAddress;
+	cpu.Reset(startAddress);
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
@@ -99,7 +98,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 	// When:
 
 	mem.loadData(testProgram, startAddress);
-	cpu.PC = startAddress;
+	cpu.Reset(startAddress);
 
 	//Then:
 	for (unsigned long l = 0; l < sizeof(testProgram) * loops; l++) {

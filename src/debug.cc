@@ -53,6 +53,23 @@ std::string stripSpaces(std::string input) {
 	return result;
 }
 
+std::string stripLeadingSpaces(std::string input) {
+	size_t first = input.find_first_not_of(" \t\n\r\f\v");
+    if (first == std::string::npos) {
+        return "";
+    }
+    return input.substr(first);
+}
+
+std::string stripTrailingSpaces(std::string input) {
+	size_t last = input.find_last_not_of(" \t\n\r\f\v");
+    if (last == std::string::npos) {
+        return "";
+    }
+    return input.substr(0, last + 1);
+
+}
+
 std::string split(std::string &input, const std::string &delim) {
     size_t pos = input.find(delim);
 
@@ -181,33 +198,36 @@ void CPU::printCPUState() {
 	auto yesno = [](bool b) -> std::string {
 		return b ? "Yes" : "No";
 	};
-	
-	fmt::print(" | PC: {:04x} SP: {:02x}\n", PC, SP );
+	auto fl = [](char c, bool b) -> char {
+		return b ? std::toupper(c) : std::tolower(c);
+	};
+
+	fmt::print("PC: {:04x} SP: {:02x}\n", PC, SP );
 	// fmt::print() doesn't like to print out union/bit-field members?
-	fmt::print(" | C:{} Z:{} I:{} D:{} B:{} U:{} V:{} N:{} (PS: {:#x})\n",
-		   (int) Flags.C, (int) Flags.Z, (int) Flags.I, (int) Flags.D,
-		   (int) Flags.B, (int) Flags._unused, (int) Flags.V,
-		   (int) Flags.N, PS);
-	fmt::print(" | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print(" | Pending: IRQ - {}, NMI - {}, Reset - {}\n",
+	fmt::print("Flags: {}{}{}{}{}{}{} PS: {:#x}\n",
+		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D),
+		fl('B', Flags.B), fl('V', Flags.V), fl('N', Flags.N), PS);
+	fmt::print("A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print("Pending: IRQ - {}, NMI - {}, Reset - {}, "
+			   "PendingReset - {}\n",
 		   yesno(pendingIRQ()), yesno(pendingNMI()),
-		   yesno(pendingReset()));
-	fmt::print(" | IRQs: {}, NMIs: {}, BRKs: {}\n",
+		   yesno(_inReset), yesno(_pendingReset));
+	fmt::print("IRQs: {}, NMIs: {}, BRKs: {}\n",
 		    _IRQCount, _NMICount, _BRKCount);
-	fmt::print(" | Cycle: {}\n", Cycles.get());
+	fmt::print("Cycle: {}\n", Cycles.get());
 }
 
 void CPU::dumpStack() {
 	Byte p = INITIAL_SP;
 	Word a;
 
-	fmt::print("# Stack [SP = {:02x}]\n", SP);
+	fmt::print("Stack [SP = {:02x}]\n", SP);
 	if (p == SP)
-		fmt::print("# Empty stack\n");
+		fmt::print("Empty stack\n");
 
 	while (p != SP) {
 		a = STACK_FRAME | p;
-		fmt::print("# [{:04x}] {:02x}\n", a, mem.Read(a));
+		fmt::print("[{:04x}] {:02x}\n", a, mem.Read(a));
 		p--;
 	}
 }
@@ -388,20 +408,10 @@ Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
 
 void CPU::toggleDebug() {
 	debugMode = !debugMode;
-	fmt::print("# Debug mode ");
-	if (debugMode)
-		fmt::print("enabled\n");
-	else
-		fmt::print("disabled\n");
 }
 
 void CPU::setDebug(bool d) {
 	debugMode = d;
-	fmt::print("# Debug mode ");
-	if (debugMode)
-		fmt::print("enabled\n");
-	else
-		fmt::print("disabled\n");
 }
 
 //////////
@@ -411,7 +421,7 @@ void CPU::listBreakpoints() {
 	std::vector<Word>::iterator i;
 	int c = 0;
 
-	fmt::print("# Active breakpoints:\n");
+	fmt::print("Active breakpoints:\n");
 	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
 		fmt::print("  {:04x} ", *i);
 		c++;
@@ -438,11 +448,11 @@ void CPU::deleteBreakpoint(Word bp) {
 	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
 		if (*i == bp) {
 			breakpoints.erase(i);
-			fmt::print("# Removed breakpoint at {:04x}\n", *i);
+			fmt::print("Removed breakpoint at {:04x}\n", *i);
 			return;
 		}
 	}
-	fmt::print("# No breakpoint set at {:04x}\n", bp);
+	fmt::print("No breakpoint set at {:04x}\n", bp);
 }
 
 void CPU::addBreakpoint(Word bp) {
@@ -452,11 +462,11 @@ void CPU::addBreakpoint(Word bp) {
 		return;
 	}
 	if (isBreakpoint(bp)) {
-		fmt::print("# Breakpoint already set at {:04x}\n", bp);
+		fmt::print("Breakpoint already set at {:04x}\n", bp);
 		return;
 	}
 	breakpoints.push_back(bp);
-	fmt::print("# Set breakpoint at {:04x}\n", bp);
+	fmt::print("Set breakpoint at {:04x}\n", bp);
 }
 
 //////////
@@ -466,7 +476,7 @@ void CPU::showBacktrace() {
 	std::vector<std::string>::iterator i = backtrace.begin();
 	unsigned int cnt = 0;
 
-	fmt::print("# Backtrace: {} entries\n", backtrace.size());
+	fmt::print("Backtrace: {} entries\n", backtrace.size());
 	for ( ; i < backtrace.end(); i++ )
 		fmt::print("#{:02d}:  {}\n", cnt++, (*i).c_str());
 
@@ -681,7 +691,7 @@ int CPU::autostateCmd([[maybe_unused]] std::string &line,
 		      [[maybe_unused]] uint64_t &returnValue) {
 
 	debug_alwaysShowPS = !debug_alwaysShowPS;
-	fmt::print("# Processor status auto-display ");
+	fmt::print("Processor status auto-display ");
 	if (debug_alwaysShowPS)
 		fmt::print("enabled\n");
 	else 
@@ -707,7 +717,7 @@ int CPU::resetListPCCmd(std::string &line,
 		listPC = PC;
 	}
 
-	fmt::print("# List reset to PC {:04x}\n", listPC);
+	fmt::print("List reset to PC {:04x}\n", listPC);
 	
 	return ACTION_CONTINUE;
 }
@@ -744,7 +754,7 @@ int CPU::memdumpCmd(std::string &line,
 	    rangeCheckAddr(addr1) && rangeCheckValue(value)) {
 		Byte oldval = mem.Read(addr1);
 		mem.Write(addr1, (Byte) value);
-		 fmt::print("# [{:04x}] {:02x} -> {:02x}\n",
+		 fmt::print("[{:04x}] {:02x} -> {:02x}\n",
 			    addr1, oldval, (Byte) value);
 		return ACTION_CONTINUE;
 	}
@@ -875,7 +885,7 @@ int CPU::setCmd(std::string &line,
 		else
 			Flags.N = (bool) value;
 	else 
-		fmt::print("# No register or status flag '{}'\n", reg);
+		fmt::print("No register or status flag '{}'\n", reg);
 
 	return ACTION_CONTINUE;
 }
@@ -883,9 +893,11 @@ int CPU::setCmd(std::string &line,
 int CPU::resetCmd([[maybe_unused]] std::string &line,
 		  [[maybe_unused]] uint64_t &returnValue) {
 
-	fmt::print("# Resetting 6502\n");
+	fmt::print("Resetting 6502\n");
 	setDebug(false);
-	Reset();
+	Reset();    // Enter reset
+	if (inReset())
+		Reset();    // Exit reset
 	returnValue = 1;
 	return ACTION_RETURN;
 }
@@ -905,7 +917,7 @@ int CPU::loopdetectCmd([[maybe_unused]] std::string &line,
 		       [[maybe_unused]] uint64_t &returnValue) {
 
 	toggleLoopDetection();
-	fmt::print("# Loop detection ");
+	fmt::print("Loop detection ");
 	if (debug_loopDetection)
 		fmt::print("enabled\n");
 	else 
@@ -1011,12 +1023,15 @@ uint64_t CPU::debugPrompt() {
 
 	while(1) {
 		getReadline(line);
+		line = stripTrailingSpaces(line);
+		line = stripLeadingSpaces(line);
 
 		if (line.empty() && debug_lastCmd.empty()) // Blank input
 			continue;
 
 		if (line.empty() && !debug_lastCmd.empty()) {
 			line = debug_lastCmd;
+			fmt::print(": {}\n", line);
 		}
 
 		// Check if command is numbers, convert them to
@@ -1030,15 +1045,18 @@ uint64_t CPU::debugPrompt() {
 			// line isn't numbers, continue.
 		}
 
+		auto savedLine = line;
 		auto command = split(line, " ");
-		
-		if (matchCommand(command, f) ==false) {
+		if (command == "") 
+			continue;
+
+		if (matchCommand(command, f) == false) {
 			fmt::print("Unknown command '{}'\n", command);
 			continue;
 		}
 
-		if (line != "continue")
-			debug_lastCmd = line;
+		if (line != "continue") 
+			debug_lastCmd = savedLine;
 
 		auto action = (this->*f)(line, returnValue);
 		if (action == ACTION_CONTINUE)
@@ -1070,7 +1088,7 @@ void CPU::debug() {
 		}
 	}
 
-	fmt::print("# Exiting debugger\n");
+	fmt::print("Exiting debugger\n");
 	if (debugExitFunc)
 		debugExitFunc();
 }

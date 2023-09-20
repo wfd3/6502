@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <memory>
 #include <algorithm>
 #include <fstream>
 #include <fmt/core.h>
@@ -192,7 +193,8 @@ public:
 		_mem.reserve(_size);
 		_watch.reserve(_size);
 
-		_mem.assign(_size, &_unmapped);
+		_unmapped = std::make_shared<::Element<Cell>>();
+		_mem.assign(_size, _unmapped);
 		_watch.assign(_size, false);
 	}
 
@@ -234,7 +236,7 @@ public:
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = _mem.begin() + end;
 		for (auto it = startIdx; it <= endIdx; it++) {
-			(*it) = new ::RAM<Cell>;
+			(*it) = std::make_shared<::RAM<Cell>>();
 		}
 
 		return true;
@@ -259,9 +261,7 @@ public:
 		unsigned long i = 0;
 
 		for (auto it = startIdx; it != endIdx; it++, i++) {
-			if ((*it) != &_unmapped)
-				delete (*it);
-			(*it) = new ::ROM<Cell>(rom[i]);
+			(*it) = std::make_shared<::ROM<Cell>>(rom[i]);
 		}
 
 		return true;
@@ -281,9 +281,7 @@ public:
 			return false;
 		}
 
-		if (_mem[address] != &_unmapped)
-			delete _mem[address];
-		_mem[address] = new ::MIO<Cell>(readfn, writefn);
+		_mem[address] = std::make_shared<::MIO<Cell>>(readfn, writefn);
 		return true;
 	}
 
@@ -291,8 +289,8 @@ public:
 		return isAddressMapped(_mem[address]);
 	}
 
-	bool isAddressMapped(Element<Cell> *e) {
-		return e != &_unmapped;
+	bool isAddressMapped(std::shared_ptr<Element<Cell>> e) {
+		return e != _unmapped;
 	}
 
 	void hexdump(const Address start, Address end) {
@@ -306,26 +304,27 @@ public:
 
 		auto begin = _mem.begin() + start;
 		auto stop = _mem.begin() + end; 
-
-		for (auto it = begin; it <= stop; it += 16) {
-			std::string ascii;
-			std::string hexdump;
-			
-			hexdump += fmt::format("{:04x}  ",
+		int cnt = 0;
+		std::string hexdump, ascii;
+        for (auto it = begin; it <= stop; it++) {
+			if (cnt == 0)
+				hexdump += fmt::format("{:04x}  ",
 					       std::distance(_mem.begin(), it));
 			
-			for (auto jt = it; jt < it+16; jt++) {
-				if (jt == _mem.end()) {
-					break;
-				}
-				Cell c = (*jt)->Read();
-				hexdump += fmt::format("{:02x} ", c);
-				if (isprint(c))
-					ascii += c;
-				else
-					ascii += '.';
+			Cell c = (*it)->Read();
+			hexdump += fmt::format("{:02x} ", c);
+			if (isprint(c))
+				ascii += c;
+			else
+				ascii += '.';
+
+			cnt++;
+			if (cnt == 16 || it == stop) {
+				cnt = 0;
+				fmt::print("{:58.58}{}\n", hexdump, ascii);
+				hexdump = "";
+				ascii = "";
 			}
-			fmt::print("{}  {}\n", hexdump, ascii);
 		}
 	}
 
@@ -361,7 +360,7 @@ public:
 		}
 		auto mappedBytes = 
 			std::count_if(_mem.begin(), _mem.end(),
-				      [](Element<Cell> *e) {
+				      [](std::shared_ptr<Element<Cell>> e) {
 			    return e->getType() != Element<Cell>::UNMAPPED;
 			});
 				
@@ -475,9 +474,9 @@ public:
 private:
 
 	Address _endAddress; // Last address
-	Element<Cell> _unmapped;	   // Default memory element 
+	std::shared_ptr<Element<Cell>> _unmapped;	   // Default memory element 
 
-	std::vector<Element<Cell> *> _mem;
+	std::vector<std::shared_ptr<Element<Cell>>> _mem;
 	std::vector<bool> _watch; // Vector of watched addresses.
 
 	void boundsCheck(Address address) {

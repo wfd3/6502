@@ -83,16 +83,14 @@ public:
 
 	// CPU Setup & reset
         CPU(cMemory &);
-	void Reset(Word);
+	void Reset(Word initialPC, Byte initialSP = INITIAL_SP);
 	void Reset();
-	void exitReset();
-
 	void setResetVector(Word);
 	void setPendingReset() {
 		if (!debugMode)
 			_pendingReset = true;
 	}
-	bool pendingReset() { return _pendingReset; }
+	bool inReset() { return _inReset; }
 
 	void setInterruptVector(Word);
 	void raiseIRQ() { _pendingIRQ = true; }
@@ -116,18 +114,21 @@ public:
 private:
 	// Setup & reset
 	cMemory& mem;
+	std::atomic_bool _inReset = false;      // CPU is held in reset
 	std::atomic_bool _pendingReset = false;
 	std::atomic_bool _pendingIRQ = false;
 	std::atomic_bool _pendingNMI = false;
 	bool _hitException = false;
-	bool overrideResetVector = false;
 	Word pendingResetPC = 0;
+	Byte pendingResetSP = INITIAL_SP;
+
 	Address_t _exitAddress = 0;
 	bool _exitAddressSet = false;
 	bool isPCAtExitAddress() {
 		return _exitAddressSet && (PC == _exitAddress);
 	}
 
+	void exitReset();
 	// Instruction map
 	typedef void (CPU::*opfn_t)(Byte, uint64_t &);
 	struct instruction {
@@ -450,6 +451,8 @@ public:
 	void setDebug(bool);
 	bool isDebugEnabled() { return debugMode; }
 	void debug();
+	bool debuggerOnException() { return debug_OnException; }
+	void enterDebuggerOnException(bool t) { debug_OnException = t; }
 	std::tuple<uint64_t, uint64_t> traceOneInstruction();
 
 	// Callbacks to run before entering and exiting the debugger
@@ -479,6 +482,7 @@ private:
 	std::string debug_lastCmd = "";
 	bool debug_alwaysShowPS = false;
 	bool debug_loopDetection = false;
+	bool debug_OnException = false;
 
 	void toggleDebug();
 	uint64_t debugPrompt();

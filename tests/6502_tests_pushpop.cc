@@ -8,7 +8,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
@@ -23,7 +22,6 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 	//Given:
 	cpu.Reset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
 
@@ -43,12 +41,10 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	Byte ins = CPU::INS_PLA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
-	cpu.SP = CPU::INITIAL_SP - 1;
 	cpu.A = 0xFF;
 
 	//When:
@@ -73,7 +69,6 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
-	cpu.SP = CPU::INITIAL_SP;
 	cpu.PS = 0b01010101;
 
 	//When:
@@ -91,12 +86,11 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 	Byte ins = CPU::INS_PLP_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
 	
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0b01010101;;
-	cpu.SP = CPU::INITIAL_SP - 1;
 	cpu.PS = 0x52;
 
 	//When:

@@ -28,7 +28,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
@@ -51,14 +50,13 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterrupt) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.PC = 0x1000;
+	cpu.Reset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.raiseIRQ();
 
 	EXPECT_TRUE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.Flags.I);
-	EXPECT_EQ(cpu.PC, 0x1000);
 
 	// When
 	cpu.executeOneInstruction();
@@ -75,7 +73,7 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterruptDoesNotInterruptWhenIFlagSe
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.PC = 0x1000;
+	cpu.Reset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.Flags.I = 1;
@@ -83,7 +81,6 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterruptDoesNotInterruptWhenIFlagSe
 
 	EXPECT_TRUE(cpu.pendingIRQ());
 	EXPECT_TRUE(cpu.Flags.I);
-	EXPECT_EQ(cpu.PC, 0x1000);
 
 	// When
 	cpu.executeOneInstruction();
@@ -100,7 +97,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.PC = 0x1000;
+	cpu.Reset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	EXPECT_FALSE(cpu.pendingIRQ());
@@ -125,7 +122,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterrupt) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.PC = 0x1000;
+	cpu.Reset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 
@@ -148,7 +145,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.PC = 0x1000;
+	cpu.Reset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.Flags.I = 1;
@@ -182,7 +179,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
 
 	//Given:
 	mem.loadData(thisProgram, 0x1000);
-	cpu.PC = 0x1000;
+	cpu.Reset(0x1000);
 	cpu.setExitAddress(0x1005);
 	cpu.setInterruptVector(0x4000);
 	mem.loadData(rtiProgram, 0x4000);

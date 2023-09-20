@@ -8,7 +8,6 @@ public:
 
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 
@@ -851,4 +850,5 @@ TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
+
 

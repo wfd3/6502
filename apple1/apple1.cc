@@ -177,7 +177,7 @@ int main() {
 	enable_raw_mode();	// Set the keyboard non-blocking
 
 	cpu.Cycles.enableTimingEmulation();
-	cpu.exitReset();	// Exit the CPU from reset
+	cpu.Reset();	    // Exit the CPU from reset
 	cpu.execute();		// Start the CPU running
 
 	disable_raw_mode();	// Set the keyboard blocking

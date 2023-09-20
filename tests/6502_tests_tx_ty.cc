@@ -8,7 +8,6 @@ public:
 	CPU cpu{mem};
 
 	virtual void SetUp() {
-		cpu.exitReset();
 		mem.mapRAM(0, CPU::MAX_MEM);
 	}
 	
@@ -296,10 +295,9 @@ TEST_F(MOS6502TXTYTests, TSX) {
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, 0x12);
 	
 	mem[0xFFFC] = ins;
-	cpu.SP = 0x12;
 	cpu.X = 0x52;
 
 	//When:
@@ -318,10 +316,9 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, 0);
 	
 	mem[0xFFFC] = ins;
-	cpu.SP = 0x0;
 	cpu.X = 0xAB;
 
 	//When:
@@ -340,10 +337,9 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 	Byte ins = CPU::INS_TSX_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, 0xff);
 	
 	mem[0xFFFC] = ins;
-	cpu.SP = 0xFF;
 	cpu.X = 0xAB;
 
 	//When:
@@ -364,10 +360,9 @@ TEST_F(MOS6502TXTYTests, TXS) {
 	Byte ins = CPU::INS_TXS_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.Reset(CPU::RESET_VECTOR, 0x12);
 	
 	mem[0xFFFC] = ins;
-	cpu.SP = 0x12;
 	cpu.X = 0x52;
 
 	//When:

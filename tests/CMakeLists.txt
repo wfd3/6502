@@ -57,6 +57,7 @@ set (6502_TEST_SOURCES
   "6502_tests_flags.cc"
   "6502_tests_inc_inx_iny.cc"
   "6502_tests_interrupt.cc"
+  "6502_tests_invalid_instruction.cc"
   "6502_tests_jmp.cc"
   "6502_tests_jsr.cc"
   "6502_tests_lda_ldy_ldx.cc"
