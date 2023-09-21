@@ -244,7 +244,7 @@ public:
 
 	bool mapROM(const Address start,
 		    const std::vector<Cell> &rom,
-		    const bool overwriteExistingElements = false) {
+		    const bool overwriteExistingElements = true) {
 		
 		boundsCheck(start + rom.size());
 		if (!overwriteExistingElements &&
@@ -270,7 +270,7 @@ public:
 	bool mapMIO(const Address address,
 		    const typename ::MIO<Cell>::readfn_t readfn,
 		    const typename ::MIO<Cell>::writefn_t writefn,
-		    const bool overwriteExistingElements = false) {
+		    const bool overwriteExistingElements = true) {
 
 		boundsCheck(address);
 		if (!overwriteExistingElements &&

@@ -65,14 +65,13 @@ constexpr Word DISPLAY = 0xd012;
 constexpr Word DISPLAYCR = 0xd013;
 
 // Apple 1 keycodes
-constexpr char CR = 0x0d;
-constexpr char BELL = 0x0a;
+constexpr char CTRL_LBRACKET = 0x1b; // ascii 27
+constexpr char CTRL_RBRACKET = 0x1d; // ascii 29
+constexpr char CTRL_MINUS    = 0x1f; // ascii 31
+constexpr char CR            = 0x0d;
+constexpr char BELL          = 0x0a;
 #ifdef _WIN64
-constexpr char DEL = '\b';
+constexpr char DEL           = '\b';
 #else
-constexpr char DEL = 0x7f;
+constexpr char DEL           = 0x7f;
 #endif
-constexpr char CTRLA = 0x01;
-constexpr char CTRLB = 0x02;
-constexpr char CTRLC = 0x03;
-constexpr char CTRLD = 0x04;

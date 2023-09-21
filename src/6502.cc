@@ -376,15 +376,19 @@ std::tuple<uint64_t, uint64_t> CPU::executeOneInstruction() {
 	return std::make_tuple(usedCycles, expectedCyclesToUse);
 }
 
-void CPU::execute() {
-	while (1) {
-		if (debugMode || isBreakpoint(PC)) {
-			debug();
-		} else if (isPCAtExitAddress()) {
-			break;
-		} else {
-			executeOneInstruction();
-		}
+bool CPU::executeOne() {
+	if (debugMode || isBreakpoint(PC)) {
+		debug();
+	} else if (isPCAtExitAddress()) {
+		return true;
+	} else {
+		executeOneInstruction();
 	}
+	return false;
+}
+
+void CPU::execute() {
+	while (!executeOne()) 
+		;
 }
 

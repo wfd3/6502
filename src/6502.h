@@ -82,7 +82,7 @@ public:
 	};
 
 	// CPU Setup & reset
-        CPU(cMemory &);
+	CPU(cMemory &);
 	void Reset(Word initialPC, Byte initialSP = INITIAL_SP);
 	void Reset();
 	void setResetVector(Word);
@@ -109,6 +109,7 @@ public:
 
 	// Execution
 	std::tuple<uint64_t, uint64_t> executeOneInstruction();
+	bool executeOne();
 	void execute();
 
 private:

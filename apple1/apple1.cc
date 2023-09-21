@@ -18,6 +18,7 @@
 #include <iostream>
 #include <csignal>
 #include <sstream>
+#include <queue>
 #include <fmt/core.h>
 
 #include <6502.h>
@@ -26,8 +27,8 @@
 #include "apple1.h"
 
 // Keyboard input 'queue'
-bool kbdCharPending = false;
-char kbdCharacter = 0;
+bool kbdCRRead = false;
+std::queue<char> queue;
 
 // Create the memory and CPU
 Memory mem(CPU::MAX_MEM);
@@ -36,9 +37,21 @@ CPU cpu(mem);
 //////////
 // Rough emulation of the MOS6820 Peripheral Interface Adapter
 
+unsigned char dspwrite_data = 0;
+bool dspwrite_haveData = false;
+
 // Write a character to the display
 void dspwrite(unsigned char c) {
-	c &= 0x7f;		// clear hi bit
+	dspwrite_data = c;
+	dspwrite_haveData = true;
+}
+
+void dspwrite_loop() {
+	if (!dspwrite_haveData) 
+		return;
+
+	unsigned char c = dspwrite_data & 0x7f;		// clear hi bit
+
 	switch (c) {
 	case CR:	// \r
 		fmt::print("\n");
@@ -53,97 +66,109 @@ void dspwrite(unsigned char c) {
 		if (isprint(c) || isspace(c))
 			fmt::print("{:c}", c);
 	}
+
+	dspwrite_haveData = false;
 }
 
 unsigned char dspread() {
 	return 0x7f;
 }
 
-// Check if characters are pending, return key code if so
-unsigned char kbdcr_read() {
-
-	// Important to not look into the STDIN stream until the last
-	// character read has been delivered to the running program.
-	if (kbdCharPending)
-		return kbdCharacter;
-
-	if (getch(kbdCharacter) == false) 
-		return 0;
+// This is called after every instruction is processed.  Enqueue
+// any keypresses into queue.  Memory-mapped IO will call functions
+// to dequeue this data.
+void kbd_loop() {
+	char ch;	
+	if (getch(ch) == false) 
+		return;
 	
 	// Map modern ascii to Apple 1 keycodes
-	switch (kbdCharacter) {
-	case '\n':
-		kbdCharacter = CR;
-		break;
-	case DEL:
-		kbdCharacter = '_';
-		break;
-	case CTRLB:
-		kbdCharacter = CTRLC; // Fake out a ^C
-		break;
-	case CTRLA:
+	switch (ch) {
+
+	// Control characters
+	case CTRL_RBRACKET:
 		fmt::print("\n");
-		cpu.setPendingReset();
-		return 0;
-	case CTRLD:
+		cpu.Reset();
+		if (cpu.inReset())
+			cpu.Reset();	
+		return;
+	
+	case CTRL_LBRACKET:
 		cpu.setDebug(true);
-		return 0;
+		return;
+	
+	case CTRL_MINUS:
+		fmt::print("\nExiting emulator\n");
+		exit(0);
+
+	// Regular characters
+	case '\n':
+		ch = CR;
+		break;
+	
+	case DEL:
+		ch = '_';
+		break;
+	
 	default:
-		kbdCharacter =
-			static_cast<char>(std::toupper(static_cast<unsigned char>(kbdCharacter)));
-		//		std::toupper(kbdCharacter);
+		ch = std::toupper(ch);
 		break;
 	}
 
-	// The keycode value will get LDA'ed into A, setting the
-	// processor status bits in the process.  Apple 1 expect that
-	// the Negative Flag will be set if there are characters
-	// pending read from the keyboard, hence the bitwise or with
-	// 0x80.
+	ch |= 0x80;
+	queue.push(ch);
+}
 
-	kbdCharacter |= (char)0x80;
-	kbdCharPending = true;
+// Check if characters are pending, return key code if so
+unsigned char kbdcr_read() {
+	kbdCRRead = true;
+	if (queue.empty())
+		return 0;
 
-	return kbdCharacter;
+	return queue.front();
 }
 
 // Read characters from the keyboard
 unsigned char kbdread() {
-	if (!kbdCharPending) {
-		kbdcr_read();
-		// If there's a pending character here, return it but do not
-		// toggle the kbdCharPending flag.
-		//
-		// Applesoft Basic Lite does a blind, unchecked read
-		// on the keyboard port looking for a ^C.  If it sees
-		// one, it then does a read on the keyboard control
-		// register, followed by a read of the keyboard port,
-		// expecting to get the same ^C.  We need this
-		// logic to allow that behavior to happen w/out blocking.
-		if (kbdCharPending)
-			return kbdCharacter;
+	if (queue.empty())
 		return 0;
+
+	auto ch = queue.front();
+
+	// Applesoft Basic Lite does a blind, unchecked read on the keyboard port
+	// looking for a ^C.  If it sees one, it then does a read on the keyboard
+	// control register, followed by a read of the keyboard port, expecting to
+	// get the same ^C.  This logic forces a keyboard control register read 
+	// before removing the character from the queue, thus preventing an 
+	// infinite loop.
+	if (kbdCRRead) {
+		queue.pop();	
+		kbdCRRead = false;
 	}
 
-	kbdCharPending = false;
-	return kbdCharacter;
-}
+	return ch;
+}	
 
 // Let's pretend to be an Apple1
 int main() {
-	setupSignals();
+//	setupSignals();
 
 	// Map RAM, making this one hefty Apple 1
 	mem.mapRAM(0x0000, 0xffff);
 
 	// Keyboard and display memory-mapped IO, overwriting existing
 	// addresses if needed.
-	mem.mapMIO(KEYBOARD, kbdread, nullptr, true);
-	mem.mapMIO(KEYBOARDCR, kbdcr_read, nullptr, true);
-	mem.mapMIO(DISPLAY, dspread, dspwrite, true);
-	mem.mapMIO(DISPLAYCR, nullptr, nullptr, true);
+	mem.mapMIO(KEYBOARD, kbdread, nullptr);
+	mem.mapMIO(KEYBOARDCR, kbdcr_read, nullptr);
+	mem.mapMIO(DISPLAY, dspread, dspwrite);
+	mem.mapMIO(DISPLAYCR, nullptr, nullptr);
 
 	fmt::print("A Very Simple Apple I\n");
+	fmt::print("Reset is Control-]\n");
+	fmt::print("Debugger is Control-[\n");
+	fmt::print("Quit is Control-minus\n");
+	fmt::print("\n");
+
 	// Load Wozmon, Apple Basic, Applesoft Basic Lite and the
 	// Apple 1 sample program
 	fmt::print("# Loading Apple I sample program at {:04x}\n",
@@ -166,10 +191,6 @@ int main() {
 		applesoftBasicLiteAddress);
 #endif
 
-	fmt::print("# Note: {}\n", commandKeyBanner);
-	fmt::print("#       ^B is ^C\n"); // todo
-	fmt::print("\n");
-
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(disable_raw_mode, enable_raw_mode);
@@ -178,7 +199,14 @@ int main() {
 
 	cpu.Cycles.enableTimingEmulation();
 	cpu.Reset();	    // Exit the CPU from reset
-	cpu.execute();		// Start the CPU running
+//	cpu.execute();		// Start the CPU running
+
+	while (1) {
+		cpu.executeOne();
+		dspwrite_loop();
+		kbd_loop();
+
+	}
 
 	disable_raw_mode();	// Set the keyboard blocking
 
