@@ -38,8 +38,6 @@
 template<class Cell>
 class Element {
 public:
-	enum Type {RAM, ROM, MIO, UNMAPPED};
-
 	virtual ~Element() { }
 
 	virtual Cell Read() const {
@@ -50,10 +48,6 @@ public:
 
 	virtual std::string type() const {
 		return "Unmapped";
-	}
-
-	virtual Type getType() const {
-		return UNMAPPED;
 	}
 
 	Element<Cell>& operator=(const Cell b) {
@@ -93,10 +87,6 @@ public:
 		_cell = b;
 	}
 
-	typename Element<Cell>::Type getType() const override {
-		return Element<Cell>::RAM;
-	}
-
 	std::string type() const override{
 		return "RAM";
 	}
@@ -122,10 +112,6 @@ public:
 		;
 	}
 
-	typename Element<Cell>::Type getType() const override {
-		return Element<Cell>::ROM;
-	}
-
 	std::string type() const override {
 		return "ROM";
 	}
@@ -134,7 +120,9 @@ private:
 	Cell _cell;
 };
 
-// Memory mapped devices, ie. a keyboard and terminal.
+// Memory mapped devices, ie. a keyboard and terminal.  This 
+// class is intended to be used with regular function pointers
+// to implement the device logic.
 template<class Cell>
 class MIO : public Element<Cell> {
 public:
@@ -162,10 +150,6 @@ public:
 		return 0;
 	}
 
-	typename Element<Cell>::Type getType() const override {
-		return Element<Cell>::MIO;
-	}
-
 	std::string type() const override {
 		return "MIO";
 	}
@@ -174,12 +158,94 @@ private:
 	readfn_t _readfn;
 	writefn_t _writefn;
 };
-	
+
+// Memory mapped Device class.  A more idiomatic version of the MIO 
+// Class above.
+template<class Cell>
+class Device : public Element<Cell> {
+public:
+    virtual void Run() = 0;
+    virtual Cell Read() const override = 0;
+    virtual void Write(const Cell c) override = 0;
+
+	virtual std::string type() const override {
+		return "MIOD";
+	}
+};
+
 /////////
 // memory class
 template<class Address = unsigned long, class Cell = unsigned char>
 class Memory {
 public:
+	template<class A, class C>
+	class MemoryProxy {
+	private:
+		Memory<A, C>& mem;
+		A addr;
+
+	public:
+		MemoryProxy(Memory<A, C>& m, Address a) : mem(m), addr(a) {}
+
+		// For assignment operations like mem[0x10] = value
+		MemoryProxy& operator=(const Cell& value) {
+			mem.Write(addr, value);
+			return *this;
+		}
+
+		// For reading operations like value = mem[0x10]
+		operator Cell() const {
+			return mem.Read(addr);
+		}
+	};
+	
+	class iterator {
+		private:
+			Memory* mem;
+			Address addr;
+		public:
+			using difference_type = std::ptrdiff_t;
+			using value_type = Cell;
+			using pointer = Cell*;
+			using reference = MemoryProxy<Address, Cell>;
+			using iterator_category = std::random_access_iterator_tag;
+
+			iterator(Memory* m, Address a) : mem(m), addr(a) {}
+
+			reference operator*() {
+				return (*mem)[addr];
+			}
+
+			iterator& operator++() {
+				++addr;
+				return *this;
+			}
+
+			iterator operator++(int) {
+				iterator tmp(*this);
+				++addr;
+				return tmp;
+			}
+
+			bool operator==(const iterator& other) const {
+				return mem == other.mem && addr == other.addr;
+			}
+
+			bool operator!=(const iterator& other) const {
+				return !(*this == other);
+			}
+
+			// You can further implement the other necessary operations like
+			// --, +=, -=, +, -, etc. for a full-fledged random access iterator
+	};
+
+    iterator begin() {
+        return iterator(this, 0);
+    }
+
+    iterator end() {
+        return iterator(this, _mem.size());
+    }
 
 	Memory(const Address endAddress) : _endAddress(endAddress) {
 		uint64_t _size = _endAddress + 1;
@@ -210,18 +276,23 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			fmt::print("# mem[{:04x}] {:02x} -> {:02x}\n",
+			fmt::print("mem[{:04x}] {:02x} -> {:02x}\n",
 				   address, _mem[address]->Read(), l);
 		}
 		
 		_mem.at(address)->Write(l);
 	}
-	
+	#if 0
 	Element<Cell>& operator[](Address address) {
 		boundsCheck(address);
 		auto &e = _mem.at(address);
 		return *e;
 	}
+	#endif
+
+	MemoryProxy<Address, Cell> operator[](Address address) {
+        return MemoryProxy<Address, Cell>(*this, address);
+    }
 
 	bool mapRAM(const Address start, const Address end) {
 		boundsCheck(end);
@@ -285,43 +356,86 @@ public:
 		return true;
 	}
 
-	bool isAddressMapped(const Address address) {
+	bool mapDevice(const Address address, std::shared_ptr<Device<Cell>> d, 
+		const bool overwriteExistingElements = true) {
+
+		boundsCheck(address);
+		if (!overwriteExistingElements &&
+		    addressRangeOverlapsExistingMap(address, address)) {
+			auto s = fmt::format("Address {:x} overlaps with "
+					     "existing map", address);
+			exception(s);
+			return false;
+		}
+
+		_mem[address] = d;
+		return true;
+	}
+
+	bool isAddressMapped(const Address address) const {
 		return isAddressMapped(_mem[address]);
 	}
 
-	bool isAddressMapped(std::shared_ptr<Element<Cell>> e) {
+	bool isAddressMapped(const std::shared_ptr<Element<Cell>> e) const {
 		return e != _unmapped;
+	}
+
+	bool addressUnmapped(const std::shared_ptr<Element<Cell>> e) const {
+		return e == _unmapped;
 	}
 
 	void hexdump(const Address start, Address end) {
 
 		if (start > end || end > _endAddress) {
-			fmt::print("# Invalid memory range\n");
+			fmt::print("Invalid memory range\n");
 			return;
 		}
 
-		fmt::print("# Memory Dump {:#04x}:{:#04x}\n", start, end);
+		fmt::print("Memory {:#04x}:{:#04x}\n", start, end);
 
-		auto begin = _mem.begin() + start;
-		auto stop = _mem.begin() + end; 
+		constexpr int addrwidth = sizeof(Address) * 2;
+		constexpr int cellwidth = sizeof(Cell) * 2;
+	
+		int lineEnd = 16 / sizeof(Cell);
+		while (addrwidth + 2 + (cellwidth + 1) * lineEnd + lineEnd > 80) {
+			lineEnd /= 2;
+		}
+		int hexwidth = addrwidth + 2 + (cellwidth + 1) * lineEnd;
+
 		int cnt = 0;
 		std::string hexdump, ascii;
-        for (auto it = begin; it <= stop; it++) {
-			if (cnt == 0)
-				hexdump += fmt::format("{:04x}  ",
-					       std::distance(_mem.begin(), it));
-			
-			Cell c = (*it)->Read();
-			hexdump += fmt::format("{:02x} ", c);
-			if (isprint(c))
-				ascii += c;
-			else
-				ascii += '.';
+        
+		auto begin = _mem.begin() + start;
+		auto stop = _mem.begin() + end; 
+		for (auto it = begin; it <= stop; it++) {
 
+			// Start a new line with the memory address
+			if (cnt == 0) {
+				auto addr = std::distance(_mem.begin(), it);
+				hexdump += fmt::format("{:0>{}x}  ", addr, addrwidth);
+			}
+
+			Cell c = (*it)->Read();
+
+			// Append hex and then ascii representation
+			hexdump += fmt::format("{:0>{}x} ", c, cellwidth);
+
+			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
+				uint8_t byte_value = (c >> (byte_idx * 8)) & 0xFF;
+				if (isascii(byte_value) && isprint(byte_value))
+					ascii += byte_value;
+				else
+					ascii += '.';
+			}
+			
+			
+			// Print the accumulated line if we're at the end of the line or
+			// the end of the memory range.
 			cnt++;
-			if (cnt == 16 || it == stop) {
+			if (cnt == lineEnd || it == stop) {
 				cnt = 0;
-				fmt::print("{:58.58}{}\n", hexdump, ascii);
+				hexdump = fmt::format("{:{}}", hexdump, hexwidth);
+				fmt::print("{}{}\n", hexdump, ascii);
 				hexdump = "";
 				ascii = "";
 			}
@@ -332,23 +446,24 @@ public:
 
 		auto it = _mem.begin();
 		auto range_start = it;
-		auto range_end = it;
+		unsigned long mappedBytes = 0;
 
 		fmt::print("Memory map:\n");
 
 		while (it != _mem.end()) {
-			auto next_it = std::next(it);
-			if ((next_it == _mem.end()) ||
-			  ((*next_it)->getType() != (*range_start)->getType())){
+			if (!addressUnmapped(*it))
+				mappedBytes++;
 
-				range_end = it;
-				Address bytes = 1 + (Address) 
-					std::distance(range_start, range_end);
-				Address start = (Address)
-				       std::distance(_mem.begin(), range_start);
-				Address end = (Address)
-					std::distance(_mem.begin(), range_end);
-				auto type = (*range_end)->type();
+			auto next_it = std::next(it);
+			bool endOfRange = (next_it == _mem.end()) ||
+			  ((*next_it)->type() != (*range_start)->type());
+			
+			if (endOfRange) {
+				Address bytes = 1 + (Address) std::distance(range_start, it);
+				Address start = (Address) std::distance(_mem.begin(), 
+						range_start);
+				Address end = (Address) std::distance(_mem.begin(), it);
+				auto type = (*it)->type();
 
 				fmt::print("{:#06x} - {:#04x} {} ({} bytes)\n",
 					   start, end, type, bytes);
@@ -358,12 +473,7 @@ public:
 
 			it = next_it;
 		}
-		auto mappedBytes = 
-			std::count_if(_mem.begin(), _mem.end(),
-				      [](std::shared_ptr<Element<Cell>> e) {
-			    return e->getType() != Element<Cell>::UNMAPPED;
-			});
-				
+		
 		fmt::print("Total bytes mapped: {} bytes\n", mappedBytes);
 		fmt::print("Total memory size : {} bytes\n", _mem.size());
 
@@ -420,16 +530,7 @@ public:
 
 		auto a = _mem.begin() + startAddress;
 		for (auto i = data.begin(); i != data.end(); a++, i++)  {
-			if ((*a)->getType() != Element<Cell>::RAM) {
-				auto s = fmt::format("Data attempted to load "
-						     "on non-RAM memory "
-						     "location at address {:x}",
-						     std::distance(_mem.begin(),
-								   a));
-				exception(s);
-			}
-			auto d = *i;
-			(*a)->Write(d);
+			(*a)->Write(*i);
 		}
 	}
 
@@ -447,11 +548,11 @@ public:
 	}
 
 	void listWatch() {
-		fmt::print("# Watch list\n");
+		fmt::print("Watch list\n");
 
 		for(Address addr = 0; addr <= _watch.size(); addr++) 
 			if (_watch[addr])
-				fmt::print("# {:#04x}\n", addr);
+				fmt::print("{:#04x}\n", addr);
 	}
 
 	void clearWatch(Address address) {
@@ -479,7 +580,7 @@ private:
 	std::vector<std::shared_ptr<Element<Cell>>> _mem;
 	std::vector<bool> _watch; // Vector of watched addresses.
 
-	void boundsCheck(Address address) {
+	void boundsCheck(const Address address) {
 		if (!boundsCheckNoThrow(address)) {
 			auto s = fmt::format("Address {:#04x} out of range",
 					     address);
@@ -487,11 +588,11 @@ private:
 		}
 	}
 
-	bool boundsCheckNoThrow(Address address) {
+	bool boundsCheckNoThrow(const Address address) const {
 		return (address <= _endAddress);
 	}
 
-	bool addressRangeOverlapsExistingMap(Address start, Address end) {
+	bool addressRangeOverlapsExistingMap(const Address start, const Address end) {
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = _mem.begin() + end;
 		for (auto it = startIdx; it <= endIdx; it++) {

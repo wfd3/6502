@@ -187,5 +187,87 @@ TEST_F(MemoryTests, MemoryClassWithDefaultTemplateTypes) {
 	EXPECT_EQ(mem[0x42], 0x42);
 }	
 
+template<class Cell> 
+class testdev : public Device<Cell> {
+public:
+	void Run() { return; }
+	Cell Read() const { return _t; }
+	void Write(Cell c) { _t = c; }
+
+	virtual std::string type() const override {
+		return "testdev";
+	}
+
+	Cell _t = 0;
+};
+TEST_F(MemoryTests, MemoryClassCanInsertAndWriteToCustomDevice) {
+	Memory<Address, Cell> mem(0x100);
+	std::shared_ptr<testdev<Cell>> d = std::make_shared<testdev<Cell>>();;
+
+	mem.mapDevice(0x10, d);
+	mem[0x10] = 'K';
+
+	EXPECT_EQ(d->_t, 'K');
+}
+
+TEST_F(MemoryTests, MemoryClassCanInsertAndReadFromCustomDevice) {
+	Memory<Address, Cell> mem(0x100);
+	std::shared_ptr<testdev<Cell>> d = std::make_shared<testdev<Cell>>();;
+
+	mem.mapDevice(0x10, d);
+	mem[0x10] = 'W';
+	EXPECT_EQ(mem[0x10], 'W');
+}
+
+TEST_F(MemoryTests, MemoryHexDump16Address8Cell) {
+	Memory<uint16_t, uint8_t> mem(0x100);	
+	mem.mapRAM(0, 0x100);
+
+	mem.hexdump(0, 0x100);
+}
 
 
+TEST_F(MemoryTests, MemoryHexDump16Address16Cell) {
+	Memory<uint16_t, uint16_t> mem(0x100);	
+	mem.mapRAM(0, 0x100);
+
+	mem.hexdump(0, 0x100);
+}
+
+TEST_F(MemoryTests, MemoryHexDump16Address32Cell) {
+	Memory<uint16_t, uint32_t> mem(0x100);	
+	mem.mapRAM(0, 0x100);
+
+	mem.hexdump(0, 0x100);
+}
+
+
+TEST_F(MemoryTests, MemoryHexDump16Address64Cell) {
+	Memory<uint16_t, uint64_t> mem(0x100);	
+	mem.mapRAM(0, 0x100);
+
+	mem.hexdump(0, 0x100);
+}
+
+TEST_F(MemoryTests, MemoryHexDump32Address32Cell) {
+	Memory<uint32_t, uint32_t> mem(0x100);	
+	mem.mapRAM(0, 0x100);
+
+	mem.hexdump(0, 0x100);
+}
+
+
+TEST_F(MemoryTests, MemoryHexDump32Address64Cell) {
+	Memory<uint32_t, uint64_t> mem(0x100);	
+	mem.mapRAM(0, 0x100);
+
+	mem.hexdump(0, 0x100);
+}
+
+
+TEST_F(MemoryTests, MemoryPrintMap) {
+	Memory<Address, Cell> mem(0x100);	
+	mem.mapRAM(0xf0, 0x100);
+
+	mem.printMap();
+}
