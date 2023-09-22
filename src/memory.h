@@ -282,14 +282,7 @@ public:
 		
 		_mem.at(address)->Write(l);
 	}
-	#if 0
-	Element<Cell>& operator[](Address address) {
-		boundsCheck(address);
-		auto &e = _mem.at(address);
-		return *e;
-	}
-	#endif
-
+	
 	MemoryProxy<Address, Cell> operator[](Address address) {
         return MemoryProxy<Address, Cell>(*this, address);
     }
