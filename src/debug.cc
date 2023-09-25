@@ -695,7 +695,7 @@ int CPU::autostateCmd([[maybe_unused]] std::string &line,
 	if (debug_alwaysShowPS)
 		fmt::print("enabled\n");
 	else 
-		fmt::print("disabled");
+		fmt::print("disabled\n");
 	
 	return ACTION_CONTINUE;
 }
@@ -1022,6 +1022,9 @@ uint64_t CPU::debugPrompt() {
 	disassemble(PC, 1);
 
 	while(1) {
+		if (debug_alwaysShowPS) 
+			printCPUState();
+			
 		getReadline(line);
 		line = stripTrailingSpaces(line);
 		line = stripLeadingSpaces(line);
@@ -1074,7 +1077,7 @@ void CPU::debug() {
 	if (debugEntryFunc)
 		debugEntryFunc();
 
-	fmt::print("Debugger starting at PC {:#04x}\n", PC);
+	fmt::print("\nDebugger starting at PC {:#04x}\n", PC);
 
 	debugMode = true;
 

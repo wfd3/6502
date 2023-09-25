@@ -24,152 +24,74 @@
 #include <6502.h>
 #include <memory.h>
 
+#include "mos6820.h"
 #include "apple1.h"
 
-// Keyboard input 'queue'
-bool kbdCRRead = false;
-std::queue<char> queue;
+
+using Address = uint16_t;
+using Cell = uint8_t;
 
 // Create the memory and CPU
-Memory mem(CPU::MAX_MEM);
+Memory<Address, Cell> mem(CPU::MAX_MEM);
 CPU cpu(mem);
+auto pia = std::make_shared<MOS6820>();
 
 //////////
-// Rough emulation of the MOS6820 Peripheral Interface Adapter
+// This section defines which and where the 'built-in' programs 
+// will be loaded. 
 
-unsigned char dspwrite_data = 0;
-bool dspwrite_haveData = false;
+// Uncomment to load Apple INTEGER BASIC
+//#define APPLE_INTEGER_BASIC
 
-// Write a character to the display
-void dspwrite(unsigned char c) {
-	dspwrite_data = c;
-	dspwrite_haveData = true;
-}
+//Uncomment to load Applesoft Basic Lite
+#define APPLESOFT_BASIC_LITE
 
-void dspwrite_loop() {
-	if (!dspwrite_haveData) 
-		return;
+#if defined(APPLE_INTEGER_BASIC) && defined(APPLESOFT_BASIC_LITE)
+# error "Can't have both Apple Integer Basic and Applesoft Basic loaded "\
+	"at the same time"
+#endif
 
-	unsigned char c = dspwrite_data & 0x7f;		// clear hi bit
+// Load addresses and data locations for various built in programs
+constexpr Address_t wozmonAddress = 0xff00;
+static const char* WOZMON_FILE =
+BINFILE_PATH "/wozmon.bin";
 
-	switch (c) {
-	case CR:	// \r
-		fmt::print("\n");
-		break;
-	case '_':		// Backspace
-		fmt::print("\b");
-		break;
-	case BELL:		// Bell
-		fmt::print("\a");
-		break;
-	default:
-		if (isprint(c) || isspace(c))
-			fmt::print("{:c}", c);
-	}
+#ifdef APPLE_INTEGER_BASIC
+constexpr Address_t appleBasicAddress = 0xe000;
+static const char* APPLESOFT_BASIC_FILE =
+BINFILE_PATH "Apple-1_Integer_BASIC.bin";
+#endif
 
-	dspwrite_haveData = false;
-}
+#ifdef APPLESOFT_BASIC_LITE
+constexpr Address_t applesoftBasicLiteAddress = 0x6000;
+static const char* APPLE_INTEGER_BASIC_FILE =
+BINFILE_PATH "/applesoft-lite-0.4-ram.bin";
+#endif
 
-unsigned char dspread() {
-	return 0x7f;
-}
+// bytecode for the sample program from the Apple 1 Manual
+constexpr Address_t apple1SampleAddress = 0x0000;
+std::vector<unsigned char> apple1SampleProg =
+	{ 0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00 };
 
-// This is called after every instruction is processed.  Enqueue
-// any keypresses into queue.  Memory-mapped IO will call functions
-// to dequeue this data.
-void kbd_loop() {
-	char ch;	
-	if (getch(ch) == false) 
-		return;
-	
-	// Map modern ascii to Apple 1 keycodes
-	switch (ch) {
 
-	// Control characters
-	case CTRL_RBRACKET:
-		fmt::print("\n");
-		cpu.Reset();
-		if (cpu.inReset())
-			cpu.Reset();	
-		return;
-	
-	case CTRL_LBRACKET:
-		cpu.setDebug(true);
-		return;
-	
-	case CTRL_MINUS:
-		fmt::print("\nExiting emulator\n");
-		exit(0);
-
-	// Regular characters
-	case '\n':
-		ch = CR;
-		break;
-	
-	case DEL:
-		ch = '_';
-		break;
-	
-	default:
-		ch = std::toupper(ch);
-		break;
-	}
-
-	ch |= 0x80;
-	queue.push(ch);
-}
-
-// Check if characters are pending, return key code if so
-unsigned char kbdcr_read() {
-	kbdCRRead = true;
-	if (queue.empty())
-		return 0;
-
-	return queue.front();
-}
-
-// Read characters from the keyboard
-unsigned char kbdread() {
-	if (queue.empty())
-		return 0;
-
-	auto ch = queue.front();
-
-	// Applesoft Basic Lite does a blind, unchecked read on the keyboard port
-	// looking for a ^C.  If it sees one, it then does a read on the keyboard
-	// control register, followed by a read of the keyboard port, expecting to
-	// get the same ^C.  This logic forces a keyboard control register read 
-	// before removing the character from the queue, thus preventing an 
-	// infinite loop.
-	if (kbdCRRead) {
-		queue.pop();	
-		kbdCRRead = false;
-	}
-
-	return ch;
-}	
-
+//////////
 // Let's pretend to be an Apple1
 int main() {
-//	setupSignals();
 
-	// Map RAM, making this one hefty Apple 1
+	// Map 64k of RAM, making this one hefty Apple 1
 	mem.mapRAM(0x0000, 0xffff);
 
 	// Keyboard and display memory-mapped IO, overwriting existing
-	// addresses if needed.
-	mem.mapMIO(KEYBOARD, kbdread, nullptr);
-	mem.mapMIO(KEYBOARDCR, kbdcr_read, nullptr);
-	mem.mapMIO(DISPLAY, dspread, dspwrite);
-	mem.mapMIO(DISPLAYCR, nullptr, nullptr);
+	// addresses.
+	mem.mapDevice(pia);
 
 	fmt::print("A Very Simple Apple I\n");
-	fmt::print("Reset is Control-]\n");
-	fmt::print("Debugger is Control-[\n");
-	fmt::print("Quit is Control-minus\n");
+	fmt::print("  Reset is Control-]\n");
+	fmt::print("  Debugger is Control-[\n");
+	fmt::print("  Quit is Control-minus\n");
 	fmt::print("\n");
 
-	// Load Wozmon, Apple Basic, Applesoft Basic Lite and the
+	// Load Wozmon, Apple Basic or Applesoft Basic Lite and the
 	// Apple 1 sample program
 	fmt::print("# Loading Apple I sample program at {:04x}\n",
 		apple1SampleAddress);
@@ -193,22 +115,19 @@ int main() {
 
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
-	cpu.setDebugEntryExitFunc(disable_raw_mode, enable_raw_mode);
+	cpu.setDebugEntryExitFunc(&MOS6820::teardown, &MOS6820::setup);
 
-	enable_raw_mode();	// Set the keyboard non-blocking
+	MOS6820::setup();	// Set the keyboard non-blocking
 
 	cpu.Cycles.enableTimingEmulation();
 	cpu.Reset();	    // Exit the CPU from reset
-//	cpu.execute();		// Start the CPU running
 
 	while (1) {
 		cpu.executeOne();
-		dspwrite_loop();
-		kbd_loop();
-
+		pia->housekeeping();
 	}
 
-	disable_raw_mode();	// Set the keyboard blocking
+	MOS6820::teardown();	// Set the keyboard blocking
 
 	return 0;
 }

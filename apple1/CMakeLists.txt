@@ -20,14 +20,6 @@ project( apple1 )
 set (APPLE1_SOURCES "apple1.cc" "apple1.h")
 source_group("src" FILE ${APPLE1_SOURCES})
 
-if (MSVC)
-	list(APPEND APPLE1_SOURCES "windows.cc")
-elseif(UNIX)
-	list(APPEND APPLE1_SOURCES "posix.cc")
-else()
-	message(FATAL_ERROR "Unsupported platform")
-endif()
-
 add_executable(apple1 ${APPLE1_SOURCES})
 target_link_libraries(apple1 6502) 
 

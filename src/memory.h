@@ -18,9 +18,10 @@
 
 #pragma once
 
-#include <memory>
+#include <set>
 #include <algorithm>
 #include <fstream>
+#include <memory>
 #include <fmt/core.h>
 
 //
@@ -35,55 +36,44 @@
 
 /////////
 // Memory element base class, also indicates an unmapped memory cell.
-template<class Cell>
+template<class Address, class Cell>
 class Element {
 public:
 	virtual ~Element() { }
 
-	virtual Cell Read() const {
-		return 0;
+	virtual Cell Read([[maybe_unused]] const Address address) { 
+		return 0; 
 	}
-
-	virtual void Write([[maybe_unused]] const Cell b) { };
+	
+	virtual void Write([[maybe_unused]] const Address address,
+		[[maybe_unused]] const Cell b) { 
+			return;
+	};
 
 	virtual std::string type() const {
 		return "Unmapped";
 	}
-
-	Element<Cell>& operator=(const Cell b) {
-		this->Write(b);
-		return *this;
-	}
-
-	bool operator==(const Element<Cell> &e) const {
-		return Read() == e.Read();
-	}
-
-	bool operator==(const int i) const {
-		return this->Read() == (Cell) i;
-	}
-
-private:
-
-protected:
 };
 
 // RAM element
-template<class Cell>
-class RAM : public Element<Cell> {
+template<class Address, class Cell>
+class RAM : public Element<Address, Cell> {
 public:
-	RAM () { }
+	RAM() { 
+		_cell = 0;
+	}
 
-	RAM<Cell>& operator=(const Cell i) {
+	RAM<Address, Cell>& operator=(const Cell i) {
 		Write(i);
 		return *this;
 	}
 
-	Cell Read() const override {
+	Cell Read([[maybe_unused]] const Address address) override {
 		return _cell;
 	}
 
-	void Write(const Cell b) override {
+	void Write([[maybe_unused]] const Address address,
+		const Cell b) override {
 		_cell = b;
 	}
 
@@ -96,19 +86,20 @@ private:
 };
 
 // ROM element
-template<class Cell>
-class ROM : public Element<Cell> {
+template<class Address, class Cell>
+class ROM : public Element<Address, Cell> {
 public:
 	
 	ROM(Cell value) {
 		_cell = value;
 	}
 
-	Cell Read() const override {
+	Cell Read([[maybe_unused]] const Address address) override {
 		return _cell;
 	}
 
-	void Write([[maybe_unused]] const Cell  b) override {
+	void Write([[maybe_unused]] const Address address,
+		[[maybe_unused]] const Cell  b) override {
 		;
 	}
 
@@ -123,10 +114,10 @@ private:
 // Memory mapped devices, ie. a keyboard and terminal.  This 
 // class is intended to be used with regular function pointers
 // to implement the device logic.
-template<class Cell>
-class MIO : public Element<Cell> {
+template<class Address, class Cell>
+class MIO : public Element<Address, Cell> {
 public:
-	using readfn_t  = Cell (*)(void);
+	using readfn_t  = Cell (*)(void);  // TODO - Accept address here.
 	using writefn_t = void (*)(Cell);
 
 //	MIO() {	}
@@ -139,12 +130,13 @@ public:
 		_writefn = writefn;
 	}
 
-	void Write(const Cell b) override {
+	void Write([[maybe_unused]] const Address address,
+		const Cell b) override {
 		if (_writefn) 
 			_writefn(b);
 	}
 
-	Cell Read() const override {
+	Cell Read([[maybe_unused]] const Address address) override {
 		if (_readfn) 
 			return _readfn();
 		return 0;
@@ -159,18 +151,58 @@ private:
 	writefn_t _writefn;
 };
 
+class Device {
+public:
+	virtual bool housekeeping() { return true; }
+	virtual void enable()       { _active = true;  }
+	virtual void disable()      { _active = false; }
+	virtual bool isActive()     { return _active ; }
+	
+	#if 0
+	// TODO: Fix this.
+	// When the Bus class runs these by directly calling b->setup(), make them virtual functions.
+	// Until then, just leave these ifdef'd out and let MemMappedDevice handle it.
+
+	// Run before and after emulation commences.  Use for things like setting up and 
+	// resetting terminal settings, etc. 
+	virtual void setup() { }
+	virtual void teardown() { };
+	#endif
+	
+private:
+	bool _active = false;
+};
+
 // Memory mapped Device class.  A more idiomatic version of the MIO 
 // Class above.
-template<class Cell>
-class Device : public Element<Cell> {
+template<class Address, class Cell>
+class MemMappedDevice : public Device, public Element<Address, Cell> {
 public:
-    virtual void Run() = 0;
-    virtual Cell Read() const override = 0;
-    virtual void Write(const Cell c) override = 0;
 
-	virtual std::string type() const override {
-		return "MIOD";
+	MemMappedDevice() {}
+	MemMappedDevice(std::vector<Address>& addresses) {
+		for (auto& a : addresses) {
+			_addresses.insert(a);
+		}
 	}
+	MemMappedDevice(std::initializer_list<Address> a) : _addresses(a.begin(), a.end()) {}
+	virtual ~MemMappedDevice() {}
+
+	void addAddress(Address a) { 
+		_addresses.insert(a);
+	}
+
+	bool validAddress(Address address) const {
+		return _addresses.find(address) != _addresses.end();
+
+	}
+
+	const std::set<Address>& getAddressSet() const {
+		return _addresses;
+	}
+
+protected:
+	std::set<Address> _addresses;
 };
 
 /////////
@@ -178,14 +210,13 @@ public:
 template<class Address = unsigned long, class Cell = unsigned char>
 class Memory {
 public:
-	template<class A, class C>
 	class MemoryProxy {
 	private:
-		Memory<A, C>& mem;
-		A addr;
+		Memory<Address, Cell>& mem;
+		Address addr;
 
 	public:
-		MemoryProxy(Memory<A, C>& m, Address a) : mem(m), addr(a) {}
+		MemoryProxy(Memory<Address, Cell>& m, Address a) : mem(m), addr(a) {}
 
 		// For assignment operations like mem[0x10] = value
 		MemoryProxy& operator=(const Cell& value) {
@@ -207,7 +238,7 @@ public:
 			using difference_type = std::ptrdiff_t;
 			using value_type = Cell;
 			using pointer = Cell*;
-			using reference = MemoryProxy<Address, Cell>;
+			using reference = MemoryProxy;
 			using iterator_category = std::random_access_iterator_tag;
 
 			iterator(Memory* m, Address a) : mem(m), addr(a) {}
@@ -234,10 +265,7 @@ public:
 			bool operator!=(const iterator& other) const {
 				return !(*this == other);
 			}
-
-			// You can further implement the other necessary operations like
-			// --, +=, -=, +, -, etc. for a full-fledged random access iterator
-	};
+	}; // class Memory::iterator
 
     iterator begin() {
         return iterator(this, 0);
@@ -259,7 +287,7 @@ public:
 		_mem.reserve(_size);
 		_watch.reserve(_size);
 
-		_unmapped = std::make_shared<::Element<Cell>>();
+		_unmapped = std::make_shared<::Element<Address, Cell>>();
 		_mem.assign(_size, _unmapped);
 		_watch.assign(_size, false);
 	}
@@ -270,21 +298,21 @@ public:
 
 	Cell Read(const Address address) {
 		boundsCheck(address);
-		return _mem.at(address)->Read();
+		return _mem.at(address)->Read(address);
 	}
 
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
 			fmt::print("mem[{:04x}] {:02x} -> {:02x}\n",
-				   address, _mem[address]->Read(), l);
+				   address, _mem.at(address)->Read(address), l);
 		}
-		
-		_mem.at(address)->Write(l);
+
+		_mem.at(address)->Write(address, l);
 	}
 	
-	MemoryProxy<Address, Cell> operator[](Address address) {
-        return MemoryProxy<Address, Cell>(*this, address);
+	MemoryProxy operator[](Address address) {
+        return MemoryProxy(*this, address);
     }
 
 	bool mapRAM(const Address start, const Address end) {
@@ -300,7 +328,7 @@ public:
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = _mem.begin() + end;
 		for (auto it = startIdx; it <= endIdx; it++) {
-			(*it) = std::make_shared<::RAM<Cell>>();
+			(*it) = std::make_shared<::RAM<Address,Cell>>();
 		}
 
 		return true;
@@ -325,15 +353,15 @@ public:
 		unsigned long i = 0;
 
 		for (auto it = startIdx; it != endIdx; it++, i++) {
-			(*it) = std::make_shared<::ROM<Cell>>(rom[i]);
+			(*it) = std::make_shared<::ROM<Address,Cell>>(rom[i]);
 		}
 
 		return true;
 	}
 	
 	bool mapMIO(const Address address,
-		    const typename ::MIO<Cell>::readfn_t readfn,
-		    const typename ::MIO<Cell>::writefn_t writefn,
+		    const typename ::MIO<Address,Cell>::readfn_t readfn,
+		    const typename ::MIO<Address,Cell>::writefn_t writefn,
 		    const bool overwriteExistingElements = true) {
 
 		boundsCheck(address);
@@ -345,23 +373,23 @@ public:
 			return false;
 		}
 
-		_mem[address] = std::make_shared<::MIO<Cell>>(readfn, writefn);
+		_mem[address] = std::make_shared<::MIO<Address,Cell>>(readfn, writefn);
 		return true;
 	}
 
-	bool mapDevice(const Address address, std::shared_ptr<Device<Cell>> d, 
+	bool mapDevice(std::shared_ptr<MemMappedDevice<Address,Cell>> device, 
 		const bool overwriteExistingElements = true) {
 
-		boundsCheck(address);
-		if (!overwriteExistingElements &&
-		    addressRangeOverlapsExistingMap(address, address)) {
-			auto s = fmt::format("Address {:x} overlaps with "
-					     "existing map", address);
-			exception(s);
-			return false;
+		for (const auto& a : device->getAddressSet()) {
+			boundsCheck(a);
+			if (!overwriteExistingElements && isAddressMapped(a)) {
+				auto s = fmt::format("Address {:x} overlaps with existing map", 
+					a); 
+				exception(s);
+				return false;
+			}
+			_mem[a] = device;
 		}
-
-		_mem[address] = d;
 		return true;
 	}
 
@@ -369,11 +397,11 @@ public:
 		return isAddressMapped(_mem[address]);
 	}
 
-	bool isAddressMapped(const std::shared_ptr<Element<Cell>> e) const {
+	bool isAddressMapped(const std::shared_ptr<Element<Address,Cell>> e) const {
 		return e != _unmapped;
 	}
 
-	bool addressUnmapped(const std::shared_ptr<Element<Cell>> e) const {
+	bool addressUnmapped(const std::shared_ptr<Element<Address,Cell>> e) const {
 		return e == _unmapped;
 	}
 
@@ -384,7 +412,7 @@ public:
 			return;
 		}
 
-		fmt::print("Memory {:#04x}:{:#04x}\n", start, end);
+		fmt::print("Memory {:#04x}:{:#04x}\n", start, end); // TODO: FIX WIDTHS!!
 
 		constexpr int addrwidth = sizeof(Address) * 2;
 		constexpr int cellwidth = sizeof(Cell) * 2;
@@ -407,8 +435,9 @@ public:
 				auto addr = std::distance(_mem.begin(), it);
 				hexdump += fmt::format("{:0>{}x}  ", addr, addrwidth);
 			}
-
-			Cell c = (*it)->Read();
+			Cell c;
+			Address address = std::distance(_mem.begin(), it);
+			c = (*it)->Read(address);
 
 			// Append hex and then ascii representation
 			hexdump += fmt::format("{:0>{}x} ", c, cellwidth);
@@ -506,7 +535,7 @@ public:
 		loadDataFromFile(filename.c_str(), start);
 	}
 	
-	void loadData(std::vector<Cell> &data, Address startAddress) {
+	void loadData(const std::vector<Cell> &data, const Address startAddress) {
 
 		if (startAddress > _endAddress) {
 			auto s = fmt::format("Data load address is not a valid "
@@ -522,8 +551,9 @@ public:
 		}
 
 		auto a = _mem.begin() + startAddress;
-		for (auto i = data.begin(); i != data.end(); a++, i++)  {
-			(*a)->Write(*i);
+		Address addr = startAddress;
+		for (auto i = data.begin(); i != data.end(); a++, i++, addr++)  {
+			(*a)->Write(addr, *i);
 		}
 	}
 
@@ -568,9 +598,9 @@ public:
 private:
 
 	Address _endAddress; // Last address
-	std::shared_ptr<Element<Cell>> _unmapped;	   // Default memory element 
+	std::shared_ptr<Element<Address,Cell>> _unmapped;	   // Default memory element 
 
-	std::vector<std::shared_ptr<Element<Cell>>> _mem;
+	std::vector<std::shared_ptr<Element<Address,Cell>>> _mem;
 	std::vector<bool> _watch; // Vector of watched addresses.
 
 	void boundsCheck(const Address address) {
