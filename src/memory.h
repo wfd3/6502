@@ -117,7 +117,7 @@ private:
 template<class Address, class Cell>
 class MIO : public Element<Address, Cell> {
 public:
-	using readfn_t  = Cell (*)(void);  // TODO - Accept address here.
+	using readfn_t  = Cell (*)(void);
 	using writefn_t = void (*)(Cell);
 
 //	MIO() {	}
@@ -153,7 +153,17 @@ private:
 
 class Device {
 public:
-	virtual bool housekeeping() { return true; }
+	// These should be in order of precedence 
+	enum Lines {
+		Exit,
+		Reset,
+		Debug,
+		None
+	};
+
+	using BusSignals = std::vector<Lines>;
+
+	virtual BusSignals housekeeping() { return {}; }
 	virtual void enable()       { _active = true;  }
 	virtual void disable()      { _active = false; }
 	virtual bool isActive()     { return _active ; }
@@ -168,7 +178,7 @@ public:
 	virtual void setup() { }
 	virtual void teardown() { };
 	#endif
-	
+
 private:
 	bool _active = false;
 };
@@ -279,9 +289,9 @@ public:
 		uint64_t _size = _endAddress + 1;
 
 		if (_size > _mem.max_size()) {
-			auto s = fmt::format("End address {:#04x} exceeds host "
+			auto s = fmt::format("End address {:{}x} exceeds host "
 					     "system memory limits",
-					     endAddress);
+					     endAddress, AddressWidth);
 			exception(s);
 		}
 		_mem.reserve(_size);
@@ -304,8 +314,9 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			fmt::print("mem[{:04x}] {:02x} -> {:02x}\n",
-				   address, _mem.at(address)->Read(address), l);
+			fmt::print("mem[{:{}x}] {:{}x} -> {:{}x}\n",
+				   address, AddressWidth, _mem.at(address)->Read(address), 
+				   CellWidth, l, CellWidth);
 		}
 
 		_mem.at(address)->Write(address, l);
@@ -318,9 +329,9 @@ public:
 	bool mapRAM(const Address start, const Address end) {
 		boundsCheck(end);
 		if (addressRangeOverlapsExistingMap(start, end)) {
-			auto s = fmt::format("Address range {:x}:{:x} overlaps "
+			auto s = fmt::format("Address range {:{}x}:{:{}x} overlaps "
 					     "with existing map",
-					     start, end);
+					     start, AddressWidth, end, AddressWidth);
 			exception(s);
 			return false;
 		}
@@ -341,9 +352,9 @@ public:
 		boundsCheck(start + rom.size());
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(start, start+rom.size())) {
-			auto s = fmt::format("Address range {:x}:{:x} overlaps "
+			auto s = fmt::format("Address range {:{}x}:{:{}x} overlaps "
 					     "with existing map",
-					     start, start + rom.size());
+					     start, AddressWidth, start + rom.size(), AddressWidth);
 			exception(s);
 			return false;
 		}
@@ -367,8 +378,8 @@ public:
 		boundsCheck(address);
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(address, address)) {
-			auto s = fmt::format("Address {:x} overlaps with "
-					     "existing map", address);
+			auto s = fmt::format("Address {:{}x} overlaps with "
+					     "existing map", address, AddressWidth);
 			exception(s);
 			return false;
 		}
@@ -383,8 +394,8 @@ public:
 		for (const auto& a : device->getAddressSet()) {
 			boundsCheck(a);
 			if (!overwriteExistingElements && isAddressMapped(a)) {
-				auto s = fmt::format("Address {:x} overlaps with existing map", 
-					a); 
+				auto s = fmt::format("Address {:{}x} overlaps with existing map", 
+					a, AddressWidth); 
 				exception(s);
 				return false;
 			}
@@ -412,16 +423,14 @@ public:
 			return;
 		}
 
-		fmt::print("Memory {:#04x}:{:#04x}\n", start, end); // TODO: FIX WIDTHS!!
+		fmt::print("Memory {:#{}x}:{:#{}x}\n", 
+			start, AddressWidth, end, AddressWidth); 
 
-		constexpr int addrwidth = sizeof(Address) * 2;
-		constexpr int cellwidth = sizeof(Cell) * 2;
-	
 		int lineEnd = 16 / sizeof(Cell);
-		while (addrwidth + 2 + (cellwidth + 1) * lineEnd + lineEnd > 80) {
+		while (AddressWidth + 2 + (CellWidth + 1) * lineEnd + lineEnd > 80) {
 			lineEnd /= 2;
 		}
-		int hexwidth = addrwidth + 2 + (cellwidth + 1) * lineEnd;
+		int hexwidth = AddressWidth + 2 + (CellWidth + 1) * lineEnd;
 
 		int cnt = 0;
 		std::string hexdump, ascii;
@@ -433,14 +442,14 @@ public:
 			// Start a new line with the memory address
 			if (cnt == 0) {
 				auto addr = std::distance(_mem.begin(), it);
-				hexdump += fmt::format("{:0>{}x}  ", addr, addrwidth);
+				hexdump += fmt::format("{:0>{}x}  ", addr, AddressWidth);
 			}
 			Cell c;
 			Address address = std::distance(_mem.begin(), it);
 			c = (*it)->Read(address);
 
 			// Append hex and then ascii representation
-			hexdump += fmt::format("{:0>{}x} ", c, cellwidth);
+			hexdump += fmt::format("{:0>{}x} ", c, CellWidth);
 
 			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
 				uint8_t byte_value = (c >> (byte_idx * 8)) & 0xFF;
@@ -487,8 +496,8 @@ public:
 				Address end = (Address) std::distance(_mem.begin(), it);
 				auto type = (*it)->type();
 
-				fmt::print("{:#06x} - {:#04x} {} ({} bytes)\n",
-					   start, end, type, bytes);
+				fmt::print("{:#{}x} - {:#x} {} ({} bytes)\n",
+					   start, AddressWidth, end, AddressWidth, type, bytes);
 
 				range_start = next_it;
 			}
@@ -498,7 +507,6 @@ public:
 		
 		fmt::print("Total bytes mapped: {} bytes\n", mappedBytes);
 		fmt::print("Total memory size : {} bytes\n", _mem.size());
-
 	}
 
 	// Loading data into memory
@@ -539,14 +547,14 @@ public:
 
 		if (startAddress > _endAddress) {
 			auto s = fmt::format("Data load address is not a valid "
-					     "address: {:#04x}", startAddress);
+					     "address: {:#{}x}", startAddress, AddressWidth);
 			exception(s);
 		}
 		if (startAddress + data.size() - 1 > _endAddress) {
 			auto s = fmt::format("Data will not fit into memory at "
-					     "start address {:#04x} (data "
+					     "start address {:#{}x} (data "
 					     "length {} bytes)",
-					     startAddress, data.size());
+					     startAddress, AddressWidth, data.size());
 			exception(s);
 		}
 
@@ -558,7 +566,7 @@ public:
 	}
 
 	// watch memory address
-	
+
 	void enableWatch(const Address address) {
 		boundsCheck(address);
 		
@@ -572,15 +580,27 @@ public:
 
 	void listWatch() {
 		fmt::print("Watch list\n");
+		
+		if (std::none_of(_watch.begin(), _watch.end(), [](bool v) { return v; })) {
+			fmt::print("--none--\n");
+			return;
+		}
 
-		for(Address addr = 0; addr <= _watch.size(); addr++) 
-			if (_watch[addr])
-				fmt::print("{:#04x}\n", addr);
+		Address addr = 0;
+		for(const auto& watching : _watch) {  
+			if (watching)
+				fmt::print("{:{}x}\n", addr, AddressWidth);
+			addr++;
+		}
 	}
 
 	void clearWatch(Address address) {
 		boundsCheck(address);
 		_watch[address] = false;
+	}
+
+	void clearAllWatches() {
+		_watch.clear();
 	}
 
 	class Exception : public std::exception {
@@ -596,6 +616,9 @@ public:
 	};
 
 private:
+	// Field widths for fmt::
+	static constexpr int AddressWidth = sizeof(Address) * 2;
+	static constexpr int CellWidth = sizeof(Cell) * 2;
 
 	Address _endAddress; // Last address
 	std::shared_ptr<Element<Address,Cell>> _unmapped;	   // Default memory element 
@@ -605,8 +628,8 @@ private:
 
 	void boundsCheck(const Address address) {
 		if (!boundsCheckNoThrow(address)) {
-			auto s = fmt::format("Address {:#04x} out of range",
-					     address);
+			auto s = fmt::format("Address {:{}x} out of range",
+					     address, AddressWidth);
 			exception(s);
 		}
 	}

@@ -34,7 +34,7 @@ using Cell = uint8_t;
 // Create the memory and CPU
 Memory<Address, Cell> mem(CPU::MAX_MEM);
 CPU cpu(mem);
-auto pia = std::make_shared<MOS6820>();
+auto pia = std::make_shared<MOS6820<Address, Cell>>();
 
 //////////
 // This section defines which and where the 'built-in' programs 
@@ -72,7 +72,6 @@ BINFILE_PATH "/applesoft-lite-0.4-ram.bin";
 constexpr Address_t apple1SampleAddress = 0x0000;
 std::vector<unsigned char> apple1SampleProg =
 	{ 0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00 };
-
 
 //////////
 // Let's pretend to be an Apple1
@@ -115,19 +114,39 @@ int main() {
 
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
-	cpu.setDebugEntryExitFunc(&MOS6820::teardown, &MOS6820::setup);
+	cpu.setDebugEntryExitFunc(&MOS6820<Address, Cell>::teardown, &MOS6820<Address, Cell>::setup);
 
-	MOS6820::setup();	// Set the keyboard non-blocking
+	MOS6820<Address, Cell>::setup();	// Set the keyboard non-blocking
 
 	cpu.Cycles.enableTimingEmulation();
 	cpu.Reset();	    // Exit the CPU from reset
 
+	// - Execute one instruction, consume however may clock cycles that takes
+	// - Execute the housekeeping functions on all devices
+	// - If any device has asserted any control signals, handle them.
 	while (1) {
 		cpu.executeOne();
-		pia->housekeeping();
+		auto signals = pia->housekeeping();
+		for (const auto& signal : signals) {
+			switch(signal) {
+			case Device::None:
+				break;
+			case Device::Reset:
+				cpu.Reset();
+				if (cpu.inReset()) 
+					cpu.Reset();
+				break;
+			case Device::Debug:
+				cpu.setDebug(true);
+				break;
+			case Device::Exit:
+				fmt::print("\nExiting emulator\n");
+				std::exit(0);
+			}
+		}
 	}
 
-	MOS6820::teardown();	// Set the keyboard blocking
+	MOS6820<Address, Cell>::teardown();	// Set the keyboard blocking
 
 	return 0;
 }

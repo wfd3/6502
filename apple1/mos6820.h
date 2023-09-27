@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 #if defined(__linux__) 
 # include <termio.h>
@@ -11,11 +12,8 @@
 #endif
 
 #include "memory.h"
-#include "6502.h"
-#include "apple1.h" 
 
-extern CPU cpu;
-
+template<class Address = uint16_t, class Cell = uint8_t>
 class MOS6820 : public MemMappedDevice<Address, Cell> {
 public:	
 	static constexpr Word KEYBOARD   = 0xd010;
@@ -24,17 +22,19 @@ public:
 	static constexpr Word DISPLAYCR  = 0xd013;
 
 	MOS6820() {
-		addAddress(DISPLAY);
-		addAddress(KEYBOARD);
-		addAddress(DISPLAYCR);
-		addAddress(KEYBOARDCR);
+		MemMappedDevice<Address, Cell>::addAddress(DISPLAY);
+		MemMappedDevice<Address, Cell>::addAddress(KEYBOARD);
+		MemMappedDevice<Address, Cell>::addAddress(DISPLAYCR);
+		MemMappedDevice<Address, Cell>::addAddress(KEYBOARDCR);
 	}
 
-	bool housekeeping() {
+  	Device::BusSignals housekeeping() {
+        std::vector<Device::Lines> r;
 		auto d = displayHousekeeping();
+        r.push_back(d);
 		auto k = keyboardHousekeeping();
-	
-		return d && k;
+        r.push_back(k);
+		return r;
 	}
 
 	std::string type() { 
@@ -145,9 +145,9 @@ private:
 
 #endif
 
-	bool displayHousekeeping() {
+	Device::Lines displayHousekeeping() {
 		if (!_haveData) 
-			return true;
+			return Device::None;
 
 		auto c = _data & 0x7f;		// clear hi bit
 		switch (c) {
@@ -166,32 +166,26 @@ private:
 		}
 
 		_haveData = false;
-		return true;
+		return Device::None;
 	}
 
-	bool keyboardHousekeeping() {
+	Device::Lines keyboardHousekeeping() {
 		char ch;	
 		if (getch(ch) == false) 
-			return true;
+			return Device::None;
 		
 		// Map modern ascii to Apple 1 keycodes
 		switch (ch) {
 
 		// Control characters
 		case CTRL_RBRACKET:
-			fmt::print("\n");
-			cpu.Reset();
-			if (cpu.inReset())
-				cpu.Reset();	
-			return true;
+            return Device::Reset;
 		
 		case CTRL_LBRACKET:
-			cpu.setDebug(true);
-			return true;
+			return Device::Debug;
 		
 		case CTRL_MINUS:
-			fmt::print("\nExiting emulator\n");
-			std::exit(0);
+			return Device::Exit;
 
 		// Regular characters
 		case '\n':
@@ -209,7 +203,7 @@ private:
 
 		ch |= 0x80;
 		queue.push(ch);
-		return true;
+		return Device::None;
 	}
 
 	void displayWrite(Address address, Cell c) {

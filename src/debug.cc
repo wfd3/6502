@@ -1024,7 +1024,7 @@ uint64_t CPU::debugPrompt() {
 	while(1) {
 		if (debug_alwaysShowPS) 
 			printCPUState();
-			
+
 		getReadline(line);
 		line = stripTrailingSpaces(line);
 		line = stripLeadingSpaces(line);
@@ -1092,6 +1092,7 @@ void CPU::debug() {
 	}
 
 	fmt::print("Exiting debugger\n");
+
 	if (debugExitFunc)
 		debugExitFunc();
 }
