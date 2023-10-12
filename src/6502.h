@@ -19,6 +19,7 @@
 
 #include <array>
 #include <map>
+#include <unordered_map>
 #include <tuple>
 #include <string>
 #include <iostream>
@@ -472,7 +473,7 @@ public:
 
 private:
 	// Disassembler
-	void decodeArgs(bool, Byte, std::string &, std::string&);
+	void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
 	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
@@ -521,17 +522,24 @@ private:
 	int continueCmd(std::string &, uint64_t &);
 	int loopdetectCmd(std::string &, uint64_t &);
 	int backtraceCmd(std::string &, uint64_t &);
+	int labelCmd(std::string &, uint64_t &);
 	int whereCmd(std::string &, uint64_t &);
 	int watchCmd(std::string &, uint64_t &);
 	int quitCmd(std::string &, uint64_t &);
+	int findCmd(std::string &, uint64_t &);
 	int clockCmd(std::string &, uint64_t &);
+	int loadcmdCmd(std::string &, uint64_t &);
 
 	// Breakpoints
-	std::vector<Word> breakpoints;
+	std::vector<bool> breakpoints;
 	void listBreakpoints();
 	bool isBreakpoint(Word);
 	void deleteBreakpoint(Word);
 	void addBreakpoint(Word);
+	void deleteAllBreakpoints() { 
+		breakpoints.assign(mem.size(), false);
+		fmt::print("Deleted all breakpoints\n");
+	}
 
 	// Backtrace
 	std::vector<std::string> backtrace;
@@ -539,4 +547,15 @@ private:
 	void addBacktrace(Word);
 	void addBacktraceInterrupt(Word);
 	void removeBacktrace();
+
+	// Labels
+	std::unordered_map<Word, std::string> addrToLabel;
+	std::unordered_map<std::string, Word> labelToAddr;
+	void showLabels();
+	void addLabel(Word, const std::string);
+	std::string addressLabel(const Word);
+	bool labelAddress(const std::string&, Word&);
+	void removeLabel(const Word);
+	bool lookupAddress(const std::string&, Word&);
+	bool parseCommandFile(const std::string&);
 };	

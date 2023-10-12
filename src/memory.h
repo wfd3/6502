@@ -306,6 +306,28 @@ public:
 		return _mem.size();
 	}
 
+	std::vector<Address> find(std::string sequence, Cell filter = -1 ) {
+		std::vector<Address> positions;
+
+        if(sequence.size() > _mem.size())
+            return positions; 
+        
+       for (size_t i = 0; i <= _mem.size() - sequence.size(); ++i) {
+            bool matches = true;
+            for (size_t j = 0; j < sequence.size(); ++j) {
+                if (sequence[j] != (_mem[i + j]->Read(i + j) & filter)) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) {
+                positions.push_back(i);
+            }
+        }
+
+        return positions;
+	}
+
 	Cell Read(const Address address) {
 		boundsCheck(address);
 		return _mem.at(address)->Read(address);
@@ -321,7 +343,13 @@ public:
 
 		_mem.at(address)->Write(address, l);
 	}
-	
+
+	void assign(const Address a1, const Address a2, const Cell value) {
+			for (uint32_t a = a1; a <= a2; a++) {
+				_mem.at(a)->Write(a, value);
+			}
+	}
+
 	MemoryProxy operator[](Address address) {
         return MemoryProxy(*this, address);
     }
@@ -416,15 +444,15 @@ public:
 		return e == _unmapped;
 	}
 
-	void hexdump(const Address start, Address end) {
+	void hexdump(const Address start, Address end, Cell filter = 0xff) {
 
 		if (start > end || end > _endAddress) {
 			fmt::print("Invalid memory range\n");
 			return;
 		}
 
-		fmt::print("Memory {:#{}x}:{:#{}x}\n", 
-			start, AddressWidth, end, AddressWidth); 
+		fmt::print("Memory {:#{}x}:{:#{}x} with filter {:0>{}x}\n", 
+			start, AddressWidth, end, AddressWidth, filter, CellWidth); 
 
 		int lineEnd = 16 / sizeof(Cell);
 		while (AddressWidth + 2 + (CellWidth + 1) * lineEnd + lineEnd > 80) {
@@ -452,7 +480,7 @@ public:
 			hexdump += fmt::format("{:0>{}x} ", c, CellWidth);
 
 			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
-				uint8_t byte_value = (c >> (byte_idx * 8)) & 0xFF;
+				uint8_t byte_value = (c >> (byte_idx * 8)) & filter;
 				if (isascii(byte_value) && isprint(byte_value))
 					ascii += byte_value;
 				else

@@ -100,15 +100,17 @@ public:
 
 private:
     // Apple 1 keycodes
-    static constexpr char CTRL_LBRACKET = 0x1b; // ascii 27
-    static constexpr char CTRL_RBRACKET = 0x1d; // ascii 29
-    static constexpr char CTRL_MINUS    = 0x1f; // ascii 31
-    static constexpr char CR            = 0x0d;
-    static constexpr char BELL          = 0x0a;
+    static constexpr char CTRL_BACKSLASH = 0x1c; // ascii 27
+    static constexpr char CTRL_RBRACKET  = 0x1d; // ascii 29
+    static constexpr char CTRL_CARET     = 0x1e; // ascii 30
+    static constexpr char CTRL_MINUS     = 0x1f; // ascii 31
+    static constexpr char CR             = 0x0d;
+    static constexpr char BELL           = 0x0a;
+    static constexpr std::string CLS     = "\033[2J\033[H";
     #ifdef _WIN64
-    static constexpr char DEL           = '\b';
+    static constexpr char DEL            = '\b';
     #else
-    static constexpr char DEL           = 0x7f;
+    static constexpr char DEL            = 0x7f;
     #endif
 
 	// Display
@@ -117,6 +119,10 @@ private:
 	// Keyboard
 	bool kbdCRRead = false;
 	std::queue<Cell> queue;
+
+    void cls() {
+        fmt::print("\033[2J\033[H");
+    }
 
 #if defined(__linux__)
     
@@ -145,6 +151,7 @@ private:
 
 #endif
 
+std::string v = "";
 	Device::Lines displayHousekeeping() {
 		if (!_haveData) 
 			return Device::None;
@@ -153,14 +160,20 @@ private:
 		switch (c) {
 		case CR:	// \r
 			fmt::print("\n");
+			v+= "[\\n]";
+            //fmt::print("{}\n", v);
+            v = "";
 			break;
 		case '_':		// Backspace
 			fmt::print("\b");
+			v += "[\\b]";
 			break;
 		case BELL:		// Bell
 			fmt::print("\a");
+			v += "[\\a]";
 			break;
 		default:
+            v += fmt::format("[{:c}={:x}]", c, _data);
 			if (c >= 0x20 && c <= 0x7e)
 				fmt::print("{:c}", toupper(c));
 		}
@@ -171,21 +184,30 @@ private:
 
 	Device::Lines keyboardHousekeeping() {
 		char ch;	
-		if (getch(ch) == false) 
-			return Device::None;
+        auto retval = Device::None;
+		
+        if (getch(ch) == false) 
+			return retval;
 		
 		// Map modern ascii to Apple 1 keycodes
 		switch (ch) {
 
 		// Control characters
+		case CTRL_BACKSLASH:
+            retval = Device::Reset;
+            break;
+
 		case CTRL_RBRACKET:
-            return Device::Reset;
-		
-		case CTRL_LBRACKET:
-			return Device::Debug;
+			retval = Device::Debug;
+            break;
+
+        case CTRL_CARET: 
+            cls();
+            break;
 		
 		case CTRL_MINUS:
-			return Device::Exit;
+			retval = Device::Exit;
+            break;
 
 		// Regular characters
 		case '\n':
@@ -203,7 +225,8 @@ private:
 
 		ch |= 0x80;
 		queue.push(ch);
-		return Device::None;
+		
+        return retval;
 	}
 
 	void displayWrite(Address address, Cell c) {

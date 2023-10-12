@@ -26,6 +26,7 @@ CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
 	
 	Cycles.disableTimingEmulation();
 	_inReset = true;
+	breakpoints.assign(m.size(), false);
 }
 
 void CPU::setResetVector(Word address) {
@@ -212,34 +213,32 @@ void CPU::popPS() {
 Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	Word address;
 	Byte zpaddr;
-	Byte flags;
 	SByte rel;
 
+	// Add a cycle if a page boundary is crossed
 	auto updateCycles = [&](Byte reg) {
-		if ((flags == CYCLE_PAGE) &&
+		if (( _instructions.at(opcode).flags == CYCLE_PAGE) &&
 		    ((address + reg) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
 	};
 
-	flags = _instructions.at(opcode).flags;
-	
 	switch (_instructions.at(opcode).addrmode) {
 
-        // ZeroPage mode
+    // ZeroPage mode
 	case ADDR_MODE_ZP:
 		address = readByteAtPC();
 		break;
 
-	// ZeroPage,X 
+	// ZeroPage,X (with zero page wrap around)
 	case ADDR_MODE_ZPX:
 		zpaddr = readByteAtPC() + X;
 		address = zpaddr;
 		Cycles++;
 		break;
 
-        // ZeroPage,Y 
+	// ZeroPage,Y (with zero page wrap around)
 	case ADDR_MODE_ZPY:
 		zpaddr = readByteAtPC() + Y;
 		address = zpaddr;
@@ -260,7 +259,6 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	// Absolute,X 
 	case ADDR_MODE_ABX:
 		address = readWordAtPC();
-		// Add a cycle if a page boundary is crossed
 		updateCycles(X);
 		address += X;
 		break;
@@ -268,7 +266,6 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	// Absolute,Y 
 	case ADDR_MODE_ABY:
 		address = readWordAtPC();
-		// Add a cycle if a page boundary is crossed
 		updateCycles(Y);
 		address += Y;
 		break;
@@ -278,7 +275,7 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 		address = readWordAtPC();
 		break;
 
-        // (Indirect,X) or Indexed Indirect
+    // (Indirect,X) or Indexed Indirect (with zero page wrap around)
 	case ADDR_MODE_IDX:	
 		zpaddr = readByteAtPC() + X;
 		address = readWord(zpaddr);
@@ -288,8 +285,7 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	// (Indirect),Y or Indirect Indexed
 	case ADDR_MODE_IDY:
 		address = readByteAtPC();
-		address = readWord(address);
-		address += Y;
+		address = readWord(address) + Y;
 		break;
 
 	default:

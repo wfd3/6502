@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <vector>
 #include <cstdarg>
+#include <regex>
 
 #include <fmt/format.h>
 #include <fmt/core.h>
@@ -33,6 +34,7 @@
 #ifdef __linux__
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <signal.h>
 #endif
 
 #include "6502.h"
@@ -111,6 +113,40 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
     return result;
 }
 
+bool isHexNumber(const std::string& str) {
+    for(char ch : str) {
+        if(!std::isxdigit(ch))
+            return false;
+    }
+    return true;
+}
+
+bool CPU::lookupAddress(const std::string& line, Word& address) {
+	if (line.empty()) {
+		fmt::print("Incomplete command\n");
+		return false;
+	} 
+	
+	if (isHexNumber(line)) {
+		try {
+			address = (Word) std::stoul(line, nullptr, 16);
+			return true;
+		}
+		catch(...) {
+			fmt::print("Parse error: {}\n", line);
+			return false;
+		}
+	}
+
+	// see if line contains a label.
+	if (!labelAddress(line, address)) {
+		fmt::print("No label '{}'\n", line);
+		return false;
+	}
+	
+	return true;
+}
+
 #ifdef __linux__
 //////////
 // readline helpers
@@ -180,6 +216,18 @@ void setupReadline() {
 	rl_completion_query_items = 50;
 	rl_attempted_completion_function = readlineCompletionCallback;
 }
+
+// Capture ^C and ^-Backslash
+void captureSignals() {
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+
+}
+
+void restoreSignals() {
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+}
 #endif
 
 #ifdef _WIN64
@@ -202,19 +250,19 @@ void CPU::printCPUState() {
 		return b ? std::toupper(c) : std::tolower(c);
 	};
 
-	fmt::print("PC: {:04x} SP: {:02x}\n", PC, SP );
+	fmt::print("| PC: {:04x} SP: {:02x}\n", PC, SP );
 	// fmt::print() doesn't like to print out union/bit-field members?
-	fmt::print("Flags: {}{}{}{}{}{}{} PS: {:#x}\n",
+	fmt::print("| Flags: {}{}{}{}{}{}{} PS: {:#x}\n",
 		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D),
 		fl('B', Flags.B), fl('V', Flags.V), fl('N', Flags.N), PS);
-	fmt::print("A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print("Pending: IRQ - {}, NMI - {}, Reset - {}, "
+	fmt::print("| A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print("| Pending: IRQ - {}, NMI - {}, Reset - {}, "
 			   "PendingReset - {}\n",
 		   yesno(pendingIRQ()), yesno(pendingNMI()),
 		   yesno(_inReset), yesno(_pendingReset));
-	fmt::print("IRQs: {}, NMIs: {}, BRKs: {}\n",
+	fmt::print("| IRQs: {}, NMIs: {}, BRKs: {}\n",
 		    _IRQCount, _NMICount, _BRKCount);
-	fmt::print("Cycle: {}\n", Cycles.get());
+	fmt::print("| Cycle: {}\n", Cycles.get());
 }
 
 void CPU::dumpStack() {
@@ -235,108 +283,204 @@ void CPU::dumpStack() {
 //////////
 // Disassembler
 
-void CPU::decodeArgs(bool atPC, Byte ins, std::string &disassembly, 
-					 std::string &opcodes) {
+void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly, 
+					 std::string& opcodes, std::string& address, 
+					 std::string& computedAddr) {
 
 	Byte mode = _instructions.at(ins).addrmode;
 	Byte byteval;
 	Word wordval;
 	SByte rel;
-	std::string out;
+	std::string out, addr, label;
 
 	switch (mode) {
 	case ADDR_MODE_IMP:
 		break;
 
 	case ADDR_MODE_ACC:
-		disassembly += "A";
+		disassembly = "A";
+		address = "";
 		break;
 
-	case ADDR_MODE_IMM:
+	case ADDR_MODE_IMM:  // #$xx
 		byteval = readByteAtPC();
-		disassembly += fmt::format("#${:02x}", byteval);
+		disassembly = fmt::format("#${:02x}", byteval);
 		opcodes += fmt::format("{:02x} ", byteval);
+		address = "";
 		break;
 
-	case ADDR_MODE_ZP:
+	case ADDR_MODE_ZP:  // $xx
 		byteval = readByteAtPC();
-		opcodes += fmt::format("{:02x} ", byteval);
+		label = addressLabel(byteval);
+		addr = fmt::format("${:04x}", byteval);
+	
+		if (!label.empty()) {
+			disassembly = label;
+			address = addr;
+		} else {
+			disassembly = addr;
+			address = "";
+		}
+		opcodes += fmt::format("{:04x} ", byteval);
 		break;
 
-	case ADDR_MODE_ZPX:
+	case ADDR_MODE_ZPX:  // $xx,X
 		byteval = readByteAtPC();
-		disassembly += fmt::format("${:02x},X",  byteval);
-		if (atPC)
-			disassembly += fmt::format(" [address {:04x}]", byteval + X);
-		opcodes += fmt::format("{:02x} ", byteval);
+		label = addressLabel(byteval);
+		addr = fmt::format("${:04x}", byteval);
+
+		if (!label.empty()) {
+			disassembly = label;
+			address = addr;
+		} else {
+			disassembly = addr;
+			address = "";
+		}
+		disassembly += ",X";
+		opcodes += fmt::format("{:04x} ", byteval);
+		if (atPC) 
+			computedAddr = fmt::format("${:04x}", byteval + X);
 		break;
 
-	case ADDR_MODE_ZPY:
+	case ADDR_MODE_ZPY:  // $xx,Y
 		byteval = readByteAtPC();
-		disassembly += fmt::format("${:02x},Y", byteval);
-		if (atPC)
-			disassembly += fmt::format("[address {:04x}]", byteval + Y);
-		opcodes += fmt::format("{:02x} ", byteval);
+		label = addressLabel(byteval);
+		addr = fmt::format("${:04x}", byteval);
+		if (!label.empty()) {
+			disassembly = label;
+			address = addr;
+		} else {
+			disassembly = addr;
+			address = "";
+		}
+		disassembly += ",Y";
+		opcodes += fmt::format("{:04x} ", byteval);
+		if (atPC) 
+			computedAddr = fmt::format("${:04x}", byteval + Y);
 		break;
 
 	case ADDR_MODE_REL:
 		rel = SByte(readByteAtPC());
-		disassembly += fmt::format("${:04x}", PC + rel);
+		computedAddr = fmt::format("${:04x}", PC + rel);
+
+		disassembly = "";
+		if (rel < 0) {
+			disassembly += "-";
+			rel = std::abs(rel);
+		}
+		disassembly += fmt::format("${:02x}", rel); 
 		opcodes += fmt::format("{:02x} ", byteval);
 		break;
 
-	case ADDR_MODE_ABS:
+	case ADDR_MODE_ABS:  // $xxxx
 		wordval = readWordAtPC();
-		disassembly += fmt::format("${:04x}", wordval);
+		label = addressLabel(wordval);
+		addr = fmt::format("${:04x}", wordval);
+
+		if (!label.empty()) {
+			disassembly = label;
+			address = address;
+		} else {
+			disassembly = addr;
+			address = "";
+		}
 		opcodes += fmt::format("{:02x} {:02x}", 
 							  wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
-	case ADDR_MODE_ABX:
+	case ADDR_MODE_ABX:  // $xxxx,X
 		wordval = readWordAtPC();
-		disassembly += fmt::format("${:04x},X", wordval);
-		if (atPC)
-			disassembly += fmt::format("[address {:04x}]", wordval + X);
+		label = addressLabel(wordval);
+		addr = fmt::format("${:04x}", wordval);
+		if (!label.empty())  {
+			disassembly = label;
+			address = addr;
+		} else { 
+			disassembly = addr;
+			address = "";
+		}
+		disassembly += ",X";
 		opcodes += fmt::format("{:02x} {:02x}", 
 							  wordval & 0xff, (wordval >> 8) & 0xff);
+		computedAddr = fmt::format("${:04x}", wordval + X);
+	
 		break;		
 
-	case ADDR_MODE_ABY:
+	case ADDR_MODE_ABY:  // $xxxx,Y
 		wordval = readWordAtPC();
-		disassembly += fmt::format("${:04x},Y", wordval);
-		if (atPC)
-			disassembly += fmt::format("[address {:04x}]", wordval + Y);
+
+		label = addressLabel(wordval);
+		addr = fmt::format("${:04x}", wordval);
+		if (!label.empty()) {
+			disassembly = label;
+			address = addr;
+		} else {
+			disassembly = addr;
+			address = "";
+		}
+		disassembly += ",Y";
 		opcodes += fmt::format("{:02x} {:02x}", 
 							  wordval & 0xff, (wordval >> 8) & 0xff);
+		if (atPC) 
+			computedAddr = fmt::format("${:04x}", wordval + Y);
 		break;
 		
-	case ADDR_MODE_IND:
+	case ADDR_MODE_IND:  // $(xxxx)
 		wordval = readWordAtPC();
-		disassembly += fmt::format("(${:04x})", wordval);
+
+		label = addressLabel(wordval);
+		addr = fmt::format("{:04x}", wordval);
+		if (!label.empty()) {
+			disassembly = "(" + label + ")";
+			address = addr;
+		} else {
+			disassembly = "(" + addr + ")";
+			address = "";
+		}
 		opcodes += fmt::format("{:02x} {:02x}", 
 							  wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
-	case ADDR_MODE_IDX:
+	case ADDR_MODE_IDX: // ($xx,X)
 		byteval = readByteAtPC();
-		opcodes += fmt::format("{:02x}", byteval);
 		wordval = byteval + X;
 		if (wordval > 0xFF)
 			wordval -= 0xFF;
 		wordval = readWord(wordval);
-		disassembly += fmt::format("(${:02x},X)", byteval);
-		if (atPC)
-			disassembly += fmt::format("[address {:04x}]", wordval);
+		
+		label = addressLabel(byteval);
+		addr = fmt::format("${:04x}", byteval);
+		if (!label.empty())  {
+			disassembly = label;
+			address = addr;
+		} else { 
+			disassembly = addr;
+			address = "";
+		}
+		disassembly = "(" + disassembly + "),X";
+		opcodes += fmt::format("{:02x}", byteval);
+		if (atPC) 
+			computedAddr = fmt::format("${:04x}", wordval);
 		break;
 		
-	case ADDR_MODE_IDY:
+	case ADDR_MODE_IDY:  // ($xx),Y
 		byteval = readByteAtPC();
 		wordval = readWord(byteval);
 		wordval += Y;
-		disassembly += fmt::format("(${:02x}),Y", byteval);
-		if (atPC)
-			disassembly += fmt::format("[address {:04x}]", wordval);
+		
+		label = addressLabel(byteval);
+		addr = fmt::format("${:04x}", byteval);
+		if (!label.empty()) { 
+			disassembly = label;
+			address = addr; 
+		} else {
+			disassembly = addr;
+			address = "";
+		}
+		disassembly = "(" + disassembly + "),Y";
 		opcodes += fmt::format("{:02x}", byteval);
+		if (atPC) 
+			computedAddr = fmt::format("${:04x}", wordval);
 		break;
 	
 	default:
@@ -348,32 +492,40 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string &disassembly,
 Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 	Address_t savePC = PC;
 	Cycles_t saveCycles = Cycles;
-	std::string bkpoint, args, opcodes;
-
-	// Are we looking at the next address to execute?  If we are, then
-	// the processor state is correct to calculate address offsets.
-	bool atPC = (PC == dPC);
+	std::string ins, bkpoint, args, opcodes, marker, address, computedAddress;
+	bool atPC = (PC == dPC); 
+	bool bytes = false;
 
 	PC = dPC;
 	if (isBreakpoint(PC))
 		bkpoint = "B";
 
+	if (atPC) 
+		marker = "*";
+
 	Byte opcode = readByteAtPC();
 	opcodes = fmt::format("{:02x} ", opcode);
-	disassembly = "";
 
-	// Assume that, while debugging, the PC must be at the
-	// start of an instruction sequence.
 	if (_instructions.count(opcode) == 0) {
-		disassembly += fmt::format(".byte ${:02x}", opcode);
+		ins = fmt::format(".byte ${:02x}", opcode);
+		bytes = true;
 	}
 	else {
-		disassembly += _instructions.at(opcode).name;
-		decodeArgs(atPC, opcode, args, opcodes);
+		ins = _instructions.at(opcode).name;
+		decodeArgs(atPC, opcode, args, opcodes, address, computedAddress);
 	}
-	disassembly = fmt::format("{:04x}: {:1.1} | {:9.9}| {}     {}", 
-				              dPC, bkpoint, opcodes, disassembly, args);
 
+//  B*| label^addr  : | 23 56 89 | ins     args | [opt. address]
+	auto addr = fmt::format("{:04x}", dPC);
+	std::string label = addressLabel(dPC);
+	if (!label.empty()) 
+		 addr += fmt::format(" ({})", label);
+		
+	disassembly = fmt::format("{:1.1}{:1.1}| {:20.20} | {:9.9}| {}     ", 
+				              marker, bkpoint, addr, opcodes, ins);
+
+	if (!bytes) 
+		disassembly += fmt::format("{:<20} | {:<5.5} | {}", args, address, computedAddress);
 	dPC = PC;
 	PC = savePC;
 	Cycles = saveCycles;
@@ -418,41 +570,34 @@ void CPU::setDebug(bool d) {
 // Breakpoints
 
 void CPU::listBreakpoints() {
-	std::vector<Word>::iterator i;
-	int c = 0;
-
 	fmt::print("Active breakpoints:\n");
-	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-		fmt::print("  {:04x} ", *i);
-		c++;
-		if (c == 4) {
-			c = 0;
+	for (size_t i = 0; i < breakpoints.size(); i++) {
+		if (breakpoints[i]) {
+			fmt::print("{:04x}", i);
+			auto label = addressLabel(i);
+			if (!label.empty()) 
+				fmt::print(": {}", label);
 			fmt::print("\n");
 		}
 	}
 }
 
 bool CPU::isBreakpoint(Word _pc) {
-	std::vector<Word>::iterator i;
-
-	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-		if (*i == _pc)
-			return true;
-	}
-	return false;
+	if (_pc > MAX_MEM) 
+		return false;
+	return breakpoints[_pc];
 }
 
 void CPU::deleteBreakpoint(Word bp) {
-	std::vector<Word>::iterator i;
-
-	for (i = breakpoints.begin(); i < breakpoints.end(); i++) {
-		if (*i == bp) {
-			breakpoints.erase(i);
-			fmt::print("Removed breakpoint at {:04x}\n", *i);
-			return;
-		}
-	}
-	fmt::print("No breakpoint set at {:04x}\n", bp);
+	if (bp > MAX_MEM) 
+		return;
+	breakpoints[bp] = false;
+	
+	fmt::print("Removed breakpoint at {:04x}", bp);
+	auto label = addressLabel(bp);
+	if (!label.empty()) 
+		fmt::print(": {}", label);
+	fmt::print("\n");
 }
 
 void CPU::addBreakpoint(Word bp) {
@@ -465,8 +610,13 @@ void CPU::addBreakpoint(Word bp) {
 		fmt::print("Breakpoint already set at {:04x}\n", bp);
 		return;
 	}
-	breakpoints.push_back(bp);
-	fmt::print("Set breakpoint at {:04x}\n", bp);
+	breakpoints[bp] = true;
+
+	fmt::print("Set breakpoint at {:04x}", bp);
+	auto label = addressLabel(bp);
+	if (!label.empty()) 
+		fmt::print(": {}", label);
+	fmt::print("\n");
 }
 
 //////////
@@ -501,6 +651,89 @@ void CPU::removeBacktrace() {
 }
 
 //////////
+// Labels
+
+void CPU::showLabels() {
+	if (addrToLabel.empty()) {
+		fmt::print("No labels\n");
+		return;
+	}
+
+	fmt::print("Address labels:\n");
+	for (const auto& [address, label] : addrToLabel) {
+		fmt::print("{:#04x}: {}\n", address, label);
+	}
+}
+
+void CPU::addLabel(const Word address, const std::string label) {
+	addrToLabel[address] = label;
+	labelToAddr[label]   = address;
+}
+
+void CPU::removeLabel(const Word address) {
+	auto it = addrToLabel.find(address);
+	if (it == addrToLabel.end())
+		return;
+
+	auto label = addrToLabel.at(address);
+	addrToLabel.erase(address);
+	labelToAddr.erase(label);
+}
+
+std::string CPU::addressLabel(const Word address) {
+	std::string label;
+
+	auto it = addrToLabel.find(address);
+	if (it != addrToLabel.end()) 
+		label += fmt::format("{}", it->second);
+	return label;
+}
+
+bool CPU::labelAddress(const std::string& label, Word& address) {
+	auto it = labelToAddr.find(label);
+	if (it == labelToAddr.end()) 
+		return false;
+	address = labelToAddr[label];
+	return true;
+}
+
+bool CPU::parseCommandFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if(!file.is_open()) {
+        fmt::print("Failed to open file '{}'", filename);
+        return false;
+    }
+
+    std::string line;
+    while(std::getline(file, line)) {
+        if(line.empty() || line[0] == '#' || line[0] == ';') {
+            continue;
+        }
+
+        std::istringstream iss(line);
+        std::string command, hexValue, label;
+        iss >> command >> hexValue >> label;
+
+        if(command != "label" || !isHexNumber(hexValue) || label.empty()) {
+            std::cerr << "Error: Invalid syntax." << std::endl;
+            return false;
+        }
+
+        Word address;
+        try {
+            address = std::stoul(hexValue, nullptr, 16);
+        } catch(const std::exception& e) {
+            fmt::print("Error: Invalid address\n");
+			return false;
+        }
+
+        addLabel(address, label);
+    }
+    
+    return true;
+}
+
+//////////
 // Debugger
 std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 	return {
@@ -517,6 +750,9 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "memory address 'address', overwriting any data.  This "
 		  "command will fail if it attempts to load data on non-RAM "
 		  "memory."
+		},
+		{ "loadcmd",      "L",  &CPU::loadcmdCmd, true,
+		  "'load a command file <file>"
 		},
 		{ "run",   "r",  &CPU::runCmd, false,
 		  "Run program at current Program Counter.  Optionally "
@@ -564,13 +800,19 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "memory address xxxx, and 'watch' alone will list "
 		  "active watchpoints"
 		},
+		{ "label",     "",   &CPU::labelCmd, false, 
+		  "Add, remove or show current address label map"
+		},
 		{ "map",       "M",  &CPU::memmapCmd, false,
 		  "Display the current memory map"
 		},
 		{ "clock",     "",   &CPU::clockCmd, false,
 		  "Toggle CPU speed emulation"
 		},
-		{ "quit",      "",   &CPU::quitCmd, false, 
+		{ "find",      "f",  &CPU::findCmd, false, 
+		  "Find a string sequence in memory, with optional filter"
+		},
+		{ "quit",      "q",   &CPU::quitCmd, false, 
 		  "Quit the emulator"
 		}
 	};
@@ -588,19 +830,10 @@ int CPU::helpCmd([[maybe_unused]] std::string &line,
 	return ACTION_CONTINUE;
 }
 
-int CPU::listCmd(std::string &line,
-		 [[maybe_unused]] uint64_t &returnValue) {
-	try {
-		listPC = std::stoi(line, nullptr, 16);
-	}
-	catch (std::out_of_range& e) {
-		fmt::print("Parse error: {}\n", e.what());
-	}
-	catch (...) {
-	}
+int CPU::listCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 
+	lookupAddress(line, listPC);
 	listPC = disassemble(listPC, 10);
-	
 	return ACTION_CONTINUE;
 }
 
@@ -628,6 +861,21 @@ int CPU::loadCmd(std::string &line,
 	catch(...) {
 		fmt::print("Load error: unknown exception\n");
 	}
+	
+	return ACTION_CONTINUE;
+}
+
+int CPU::loadcmdCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+	std::string fname;
+
+	std::istringstream iss(line);
+	iss >> fname;
+	
+	fmt::print("Loading command file {}\n", fname);
+	
+	if (parseCommandFile(fname) == false) 
+		fmt::print("Command file failed\n");
+	
 	
 	return ACTION_CONTINUE;
 }
@@ -660,23 +908,24 @@ int CPU::breakpointCmd(std::string &line,
 		listBreakpoints();
 		return ACTION_CONTINUE;
 	}
-		
+
 	if (line[0] == '-') {
 		line.erase(0,1);
 		remove = true;
 	} 
 
-	try {
-		addr = (Word) std::stoul(line, nullptr, 16);
-		if (remove)
+	if (remove && line == "*") {
+		deleteAllBreakpoints();
+		return ACTION_CONTINUE;
+	}
+	
+	if (lookupAddress(line, addr)) {	
+		if (remove) 
 			deleteBreakpoint(addr);
 		else
 			addBreakpoint(addr);
 	}
-	catch(...) {
-		fmt::print("Parse error: {}\n", line);
-	}
-	
+
 	return ACTION_CONTINUE;
 }
 
@@ -722,11 +971,68 @@ int CPU::resetListPCCmd(std::string &line,
 	return ACTION_CONTINUE;
 }
 
+
 int CPU::memdumpCmd(std::string &line,
 		    [[maybe_unused]] uint64_t &returnValue) {
+	std::regex pattern1(R"((\w+))");	
+    std::regex pattern2(R"((\w+)=([0-9a-fA-F]+))");
+    std::regex pattern3(R"((\w+):(\w+))");
+    std::regex pattern4(R"((\w+):(\w+):([0-9a-fA-F]+))");
+    std::regex pattern5(R"((\w+):(\w+)=([0-9a-fA-F]+))");
+    std::smatch matches;
+	Word addr1, addr2, value;	
+
+	auto rangeCheckAddr = [](Word a) {
+		return a <= MAX_MEM;
+	};
+
+	auto rangeCheckValue =[](Word v) {
+		return v <= 0xff;
+	};
+		
+    if (std::regex_match(line, matches, pattern1) && matches.size() == 2) {
+		if (lookupAddress(matches[1], addr1) && rangeCheckAddr(addr1)) {
+			fmt::print("[{:04x}] {:02x}\n", addr1, mem.Read(addr1));
+			return ACTION_CONTINUE;
+		}
+    } else if (std::regex_match(line, matches, pattern2) && matches.size() == 3) {
+		value = std::stoul(matches[2], nullptr, 16);
+		if (lookupAddress(matches[1], addr1) && rangeCheckAddr(addr1) && rangeCheckValue(value)) {
+			Byte oldval = mem.Read(addr1);
+			mem.Write(addr1, (Byte) value);
+			fmt::print("[{:04x}] {:02x} -> {:02x}\n", addr1, oldval, (Byte) value);
+			return ACTION_CONTINUE;
+		}
+    } else if (std::regex_match(line, matches, pattern3) && matches.size() == 3) {
+		if (lookupAddress(matches[1], addr1) && lookupAddress(matches[2], addr2) && 
+			rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
+			mem.hexdump(addr1, addr2);
+			return ACTION_CONTINUE;;
+		}
+    } else if (std::regex_match(line, matches, pattern4) && matches.size() == 4) {
+        value = std::stoul(matches[3], nullptr, 16);
+		if (lookupAddress(matches[1], addr1) && lookupAddress(matches[2], addr2) && 
+			rangeCheckAddr(addr1) && rangeCheckAddr(addr2) && rangeCheckValue(value)) {
+			mem.hexdump(addr1, addr2, value);
+			return ACTION_CONTINUE;
+		}
+    } else if (std::regex_match(line, matches, pattern5) && matches.size() == 4) {
+        value = std::stoul(matches[3], nullptr, 16);
+		if (lookupAddress(matches[1], addr1) && lookupAddress(matches[2], addr2) &&
+			rangeCheckAddr(addr1) && rangeCheckAddr(addr2) && rangeCheckValue(value)) {
+				mem.assign(addr1, addr2, (Byte) value);
+			return ACTION_CONTINUE;
+		}
+	} 
+
+	fmt::print("Parse error: '{}'\n", line);
+	return ACTION_CONTINUE;
+}
+#if 0
 	Word addr1, addr2;
 	Word value;		
 	char equal, colon;
+	std::string s1, s2;
 	
 	auto s = stripSpaces(line);
 	std::istringstream iss(s);
@@ -741,8 +1047,8 @@ int CPU::memdumpCmd(std::string &line,
 		
 	// xxxx
 	iss.seekg(0);
-	iss >> std::hex >> addr1;
-	if (!iss.fail() && iss.eof() && rangeCheckAddr(addr1)) {
+	iss >> s1;
+	if (!iss.fail() && iss.eof() && lookupAddress(s1, addr1) && rangeCheckAddr(addr1)) {
 		fmt::print("[{:04x}] {:02x}\n", addr1, mem.Read(addr1));
 		return ACTION_CONTINUE;
 	}
@@ -768,6 +1074,17 @@ int CPU::memdumpCmd(std::string &line,
 		return ACTION_CONTINUE;;
 	}
 
+	// xxxx:yyyy:ff
+	iss.seekg(0);
+	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> colon
+	    >> std::hex >> value;  // In this case, value is a filter for memdump()
+	if (!iss.fail() && iss.eof() && colon == ':' &&
+	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
+	    rangeCheckValue(value)) {
+			mem.hexdump(addr1, addr2, value);
+			return ACTION_CONTINUE;
+	}
+		
 	// xxxx:yyyy=val
 	iss.seekg(0);
 	value = 0;
@@ -780,12 +1097,11 @@ int CPU::memdumpCmd(std::string &line,
 			mem.Write(a, (Byte) value);
 		return ACTION_CONTINUE;
 	}
-
 	// Handle parsing errors
 	fmt::print("Parse error: '{}'\n", s);
 	return ACTION_CONTINUE;
 }
-
+#endif
 int CPU::memmapCmd([[maybe_unused]] std::string &line,
 		   [[maybe_unused]] uint64_t &returnValue) {
 	mem.printMap();
@@ -979,6 +1295,52 @@ int CPU::watchCmd(std::string &line,
 	return ACTION_CONTINUE;
 }
 
+int CPU::labelCmd(std::string &line,
+		  [[maybe_unused]] uint64_t &returnValue) {
+	Word addr;
+	bool remove = false;
+
+	if (line.empty()) {
+		showLabels();
+		return ACTION_CONTINUE;
+	}
+	
+	if (line[0] == '-') {
+		line.erase(0,1);
+		remove = true;
+	}
+
+	try {
+		size_t index = 0;
+		addr = (Word) std::stoul(line, &index, 16);
+		
+		if (addr > MAX_MEM) {
+			fmt::print("Error: Watchpoint address outside of "
+				   "available address range\n");
+			return ACTION_CONTINUE;
+		}
+		if (remove) {
+			removeLabel(addr);
+			fmt::print("Label for address {:04x} removed\n", addr);
+		} else {
+			if (line[index] != ' ') {
+				throw std::invalid_argument("Invalid number");
+			}
+			auto label = line.substr(index);
+			label = stripLeadingSpaces(label);
+			label = stripTrailingSpaces(label);
+		
+			addLabel(addr, label);
+			fmt::print("Label '{}' added for memory address {:04x}\n", label, addr);
+		}
+	}
+	catch(...) {
+		fmt::print("Parse error: {}\n", line);
+	}
+	
+	return ACTION_CONTINUE;
+}
+
 int CPU::clockCmd([[maybe_unused]] std::string &line,
 	     [[maybe_unused]] uint64_t &returnValue) {
 
@@ -997,6 +1359,44 @@ int CPU::quitCmd([[maybe_unused]] std::string& line,
 	[[maybe_unused]] uint64_t& returnValue) {
 	fmt::print("Exiting emulator\n");
 	exit(0);
+}
+
+int CPU::findCmd(std::string& line, [[maybe_unused]] uint64_t& returnValue) {
+	line = stripLeadingSpaces(line);
+	auto sequence = split(line, " ");
+	if (sequence.empty()) {
+		fmt::print("Error: no search sequence provided\n");
+		return ACTION_CONTINUE;
+	}
+	line = stripSpaces(line);
+	uint8_t filter = 0xff;
+
+	if (!line.empty()) {
+		try {
+			size_t cProcessed;
+			auto len = line.length();
+			filter = std::stoul(line, &cProcessed, 16);
+			if (cProcessed != len) {
+				fmt::print("Error: filter is not a hexadecimal number\n");
+				return ACTION_CONTINUE;
+			}
+		}
+		catch(...) {
+			fmt::print("Error: filter is not a hexadecimal number\n");
+			return ACTION_CONTINUE;
+		}
+	} 
+
+	auto locations = mem.find(sequence, filter);
+	if (locations.empty()) {
+		fmt::print("Sequence not found\n");
+		return ACTION_CONTINUE;
+	}
+	fmt::print("Sequence found at addresses:\n");
+	for (const auto& addr : locations) 
+		fmt::print(" {:04x}\n", addr);
+
+	return ACTION_CONTINUE;
 }
 
 bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
@@ -1074,8 +1474,10 @@ uint64_t CPU::debugPrompt() {
 void CPU::debug() {
 	uint64_t count;
 
-	if (debugEntryFunc)
+	if (debugEntryFunc) {
+		captureSignals();
 		debugEntryFunc();
+	}
 
 	fmt::print("\nDebugger starting at PC {:#04x}\n", PC);
 
@@ -1093,8 +1495,10 @@ void CPU::debug() {
 
 	fmt::print("Exiting debugger\n");
 
-	if (debugExitFunc)
+	if (debugExitFunc) {
+		restoreSignals();
 		debugExitFunc();
+	}
 }
 
 std::tuple<uint64_t, uint64_t> CPU::traceOneInstruction() {

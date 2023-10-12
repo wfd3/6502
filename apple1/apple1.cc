@@ -41,10 +41,10 @@ auto pia = std::make_shared<MOS6820<Address, Cell>>();
 // will be loaded. 
 
 // Uncomment to load Apple INTEGER BASIC
-//#define APPLE_INTEGER_BASIC
+#define APPLE_INTEGER_BASIC
 
 //Uncomment to load Applesoft Basic Lite
-#define APPLESOFT_BASIC_LITE
+//#define APPLESOFT_BASIC_LITE
 
 #if defined(APPLE_INTEGER_BASIC) && defined(APPLESOFT_BASIC_LITE)
 # error "Can't have both Apple Integer Basic and Applesoft Basic loaded "\
@@ -59,7 +59,7 @@ BINFILE_PATH "/wozmon.bin";
 #ifdef APPLE_INTEGER_BASIC
 constexpr Address_t appleBasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE =
-BINFILE_PATH "Apple-1_Integer_BASIC.bin";
+BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
 #endif
 
 #ifdef APPLESOFT_BASIC_LITE
@@ -85,9 +85,10 @@ int main() {
 	mem.mapDevice(pia);
 
 	fmt::print("A Very Simple Apple I\n");
-	fmt::print("  Reset is Control-]\n");
-	fmt::print("  Debugger is Control-[\n");
-	fmt::print("  Quit is Control-minus\n");
+	fmt::print("  Reset        = Control-\\\n");
+	fmt::print("  Clear screen = Control-^\n");
+	fmt::print("  Debugger     = Control-]\n");
+	fmt::print("  Quit         = Control-minus\n");
 	fmt::print("\n");
 
 	// Load Wozmon, Apple Basic or Applesoft Basic Lite and the
