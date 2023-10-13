@@ -122,10 +122,8 @@ bool isHexNumber(const std::string& str) {
 }
 
 bool CPU::lookupAddress(const std::string& line, Word& address) {
-	if (line.empty()) {
-		fmt::print("Incomplete command\n");
+	if (line.empty()) 
 		return false;
-	} 
 	
 	if (isHexNumber(line)) {
 		try {
@@ -832,7 +830,9 @@ int CPU::helpCmd([[maybe_unused]] std::string &line,
 
 int CPU::listCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 
-	lookupAddress(line, listPC);
+	if (!lookupAddress(line, listPC) && !line.empty()) {
+		return ACTION_CONTINUE;
+	};
 	listPC = disassemble(listPC, 10);
 	return ACTION_CONTINUE;
 }
@@ -919,12 +919,14 @@ int CPU::breakpointCmd(std::string &line,
 		return ACTION_CONTINUE;
 	}
 	
-	if (lookupAddress(line, addr)) {	
-		if (remove) 
-			deleteBreakpoint(addr);
-		else
-			addBreakpoint(addr);
+	if (!lookupAddress(line, addr)) {
+		return ACTION_CONTINUE;
 	}
+	
+	if (remove) 
+		deleteBreakpoint(addr);
+	else
+		addBreakpoint(addr);
 
 	return ACTION_CONTINUE;
 }
@@ -1309,29 +1311,34 @@ int CPU::labelCmd(std::string &line,
 		remove = true;
 	}
 
+	// Handle '-0xfoof' or '-label'
+	if (remove) {
+		line = stripSpaces(line);
+		if (lookupAddress(line, addr)) {
+			removeLabel(addr);
+			fmt::print("Label for address {:04x} removed\n", addr);
+			return ACTION_CONTINUE;
+		}
+	}
+
 	try {
 		size_t index = 0;
 		addr = (Word) std::stoul(line, &index, 16);
 		
 		if (addr > MAX_MEM) {
-			fmt::print("Error: Watchpoint address outside of "
+			fmt::print("Error: Label address outside of "
 				   "available address range\n");
 			return ACTION_CONTINUE;
 		}
-		if (remove) {
-			removeLabel(addr);
-			fmt::print("Label for address {:04x} removed\n", addr);
-		} else {
-			if (line[index] != ' ') {
-				throw std::invalid_argument("Invalid number");
-			}
-			auto label = line.substr(index);
-			label = stripLeadingSpaces(label);
-			label = stripTrailingSpaces(label);
-		
-			addLabel(addr, label);
-			fmt::print("Label '{}' added for memory address {:04x}\n", label, addr);
+		if (line[index] != ' ') {
+			throw std::invalid_argument("Invalid number");
 		}
+		auto label = line.substr(index);
+		label = stripLeadingSpaces(label);
+		label = stripTrailingSpaces(label);
+	
+		addLabel(addr, label);
+		fmt::print("Label '{}' added for memory address {:04x}\n", label, addr);
 	}
 	catch(...) {
 		fmt::print("Parse error: {}\n", line);
