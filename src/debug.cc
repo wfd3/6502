@@ -972,13 +972,12 @@ int CPU::resetListPCCmd(std::string &line,
 }
 
 
-int CPU::memdumpCmd(std::string &line,
-		    [[maybe_unused]] uint64_t &returnValue) {
-	std::regex pattern1(R"((\w+))");	
-    std::regex pattern2(R"((\w+)=([0-9a-fA-F]+))");
-    std::regex pattern3(R"((\w+):(\w+))");
-    std::regex pattern4(R"((\w+):(\w+):([0-9a-fA-F]+))");
-    std::regex pattern5(R"((\w+):(\w+)=([0-9a-fA-F]+))");
+int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+	std::regex pattern1(R"((\w+))");					  // xxxx	
+    std::regex pattern2(R"((\w+)=([0-9a-fA-F]+))"); 	  // xxxx=zz
+    std::regex pattern3(R"((\w+):(\w+))");				  // xxxx:yyyy
+    std::regex pattern4(R"((\w+):(\w+):([0-9a-fA-F]+))"); // xxxx:yyyy:ff
+    std::regex pattern5(R"((\w+):(\w+)=([0-9a-fA-F]+))"); // xxxx:yyyy=zz
     std::smatch matches;
 	Word addr1, addr2, value;	
 
