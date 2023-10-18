@@ -554,8 +554,10 @@ private:
 	void showLabels();
 	void addLabel(Word, const std::string);
 	std::string addressLabel(const Word);
+	std::string addressLabelSearch(const Word, const int8_t searchWidth = 3);
 	bool labelAddress(const std::string&, Word&);
 	void removeLabel(const Word);
 	bool lookupAddress(const std::string&, Word&);
 	bool parseCommandFile(const std::string&);
+	std::string getLabelByte(const uint8_t);
 };	

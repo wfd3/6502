@@ -24,6 +24,7 @@
 #include <cstdarg>
 #include <algorithm>
 #include <vector>
+#include <list>
 #include <cstdarg>
 #include <regex>
 
@@ -309,8 +310,8 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 
 	case ADDR_MODE_ZP:  // $xx
 		byteval = readByteAtPC();
-		label = addressLabel(byteval);
-		addr = fmt::format("${:04x}", byteval);
+		label = addressLabelSearch(byteval);
+		addr = fmt::format("${:02x}", byteval);
 	
 		if (!label.empty()) {
 			disassembly = label;
@@ -324,7 +325,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 
 	case ADDR_MODE_ZPX:  // $xx,X
 		byteval = readByteAtPC();
-		label = addressLabel(byteval);
+		label = addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
 
 		if (!label.empty()) {
@@ -342,7 +343,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 
 	case ADDR_MODE_ZPY:  // $xx,Y
 		byteval = readByteAtPC();
-		label = addressLabel(byteval);
+		label = addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
 		if (!label.empty()) {
 			disassembly = label;
@@ -359,14 +360,17 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 
 	case ADDR_MODE_REL:
 		rel = SByte(readByteAtPC());
-		computedAddr = fmt::format("${:04x}", PC + rel);
+		wordval = PC + rel;
+		addr = fmt::format("${:04x}", wordval);
+		label = addressLabel(wordval);
 
-		disassembly = "";
-		if (rel < 0) {
-			disassembly += "-";
-			rel = std::abs(rel);
-		}
-		disassembly += fmt::format("${:02x}", rel); 
+		if (!label.empty()) {
+			disassembly = label;
+			address = addr;
+		} else { 
+			disassembly = addr;
+			address = "";
+		} 
 		opcodes += fmt::format("{:02x} ", byteval);
 		break;
 
@@ -388,7 +392,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 
 	case ADDR_MODE_ABX:  // $xxxx,X
 		wordval = readWordAtPC();
-		label = addressLabel(wordval);
+		label = addressLabelSearch(wordval);
 		addr = fmt::format("${:04x}", wordval);
 		if (!label.empty())  {
 			disassembly = label;
@@ -406,8 +410,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 
 	case ADDR_MODE_ABY:  // $xxxx,Y
 		wordval = readWordAtPC();
-
-		label = addressLabel(wordval);
+		label = addressLabelSearch(wordval);
 		addr = fmt::format("${:04x}", wordval);
 		if (!label.empty()) {
 			disassembly = label;
@@ -446,7 +449,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			wordval -= 0xFF;
 		wordval = readWord(wordval);
 		
-		label = addressLabel(byteval);
+		label = addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
 		if (!label.empty())  {
 			disassembly = label;
@@ -680,12 +683,90 @@ void CPU::removeLabel(const Word address) {
 
 std::string CPU::addressLabel(const Word address) {
 	std::string label;
-
+	
 	auto it = addrToLabel.find(address);
 	if (it != addrToLabel.end()) 
 		label += fmt::format("{}", it->second);
+	
 	return label;
 }
+
+std::unordered_map<Word, std::string> addrToLabel;
+std::list<Word> recentAddresses;  // Cache for recent addresses
+const size_t cacheSize = 10; // Adjust the cache size as neede
+std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth) {
+	std::string label;
+
+    label = addressLabel(address);
+    if (!label.empty())  {
+		recentAddresses.remove(address);
+        recentAddresses.push_back(address);
+        return label;
+    }
+
+    int16_t offset;
+    bool found = false;
+    auto it = recentAddresses.rbegin(); 
+  	for (offset = 1; offset <= searchWidth && !found; ++offset) {
+    	it = std::find_if(recentAddresses.rbegin(), recentAddresses.rend(),
+        	[&](Word addr) { return addr == address + offset || addr == address - offset; });
+       	if (it != recentAddresses.rend()) {
+			found = true;
+			break;
+        }
+	}
+
+    if (found) {
+        label = fmt::format("{}{:+}", addressLabel(*it), offset);
+		recentAddresses.remove(*it);
+        recentAddresses.push_back(*it);
+    } else {
+        label = fmt::format("{:x}", address);
+    }
+
+    // Ensure the cache does not exceed its size
+    if (recentAddresses.size() >= cacheSize) {
+        recentAddresses.pop_front();
+    }
+
+    return label;
+}
+
+#if 0
+std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth) {
+	std::string label;
+
+	label = addressLabel(address);
+	if (!label.empty())  
+		return label;
+
+	// TODO:
+	// Save last N labels found.  When given an address, find the previous label who's
+	// address is closest to the current address.  Use that label as base for "label+n" 
+	// syntax
+	int16_t offset;
+	bool found = false;
+	auto it = addrToLabel.end(); 
+	for (offset = 1; offset <= searchWidth && it == addrToLabel.end(); offset++) {
+		it = addrToLabel.find(address + offset);
+		if (it != addrToLabel.end()) {
+			found = true;
+			break;
+		}
+		it = addrToLabel.find(address - offset);
+		if (it != addrToLabel.end()) {
+			offset *= -1;
+			found = true;
+			break;
+		}
+	}
+	
+	if (found) 
+		label = fmt::format("{}{:+}", it->second, offset);
+		
+	return label;
+}
+#endif
 
 bool CPU::labelAddress(const std::string& label, Word& address) {
 	auto it = labelToAddr.find(label);
@@ -1029,80 +1110,7 @@ int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 	fmt::print("Parse error: '{}'\n", line);
 	return ACTION_CONTINUE;
 }
-#if 0
-	Word addr1, addr2;
-	Word value;		
-	char equal, colon;
-	std::string s1, s2;
-	
-	auto s = stripSpaces(line);
-	std::istringstream iss(s);
 
-	auto rangeCheckAddr = [](Word a) {
-		return a <= MAX_MEM;
-	};
-
-	auto rangeCheckValue =[](Word v) {
-		return v <= 0xff;
-	};
-		
-	// xxxx
-	iss.seekg(0);
-	iss >> s1;
-	if (!iss.fail() && iss.eof() && lookupAddress(s1, addr1) && rangeCheckAddr(addr1)) {
-		fmt::print("[{:04x}] {:02x}\n", addr1, mem.Read(addr1));
-		return ACTION_CONTINUE;
-	}
-
-	// xxxx=val
-	iss.seekg(0);
-	iss >> std::hex >> addr1 >> equal >> std::hex >> value;
-	if (!iss.fail() && iss.eof() && equal == '=' &&
-	    rangeCheckAddr(addr1) && rangeCheckValue(value)) {
-		Byte oldval = mem.Read(addr1);
-		mem.Write(addr1, (Byte) value);
-		 fmt::print("[{:04x}] {:02x} -> {:02x}\n",
-			    addr1, oldval, (Byte) value);
-		return ACTION_CONTINUE;
-	}
-
-	// xxxx:yyyy
-	iss.seekg(0);
-	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2;
-	if (!iss.fail() && iss.eof() && colon == ':' &&
-	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
-		mem.hexdump(addr1, addr2);
-		return ACTION_CONTINUE;;
-	}
-
-	// xxxx:yyyy:ff
-	iss.seekg(0);
-	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> colon
-	    >> std::hex >> value;  // In this case, value is a filter for memdump()
-	if (!iss.fail() && iss.eof() && colon == ':' &&
-	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
-	    rangeCheckValue(value)) {
-			mem.hexdump(addr1, addr2, value);
-			return ACTION_CONTINUE;
-	}
-		
-	// xxxx:yyyy=val
-	iss.seekg(0);
-	value = 0;
-	iss >> std::hex >> addr1 >> colon >> std::hex >> addr2 >> equal
-	    >> std::hex >> value;
-	if (!iss.fail() && iss.eof() && colon == ':' && equal == '=' &&
-	    rangeCheckAddr(addr1) && rangeCheckAddr(addr2) &&
-	    rangeCheckValue(value)) {
-		for (Address_t a = addr1; a <= addr2; a++)
-			mem.Write(a, (Byte) value);
-		return ACTION_CONTINUE;
-	}
-	// Handle parsing errors
-	fmt::print("Parse error: '{}'\n", s);
-	return ACTION_CONTINUE;
-}
-#endif
 int CPU::memmapCmd([[maybe_unused]] std::string &line,
 		   [[maybe_unused]] uint64_t &returnValue) {
 	mem.printMap();
