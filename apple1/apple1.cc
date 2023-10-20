@@ -33,6 +33,7 @@ using Cell = uint8_t;
 
 // Create the memory and CPU
 Memory<Address, Cell> mem(CPU::MAX_MEM);
+
 CPU cpu(mem);
 auto pia = std::make_shared<MOS6820<Address, Cell>>();
 

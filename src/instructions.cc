@@ -275,7 +275,7 @@ void CPU::ins_cmp(Byte opcode, uint64_t &expectedCyclesToUse) {
 	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = A >= data;
 	Flags.Z = A == data;
-	Flags.N = A  < data;
+	Flags.N = data > A;
 }
 
 // CPX
@@ -285,7 +285,7 @@ void CPU::ins_cpx(Byte opcode, uint64_t &expectedCyclesToUse) {
 	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = X >= data;
 	Flags.Z = X == data;
-	Flags.N = X  < data;
+	Flags.N = data > X;
 }
 
 // CPY
@@ -295,7 +295,7 @@ void CPU::ins_cpy(Byte opcode, uint64_t &expectedCyclesToUse) {
 	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = Y >= data;
 	Flags.Z = Y == data;
-	Flags.N = Y  < data;
+	Flags.N = data > Y;
 
 }
 

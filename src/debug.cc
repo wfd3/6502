@@ -125,6 +125,9 @@ bool isHexNumber(const std::string& str) {
 bool CPU::lookupAddress(const std::string& line, Word& address) {
 	if (line.empty()) 
 		return false;
+
+	if (labelAddress(line, address)) 
+		return true;
 	
 	if (isHexNumber(line)) {
 		try {
@@ -137,13 +140,7 @@ bool CPU::lookupAddress(const std::string& line, Word& address) {
 		}
 	}
 
-	// see if line contains a label.
-	if (!labelAddress(line, address)) {
-		fmt::print("No label '{}'\n", line);
-		return false;
-	}
-	
-	return true;
+	return false;
 }
 
 #ifdef __linux__
@@ -320,7 +317,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			disassembly = addr;
 			address = "";
 		}
-		opcodes += fmt::format("{:04x} ", byteval);
+		opcodes += fmt::format("{:02x} ", byteval);
 		break;
 
 	case ADDR_MODE_ZPX:  // $xx,X
@@ -336,7 +333,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			address = "";
 		}
 		disassembly += ",X";
-		opcodes += fmt::format("{:04x} ", byteval);
+		opcodes += fmt::format("{:02x} ", byteval);
 		if (atPC) 
 			computedAddr = fmt::format("${:04x}", byteval + X);
 		break;
@@ -353,7 +350,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			address = "";
 		}
 		disassembly += ",Y";
-		opcodes += fmt::format("{:04x} ", byteval);
+		opcodes += fmt::format("{:02x} ", byteval);
 		if (atPC) 
 			computedAddr = fmt::format("${:04x}", byteval + Y);
 		break;
@@ -732,42 +729,6 @@ std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth
     return label;
 }
 
-#if 0
-std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth) {
-	std::string label;
-
-	label = addressLabel(address);
-	if (!label.empty())  
-		return label;
-
-	// TODO:
-	// Save last N labels found.  When given an address, find the previous label who's
-	// address is closest to the current address.  Use that label as base for "label+n" 
-	// syntax
-	int16_t offset;
-	bool found = false;
-	auto it = addrToLabel.end(); 
-	for (offset = 1; offset <= searchWidth && it == addrToLabel.end(); offset++) {
-		it = addrToLabel.find(address + offset);
-		if (it != addrToLabel.end()) {
-			found = true;
-			break;
-		}
-		it = addrToLabel.find(address - offset);
-		if (it != addrToLabel.end()) {
-			offset *= -1;
-			found = true;
-			break;
-		}
-	}
-	
-	if (found) 
-		label = fmt::format("{}{:+}", it->second, offset);
-		
-	return label;
-}
-#endif
-
 bool CPU::labelAddress(const std::string& label, Word& address) {
 	auto it = labelToAddr.find(label);
 	if (it == labelToAddr.end()) 
@@ -1056,12 +1017,23 @@ int CPU::resetListPCCmd(std::string &line,
 
 
 int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
-	std::regex pattern1(R"((\w+))");					  // xxxx	
-    std::regex pattern2(R"((\w+)=([0-9a-fA-F]+))"); 	  // xxxx=zz
-    std::regex pattern3(R"((\w+):(\w+))");				  // xxxx:yyyy
-    std::regex pattern4(R"((\w+):(\w+):([0-9a-fA-F]+))"); // xxxx:yyyy:ff
-    std::regex pattern5(R"((\w+):(\w+)=([0-9a-fA-F]+))"); // xxxx:yyyy=zz
-    std::smatch matches;
+	const std::string wordPattern   = R"((\w+))";  				// A word, like a label or identifier
+	const std::string offsetPattern = R"(([+-][0-9a-fA-F]+)?)"; // Optional offset, positive or negative, in hexadecimal
+	const std::string valuePattern  = R"(([0-9a-fA-F]+))";  	// A value, in hexadecimal
+//	const std::string expressionPattern = R"((?:[+\-&|^%/*][\dA-Fa-f]+)+)";
+	
+	const std::string expressionPattern = R"((:?([+\-&|^%/*]?\w+)+))";
+
+	const std::string assignmentPattern = wordPattern + offsetPattern + "=" + valuePattern;  
+	const std::string rangePattern = wordPattern + offsetPattern + ":" + wordPattern + offsetPattern; 
+
+    std::regex labelWithOptionalOffsetR(wordPattern + offsetPattern);       // xxxx[+/-offset]
+	std::regex assignValueToLabelR     (assignmentPattern); 				// xxxx[+/-offset]=zz 
+	std::regex rangeBetweenLabelsR     (rangePattern);                      // xxxx[+/-offset]:yyyy[+/-offset]
+	std::regex filterRangeWithValueR   (rangePattern + ":" + expressionPattern); // xxxx[+/-offset]:yyyy[+/-offset]:zz
+	std::regex assignValueToRangeR     (rangePattern + "=" + valuePattern); // xxxx[+/-offset]:yyyy[+/-offset]=zz
+
+	std::smatch matches;
 	Word addr1, addr2, value;	
 
 	auto rangeCheckAddr = [](Word a) {
@@ -1071,36 +1043,58 @@ int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 	auto rangeCheckValue =[](Word v) {
 		return v <= 0xff;
 	};
+
+	auto calculateAddress = [this](const std::smatch& m, Word& address1, Word& address2, bool isRange) {
+        if (!lookupAddress(m[1].str(), address1)) 
+			return false;
+			
+		if (m[2].matched) {
+			int offset = std::stoi(m[2].str(), nullptr, 16); 
+			address1 += offset; 
+		}
+
+		if (isRange) {
+			if (!lookupAddress(m[3].str(), address2)) 
+				return false;
+			if (m[4].matched) {
+				int offset = std::stoi(m[4].str(), nullptr, 16);
+				address2 += offset; 
+			}
+		}
 		
-    if (std::regex_match(line, matches, pattern1) && matches.size() == 2) {
-		if (lookupAddress(matches[1], addr1) && rangeCheckAddr(addr1)) {
+		return true;
+	};
+
+    if (std::regex_match(line, matches, labelWithOptionalOffsetR) && matches.size() > 1) {
+		if (calculateAddress(matches, addr1, addr2, false) && rangeCheckAddr(addr1)) {
 			fmt::print("[{:04x}] {:02x}\n", addr1, mem.Read(addr1));
 			return ACTION_CONTINUE;
 		}
-    } else if (std::regex_match(line, matches, pattern2) && matches.size() == 3) {
-		value = std::stoul(matches[2], nullptr, 16);
-		if (lookupAddress(matches[1], addr1) && rangeCheckAddr(addr1) && rangeCheckValue(value)) {
+    } else if (std::regex_match(line, matches, assignValueToLabelR) && matches.size() > 3) {
+		value = std::stoul(matches[3], nullptr, 16);
+		if (calculateAddress(matches, addr1, addr2, false) && rangeCheckAddr(addr1) && rangeCheckValue(value)) {
 			Byte oldval = mem.Read(addr1);
 			mem.Write(addr1, (Byte) value);
 			fmt::print("[{:04x}] {:02x} -> {:02x}\n", addr1, oldval, (Byte) value);
 			return ACTION_CONTINUE;
 		}
-    } else if (std::regex_match(line, matches, pattern3) && matches.size() == 3) {
-		if (lookupAddress(matches[1], addr1) && lookupAddress(matches[2], addr2) && 
+    } else if (std::regex_match(line, matches, rangeBetweenLabelsR) && matches.size() > 2) {
+		if (calculateAddress(matches, addr1, addr2, true) && 
 			rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
 			mem.hexdump(addr1, addr2);
-			return ACTION_CONTINUE;;
-		}
-    } else if (std::regex_match(line, matches, pattern4) && matches.size() == 4) {
-        value = std::stoul(matches[3], nullptr, 16);
-		if (lookupAddress(matches[1], addr1) && lookupAddress(matches[2], addr2) && 
-			rangeCheckAddr(addr1) && rangeCheckAddr(addr2) && rangeCheckValue(value)) {
-			mem.hexdump(addr1, addr2, value);
 			return ACTION_CONTINUE;
 		}
-    } else if (std::regex_match(line, matches, pattern5) && matches.size() == 4) {
-        value = std::stoul(matches[3], nullptr, 16);
-		if (lookupAddress(matches[1], addr1) && lookupAddress(matches[2], addr2) &&
+    } else if (std::regex_match(line, matches, filterRangeWithValueR) && matches.size() > 4) {
+        auto valueExpression = matches[5].str();
+		fmt::print("valueExpression = {}\n", valueExpression);
+		if (calculateAddress(matches, addr1, addr2, true) && rangeCheckAddr(addr1) && 
+			rangeCheckAddr(addr2)) {
+			mem.hexdump(addr1, addr2, valueExpression);
+			return ACTION_CONTINUE;
+		}
+    } else if (std::regex_match(line, matches, assignValueToRangeR) && matches.size() > 4) {
+        value = std::stoul(matches[5], nullptr, 16);
+		if (calculateAddress(matches, addr1, addr2, true) &&
 			rangeCheckAddr(addr1) && rangeCheckAddr(addr2) && rangeCheckValue(value)) {
 				mem.assign(addr1, addr2, (Byte) value);
 			return ACTION_CONTINUE;

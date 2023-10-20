@@ -22,6 +22,12 @@
 #include <algorithm>
 #include <fstream>
 #include <memory>
+#include <iostream>
+#include <stack>
+#include <string>
+#include <sstream>
+#include <cctype>
+#include <unordered_map>
 #include <fmt/core.h>
 
 //
@@ -444,15 +450,15 @@ public:
 		return e == _unmapped;
 	}
 
-	void hexdump(const Address start, Address end, Cell filter = 0xff) {
+	void hexdump(const Address start, Address end, std::string valueExpression = "") {
 
 		if (start > end || end > _endAddress) {
 			fmt::print("Invalid memory range\n");
 			return;
 		}
 
-		fmt::print("Memory {:#{}x}:{:#{}x} with filter {:0>{}x}\n", 
-			start, AddressWidth, end, AddressWidth, filter, CellWidth); 
+		fmt::print("Memory {:#{}x}:{:#{}x} with expression 'value {}'\n", 
+			start, AddressWidth, end, AddressWidth, valueExpression); 
 
 		int lineEnd = 16 / sizeof(Cell);
 		while (AddressWidth + 2 + (CellWidth + 1) * lineEnd + lineEnd > 80) {
@@ -476,17 +482,18 @@ public:
 			Address address = std::distance(_mem.begin(), it);
 			c = (*it)->Read(address);
 
+			c = calculateValue(valueExpression, c);
+
 			// Append hex and then ascii representation
 			hexdump += fmt::format("{:0>{}x} ", c, CellWidth);
 
 			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
-				uint8_t byte_value = (c >> (byte_idx * 8)) & filter;
+				uint8_t byte_value = (c >> (byte_idx * 8));
 				if (isascii(byte_value) && isprint(byte_value))
 					ascii += byte_value;
 				else
 					ascii += '.';
 			}
-			
 			
 			// Print the accumulated line if we're at the end of the line or
 			// the end of the memory range.
@@ -674,6 +681,60 @@ private:
 				return true;
 		}
 		return false;
+	}
+
+	Cell calculateValue(const std::string& expression, Cell initialValue) {
+		std::vector<int64_t> values;
+		std::vector<char> ops;
+
+		auto applyOp = [&]() {
+			int64_t right = values.back(); values.pop_back();
+			int64_t left = values.back(); values.pop_back();
+			char op = ops.back(); ops.pop_back();
+			switch(op) {
+				case '+': values.push_back(left + right); break;
+				case '-': values.push_back(left - right); break;
+				case '*': values.push_back(left * right); break;
+				case '/': values.push_back(left / right); break; // Consider adding zero division check
+				case '%': values.push_back(left % right); break; // Consider adding zero division check
+				case '&': values.push_back(left & right); break;
+				case '|': values.push_back(left | right); break;
+				case '^': values.push_back(left ^ right); break;
+			}
+		};
+
+		auto precedence = [](char op) -> int {
+			switch(op) {
+				case '+': case '-': return 1;
+				case '*': case '/': case '%': return 2;
+				case '&': return 3;
+				case '^': return 4;
+				case '|': return 5;
+				default: return 0;
+			}
+		};
+
+		std::istringstream stream(expression);
+		char op;
+		int64_t num;
+		stream >> op >> std::hex >> num; // Read the first operator and number, assuming it's always formatted this way
+		values.push_back(initialValue);
+		ops.push_back(op);
+		values.push_back(num);
+
+		while (stream >> op >> std::hex >> num) {
+			while (!ops.empty() && precedence(op) <= precedence(ops.back())) {
+				applyOp();
+			}
+			values.push_back(num);
+			ops.push_back(op);
+		}
+
+		while (!ops.empty()) {
+			applyOp();
+		}
+
+		return values.front();
 	}
 
 	void exception(const std::string &message) {
