@@ -217,6 +217,8 @@ public:
 		return _addresses;
 	}
 
+	virtual std::string type() const override { return "MemMappedDevice"; }
+
 protected:
 	std::set<Address> _addresses;
 };
@@ -393,15 +395,29 @@ public:
 			return false;
 		}
 
+		if (start + rom.size() - 1 > _endAddress) {
+			auto s = fmt::format("ROM will not fit into memory at "
+					     "start address {:#{}x} (data "
+					     "length {} bytes)",
+					     start, AddressWidth, rom.size());
+			exception(s);
+		}
+
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = _mem.begin() + rom.size();
 		unsigned long i = 0;
 
-		for (auto it = startIdx; it != endIdx; it++, i++) {
+		for (auto it = startIdx; it != endIdx && it != _mem.end(); it++, i++) {
 			(*it) = std::make_shared<::ROM<Address,Cell>>(rom[i]);
 		}
 
 		return true;
+	}
+
+	bool mapROM(const Address start, const Address end, const bool overwriteExistingElements = true) {
+		std::size_t size = end - start + 1;
+    	std::vector<Cell> v(size, Cell(0));
+		return mapROM(start, v, overwriteExistingElements);
 	}
 	
 	bool mapMIO(const Address address,
@@ -531,7 +547,7 @@ public:
 				Address end = (Address) std::distance(_mem.begin(), it);
 				auto type = (*it)->type();
 
-				fmt::print("{:#{}x} - {:#x} {} ({} bytes)\n",
+				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n",
 					   start, AddressWidth, end, AddressWidth, type, bytes);
 
 				range_start = next_it;
@@ -540,44 +556,27 @@ public:
 			it = next_it;
 		}
 		
-		fmt::print("Total bytes mapped: {} bytes\n", mappedBytes);
-		fmt::print("Total memory size : {} bytes\n", _mem.size());
+		fmt::print("Total bytes mapped:   {} bytes\n", mappedBytes);
+		fmt::print("Total memory size :   {} bytes\n", _mem.size());
 	}
 
 	// Loading data into memory
 
 	void loadDataFromFile(const char *filename, Address start) {
 
-		std::ifstream file(filename, std::ios::binary);
-
-		file.unsetf(std::ios::skipws);
-		
-		std::streampos fileSize;
-		
-		file.seekg(0, std::ios::end);
-		fileSize = file.tellg();
-		file.seekg(0, std::ios::beg);
-
-		if (fileSize == -1) {
-			auto s = fmt::format("File {} not found", filename);
-			exception(s);
-		}
-		
-		// reserve capacity
-		std::vector<Cell> vec;
-		vec.reserve(fileSize);
-		
-		// read the data
-		vec.insert(vec.begin(),
-			   std::istream_iterator<unsigned char>(file),
-			   std::istream_iterator<unsigned char>());
+		auto vec = _loadDataFromFile(filename);
 		loadData(vec, start);
 	}
 
 	void loadDataFromFile(std::string& filename, Address start) {
 		loadDataFromFile(filename.c_str(), start);
 	}
-	
+
+	void loadRomFromFile(const char *filename, Address start) {
+		auto vec = _loadDataFromFile(filename); 
+		mapROM(start, vec);
+	}
+
 	void loadData(const std::vector<Cell> &data, const Address startAddress) {
 
 		if (startAddress > _endAddress) {
@@ -735,6 +734,28 @@ private:
 		}
 
 		return values.front();
+	}
+
+	std::vector<Cell> _loadDataFromFile(const std::string& filename) {
+		std::ifstream file(filename, std::ios::binary);
+		
+		if (!file) {
+			std::string message = "File " + filename + " not found";
+			exception(message);
+		}
+
+		file.seekg(0, std::ios::end);
+		std::streamsize size = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		std::vector<Cell> data(size/sizeof(Cell));
+
+		if (!file.read(reinterpret_cast<char*>(data.data()), size)) {
+			std::string message = "Error: Failed to read the file " + filename; 
+			exception(message);
+		}
+
+		return data;
 	}
 
 	void exception(const std::string &message) {

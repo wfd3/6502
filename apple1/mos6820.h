@@ -37,7 +37,7 @@ public:
 		return r;
 	}
 
-	std::string type() { 
+	std::string type() const override { 
         return "MOS6820"; 
     }
 

@@ -56,3 +56,28 @@ TEST_F(MOS6502JMPTests, JmpIndirect) {
 	EXPECT_EQ(cpu.PC, 0x4321);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
+
+TEST_F(MOS6502JMPTests, JmpIndirectBug) {
+	uint64_t UsedCycles, ExpectedCycles;
+	Byte ins = CPU::INS_JMP_IND;
+
+	//Given:
+	cpu.Reset(CPU::RESET_VECTOR);
+
+	// JMP ($30ff)
+	mem[0xfffc] = ins;
+	mem[0xfffd] = 0xff;
+	mem[0xfffe] = 0x30;
+
+	mem[0x3000] = 0x40;
+	mem[0x30ff] = 0x80;
+	mem[0x3100] = 0x50;
+
+	//When:
+	std::tie(UsedCycles, ExpectedCycles) =
+		cpu.executeOneInstruction();
+
+	// Then:
+	EXPECT_EQ(cpu.PC, 0x4080);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}

@@ -130,8 +130,9 @@ void CPU::ins_and(Byte opcode, uint64_t &expectedCyclesToUse) {
 void CPU::ins_asl(Byte opcode, uint64_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
+	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) {
+	if (accumulator) {
 		data = A;
 	} else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -143,7 +144,7 @@ void CPU::ins_asl(Byte opcode, uint64_t &expectedCyclesToUse) {
 	setFlagN(data);
 	setFlagZ(data);
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) {
+	if (accumulator) {
 		A = data;
 	} else {
 		writeByte(address, data);
@@ -378,14 +379,21 @@ void CPU::ins_iny([[maybe_unused]] Byte opcode,
 }
 
 // JMP
-void CPU::ins_jmp(Byte opcode, uint64_t &expectedCyclesToUse) {
-	Word address = PC;
+void CPU::ins_jmp(Byte opcode, [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+	Word address = readWord(PC);
+	bool indirect = _instructions.at(opcode).addrmode == ADDR_MODE_IND;
+	
+	if (indirect) {
+		if ((address & 0xff) == 0xff) { // JMP Indirect bug
+			Byte lsb = readByte(address);
+			Byte msb = readByte(address & 0xff00);
+			address = (msb << 8) | lsb;
+		} else {
+			address = readWord(address);
+		}
+	} 
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_IND) {
-		address = getAddress(opcode, expectedCyclesToUse);
-	}
-
-	PC = readWord(address);
+	PC = address;
 }
 
 // JSR
@@ -427,8 +435,9 @@ void CPU::ins_ldy(Byte opcode, uint64_t &expectedCyclesToUse) {
 void CPU::ins_lsr(Byte opcode, uint64_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
+	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) 
+	if (accumulator)
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -440,7 +449,7 @@ void CPU::ins_lsr(Byte opcode, uint64_t &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC)
+	if (accumulator)
 		A = data;
 	else 
 		writeByte(address, data);
@@ -475,6 +484,13 @@ void CPU::ins_pha([[maybe_unused]] Byte opcode,
 	Cycles++;		// Single byte instruction
 }
 
+// PHP
+void CPU::ins_php([[maybe_unused]] Byte opcode,
+		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+	pushPS();
+	Cycles++;		// Single byte instruction
+}
+
 // PLA
 void CPU::ins_pla([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
@@ -482,13 +498,6 @@ void CPU::ins_pla([[maybe_unused]] Byte opcode,
 	setFlagN(A);
 	setFlagZ(A);
 	Cycles += 2;      
-}
-
-// PHP
-void CPU::ins_php([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
-	pushPS();
-	Cycles++;		// Single byte instruction
 }
 
 // PLP
@@ -502,10 +511,11 @@ void CPU::ins_plp([[maybe_unused]] Byte opcode,
 void CPU::ins_rol(Byte opcode, uint64_t &expectedCyclesToUse) {
 	Word address;
 	Byte data, carry;
+	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) {
+	if (accumulator)
 		data = A;
-	} else {
+	else {
 		address = getAddress(opcode, expectedCyclesToUse);
 		data = readByte(address);
 	}
@@ -518,7 +528,7 @@ void CPU::ins_rol(Byte opcode, uint64_t &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC)
+	if (accumulator)
 		A = data;
 	else 
 		writeByte(address, data);
@@ -532,8 +542,9 @@ void CPU::ins_rol(Byte opcode, uint64_t &expectedCyclesToUse) {
 void CPU::ins_ror(Byte opcode, uint64_t &expectedCyclesToUse) {
 	Word address;
 	Byte data, zero;
+	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC) 
+	if (accumulator)
 		data = A;
 	else {
 		address = getAddress(opcode, expectedCyclesToUse);
@@ -548,7 +559,7 @@ void CPU::ins_ror(Byte opcode, uint64_t &expectedCyclesToUse) {
 	setFlagZ(data);
 	Flags.C = (zero == 1);
 
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ACC)
+	if (accumulator)
 		A = data;
 	else 
 		writeByte(address, data);

@@ -212,7 +212,6 @@ void CPU::popPS() {
 // Address decoding
 Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	Word address;
-	Byte zpaddr;
 	SByte rel;
 
 	// Add a cycle if a page boundary is crossed
@@ -233,15 +232,13 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 
 	// ZeroPage,X (with zero page wrap around)
 	case ADDR_MODE_ZPX:
-		zpaddr = readByteAtPC() + X;
-		address = zpaddr;
+		address = static_cast<Byte>(readByteAtPC() + X);
 		Cycles++;
 		break;
 
 	// ZeroPage,Y (with zero page wrap around)
 	case ADDR_MODE_ZPY:
-		zpaddr = readByteAtPC() + Y;
-		address = zpaddr;
+		address = static_cast<Byte>(readByteAtPC() + Y);
 		Cycles++;
 		break;
 
@@ -270,15 +267,10 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 		address += Y;
 		break;
 
-	// Indirect 
-	case ADDR_MODE_IND:
-		address = readWordAtPC();
-		break;
-
     // (Indirect,X) or Indexed Indirect (with zero page wrap around)
 	case ADDR_MODE_IDX:	
-		zpaddr = readByteAtPC() + X;
-		address = readWord(zpaddr);
+		address = static_cast<Byte>(readByteAtPC() + X);
+		address = readWord(address);
 		Cycles++;
 		break;
 
@@ -286,6 +278,13 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	case ADDR_MODE_IDY:
 		address = readByteAtPC();
 		address = readWord(address) + Y;
+		break;
+
+	case ADDR_MODE_IMP:
+	case ADDR_MODE_ACC:
+	case ADDR_MODE_IMM:
+	case ADDR_MODE_IND:
+		exception("Decoded address for Accumulator, Immediate or Indirect opcode");
 		break;
 
 	default:
@@ -307,7 +306,7 @@ Byte CPU::getData(Byte opcode, uint64_t &expectedCycles) {
 	// Implied and Accumulator
 	case ADDR_MODE_IMP:
 	case ADDR_MODE_ACC:
-		data = 0;
+		exception("Tried to fetch address or data for Implicit or Accumulator addressing mode");
 		break;
 
 	// Immediate mode

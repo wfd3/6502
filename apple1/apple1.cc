@@ -84,6 +84,7 @@ int main() {
 	// Keyboard and display memory-mapped IO, overwriting existing
 	// addresses.
 	mem.mapDevice(pia);
+	mem.mapROM(0xf000, 0xf0ff);
 
 	fmt::print("A Very Simple Apple I\n");
 	fmt::print("  Reset        = Control-\\\n");
@@ -99,7 +100,7 @@ int main() {
 	mem.loadData(apple1SampleProg, apple1SampleAddress);
 
 	fmt::print("# Loading wozmon at {:04x}\n", wozmonAddress);
-	mem.loadDataFromFile(WOZMON_FILE, wozmonAddress);
+	mem.loadRomFromFile(WOZMON_FILE, wozmonAddress);
 
 #ifdef APPLE_INTEGER_BASIC
 	fmt::print("# Loading Apple Integer Basic at {:04x}\n",
