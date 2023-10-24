@@ -271,33 +271,34 @@ void CPU::ins_clv([[maybe_unused]] Byte opcode,
 
 // CMP
 void CPU::ins_cmp(Byte opcode, uint64_t &expectedCyclesToUse) {
-	Byte data;
+	Byte data = getData(opcode, expectedCyclesToUse);
 
-	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = A >= data;
 	Flags.Z = A == data;
-	Flags.N = data > A;
+
+	Byte result = A - data;
+	setFlagN(result);
 }
 
 // CPX
 void CPU::ins_cpx(Byte opcode, uint64_t &expectedCyclesToUse) {
-	Byte data;
+	Byte data = getData(opcode, expectedCyclesToUse);
 
-	data = getData(opcode, expectedCyclesToUse);
 	Flags.C = X >= data;
 	Flags.Z = X == data;
-	Flags.N = data > X;
+
+	Byte result = X - data;
+	setFlagN(result);
 }
 
 // CPY
 void CPU::ins_cpy(Byte opcode, uint64_t &expectedCyclesToUse) {
-	Byte data;
-
-	data = getData(opcode, expectedCyclesToUse);
+	Byte data = getData(opcode, expectedCyclesToUse);
 	Flags.C = Y >= data;
 	Flags.Z = Y == data;
-	Flags.N = data > Y;
 
+	Byte result = Y - data;
+	setFlagN(result);
 }
 
 // DEC

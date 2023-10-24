@@ -55,7 +55,7 @@
 		// Then:
 		EXPECT_FALSE(cpu.Flags.C);
 		EXPECT_FALSE(cpu.Flags.Z);
-		EXPECT_TRUE(cpu.Flags.N);
+		EXPECT_FALSE(cpu.Flags.N);
 		EXPECT_EQ(UsedCycles, ExpectedCycles); 
 	}
 
@@ -89,8 +89,8 @@
 		cpu.Reset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
-		mem[0xFFFD] = 0xFF;
-		cpu.A = 0x0;
+		mem[0xFFFD] = 0x20;
+		cpu.A = 0x10;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -113,7 +113,7 @@
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
 		mem[0x0000] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x20;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -137,7 +137,7 @@
 		mem[0xFFFD] = 0x00;
 		cpu.X = 0x01;
 		mem[0x0001] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -161,7 +161,7 @@
 		mem[0xFFFD] = 0x00;
 		mem[0xFFFE] = 0x20;
 		mem[0x2000] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -186,7 +186,7 @@
 		mem[0xFFFE] = 0x20;
 		cpu.X = 0x01;
 		mem[0x2001] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -211,7 +211,7 @@
 		mem[0xFFFE] = 0x20;
 		cpu.X = 0xFF;
 		mem[0x210f] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -236,7 +236,7 @@
 		mem[0xFFFE] = 0x20;
 		cpu.Y = 0x01;
 		mem[0x2001] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -261,7 +261,7 @@
 		mem[0xFFFE] = 0x20;
 		cpu.Y = 0xFF;
 		mem[0x210f] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -287,7 +287,7 @@
 		mem[0x0002] = 0x01;
 		mem[0x0000] = 0x20;
 		mem[0x2001] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -313,7 +313,7 @@
 		mem[0x0002] = 0x01;
 		mem[0x0000] = 0x20;
 		mem[0x2002] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -339,7 +339,7 @@
 		mem[0x0002] = 0x10;
 		mem[0x0000] = 0x20;
 		mem[0x210F] = 0x0F;
-		cpu.A = 0xFF;
+		cpu.A = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -383,8 +383,8 @@
 		cpu.Reset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
-		mem[0xFFFD] = 0xFF;
-		cpu.X = 0x0F;
+		mem[0xFFFD] = 0xf;
+		cpu.X = 0x0e;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -427,8 +427,8 @@
 		cpu.Reset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
-		mem[0xFFFD] = 0xFF;
-		cpu.X = 0x0;
+		mem[0xFFFD] = 0x2F;
+		cpu.X = 0x1F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -451,7 +451,7 @@
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
 		mem[0x0000] = 0x0F;
-		cpu.X = 0xFF;
+		cpu.X = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -475,7 +475,7 @@
 		mem[0xFFFD] = 0x00;
 		mem[0xFFFE] = 0x20;
 		mem[0x2000] = 0x0F;
-		cpu.X = 0xFF;
+		cpu.X = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -519,8 +519,8 @@
 		cpu.Reset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
-		mem[0xFFFD] = 0xFF;
-		cpu.Y = 0x0F;
+		mem[0xFFFD] = 0xf;
+		cpu.Y = 0xe;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -563,8 +563,8 @@
 		cpu.Reset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
-		mem[0xFFFD] = 0xFF;
-		cpu.Y = 0x0;
+		mem[0xFFFD] = 0x3F;
+		cpu.Y = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -587,7 +587,7 @@
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
 		mem[0x0000] = 0x0F;
-		cpu.Y = 0xFF;
+		cpu.Y = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =
@@ -611,7 +611,7 @@
 		mem[0xFFFD] = 0x00;
 		mem[0xFFFE] = 0x20;
 		mem[0x2000] = 0x0F;
-		cpu.Y = 0xFF;
+		cpu.Y = 0x2F;
 
 		//When:
 		std::tie(UsedCycles, ExpectedCycles) =

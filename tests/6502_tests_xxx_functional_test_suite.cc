@@ -1,7 +1,14 @@
 #include <gtest/gtest.h>
 #include <6502.h>
 
+// This test takes time to run.
+// If it completes, it passed.  If it drops into the debugger with a
+// Loop Detected notice, it's failed.  To disable, comment out the next line
+#define RUN_FUNCTIONAL_TEST
+
+#ifdef RUN_FUNCTIONAL_TEST
 static const char *fileName = BINFILE_PATH "/6502_functional_test.bin";
+#endif
 
 class MOS6502XXXFunctionalTestSuite : public testing::Test {
 public:	
@@ -16,10 +23,6 @@ public:
 	}
 };
 
-// This test takes time to run.
-// If it completes, it passed.  If it drops into the debugger with a
-// Loop Detected notice, it's failed.  To disable, comment out the next line
-#define RUN_FUNCTIONAL_TEST
 
 TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 {
