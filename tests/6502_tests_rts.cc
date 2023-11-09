@@ -20,7 +20,7 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 	Byte ins = CPU::INS_RTS_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 2);
+	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 2);
 	mem[0x01FF] = 0x20;
 	mem[0x01FE] = 0x00;
 

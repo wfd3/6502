@@ -59,7 +59,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 	// When:
 
 	mem.loadData(testProgram, startAddress);
-	cpu.Reset(startAddress);
+	cpu.TestReset(startAddress);
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
@@ -78,7 +78,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 	// When:
 
 	mem.loadDataFromFile(testProgramFile, startAddress);
-	cpu.Reset(startAddress);
+	cpu.TestReset(startAddress);
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
@@ -98,7 +98,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 	// When:
 
 	mem.loadData(testProgram, startAddress);
-	cpu.Reset(startAddress);
+	cpu.TestReset(startAddress);
 
 	//Then:
 	for (unsigned long l = 0; l < sizeof(testProgram) * loops; l++) {

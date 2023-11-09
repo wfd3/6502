@@ -84,14 +84,18 @@ public:
 
 	// CPU Setup & reset
 	CPU(cMemory &);
-	void Reset(Word initialPC, Byte initialSP = INITIAL_SP);
 	void Reset();
+	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
 	void setResetVector(Word);
 	void setPendingReset() {
 		if (!debugMode)
 			_pendingReset = true;
 	}
 	bool inReset() { return _inReset; }
+
+	void setupFunction(void (*func)(void)) {
+		_setupFunction = func;
+	}
 
 	void setInterruptVector(Word);
 	void raiseIRQ() { _pendingIRQ = true; }
@@ -121,8 +125,10 @@ private:
 	std::atomic_bool _pendingIRQ = false;
 	std::atomic_bool _pendingNMI = false;
 	bool _hitException = false;
-	Word pendingResetPC = 0;
-	Byte pendingResetSP = INITIAL_SP;
+	Word testResetPC = 0;
+	Byte testResetSP = INITIAL_SP;
+	bool _testReset = false;
+	void (*_setupFunction)(void);
 
 	Address_t _exitAddress = 0;
 	bool _exitAddressSet = false;
@@ -529,6 +535,13 @@ private:
 	int findCmd(std::string &, uint64_t &);
 	int clockCmd(std::string &, uint64_t &);
 	int loadcmdCmd(std::string &, uint64_t &);
+	int savememCmd(std::string &, uint64_t &);
+	int loadhexCmd(std::string &, uint64_t &);
+
+	// Hex file
+	bool loadHexFile(const std::string&);
+	bool saveToHexFile(const std::string&, const std::vector<std::pair<Word, Word>>&);
+	bool saveToHexFile(const std::string&, Word startAddress, Word);
 
 	// Breakpoints
 	std::vector<bool> breakpoints;

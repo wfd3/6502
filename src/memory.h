@@ -126,8 +126,6 @@ public:
 	using readfn_t  = Cell (*)(void);
 	using writefn_t = void (*)(Cell);
 
-//	MIO() {	}
-
 	MIO(readfn_t readfn = nullptr, writefn_t writefn = nullptr) :
 		_readfn(readfn), _writefn(writefn) { }
 	
@@ -174,7 +172,7 @@ public:
 	virtual void disable()      { _active = false; }
 	virtual bool isActive()     { return _active ; }
 	
-	#if 0
+#if 0
 	// TODO: Fix this.
 	// When the Bus class runs these by directly calling b->setup(), make them virtual functions.
 	// Until then, just leave these ifdef'd out and let MemMappedDevice handle it.
@@ -183,7 +181,7 @@ public:
 	// resetting terminal settings, etc. 
 	virtual void setup() { }
 	virtual void teardown() { };
-	#endif
+#endif
 
 private:
 	bool _active = false;
@@ -302,10 +300,18 @@ public:
 					     endAddress, AddressWidth);
 			exception(s);
 		}
+		_unmapped = std::make_shared<::Element<Address, Cell>>();
+
+		Reset();
+	}
+
+	void Reset() {
+		uint64_t _size = _endAddress + 1;
+
+		_mem.clear();
 		_mem.reserve(_size);
 		_watch.reserve(_size);
 
-		_unmapped = std::make_shared<::Element<Address, Cell>>();
 		_mem.assign(_size, _unmapped);
 		_watch.assign(_size, false);
 	}
@@ -525,7 +531,6 @@ public:
 	}
 
 	void printMap() const {
-
 		auto it = _mem.begin();
 		auto range_start = it;
 		unsigned long mappedBytes = 0;
@@ -556,8 +561,8 @@ public:
 			it = next_it;
 		}
 		
-		fmt::print("Total bytes mapped:   {} bytes\n", mappedBytes);
-		fmt::print("Total memory size :   {} bytes\n", _mem.size());
+		fmt::print("Total bytes mapped:   {} bytes\n", mappedBytes * sizeof(Cell));
+		fmt::print("Total memory size :   {} bytes\n", _mem.size() * sizeof(Cell));
 	}
 
 	// Loading data into memory
@@ -652,7 +657,7 @@ public:
 private:
 	// Field widths for fmt::
 	static constexpr int AddressWidth = sizeof(Address) * 2;
-	static constexpr int CellWidth = sizeof(Cell) * 2;
+	static constexpr int CellWidth    = sizeof(Cell) * 2;
 
 	Address _endAddress; // Last address
 	std::shared_ptr<Element<Address,Cell>> _unmapped;	   // Default memory element 
@@ -694,8 +699,8 @@ private:
 				case '+': values.push_back(left + right); break;
 				case '-': values.push_back(left - right); break;
 				case '*': values.push_back(left * right); break;
-				case '/': values.push_back(left / right); break; // Consider adding zero division check
-				case '%': values.push_back(left % right); break; // Consider adding zero division check
+				case '/': values.push_back(left / right); break; // Add zero division check
+				case '%': values.push_back(left % right); break; // Add zero division check
 				case '&': values.push_back(left & right); break;
 				case '|': values.push_back(left | right); break;
 				case '^': values.push_back(left ^ right); break;
@@ -716,7 +721,7 @@ private:
 		std::istringstream stream(expression);
 		char op;
 		int64_t num;
-		stream >> op >> std::hex >> num; // Read the first operator and number, assuming it's always formatted this way
+		stream >> op >> std::hex >> num;
 		values.push_back(initialValue);
 		ops.push_back(op);
 		values.push_back(num);

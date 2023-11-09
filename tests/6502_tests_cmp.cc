@@ -20,7 +20,7 @@
 		Byte ins = CPU::INS_CMP_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);
+		cpu.TestReset(CPU::RESET_VECTOR);
 		
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x20;
@@ -42,7 +42,7 @@
 		Byte ins = CPU::INS_CMP_IMM;
 
 		//Given:
-			cpu.Reset(CPU::RESET_VECTOR);	
+			cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0xFF;
@@ -64,7 +64,7 @@
 		Byte ins = CPU::INS_CMP_IMM;
 
 		//Given:
-			cpu.Reset(CPU::RESET_VECTOR);	
+			cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0xFF;
@@ -86,7 +86,7 @@
 		Byte ins = CPU::INS_CMP_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x20;
@@ -108,7 +108,7 @@
 		Byte ins = CPU::INS_CMP_ZP;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -131,7 +131,7 @@
 		Byte ins = CPU::INS_CMP_ZPX;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -155,7 +155,7 @@
 		Byte ins = CPU::INS_CMP_ABS;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -179,7 +179,7 @@
 		Byte ins = CPU::INS_CMP_ABX;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -204,7 +204,7 @@
 		Byte ins = CPU::INS_CMP_ABX;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x10;
@@ -229,7 +229,7 @@
 		Byte ins = CPU::INS_CMP_ABY;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -254,7 +254,7 @@
 		Byte ins = CPU::INS_CMP_ABY;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x10;
@@ -279,7 +279,7 @@
 		Byte ins = CPU::INS_CMP_IDX;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x01;
@@ -305,7 +305,7 @@
 		Byte ins = CPU::INS_CMP_IDY;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x02;
@@ -331,7 +331,7 @@
 		Byte ins = CPU::INS_CMP_IDY;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x02;
@@ -358,7 +358,7 @@
 		Byte ins = CPU::INS_CPX_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x20;
@@ -380,7 +380,7 @@
 		Byte ins = CPU::INS_CPX_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0xf;
@@ -402,7 +402,7 @@
 		Byte ins = CPU::INS_CPX_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0xFF;
@@ -424,7 +424,7 @@
 		Byte ins = CPU::INS_CPX_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x2F;
@@ -446,7 +446,7 @@
 		Byte ins = CPU::INS_CPX_ZP;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -469,7 +469,7 @@
 		Byte ins = CPU::INS_CPX_ABS;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -494,7 +494,7 @@
 		Byte ins = CPU::INS_CPY_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x20;
@@ -516,7 +516,7 @@
 		Byte ins = CPU::INS_CPY_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0xf;
@@ -538,7 +538,7 @@
 		Byte ins = CPU::INS_CPY_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0xFF;
@@ -560,7 +560,7 @@
 		Byte ins = CPU::INS_CPY_IMM;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x3F;
@@ -582,7 +582,7 @@
 		Byte ins = CPU::INS_CPY_ZP;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;
@@ -605,7 +605,7 @@
 		Byte ins = CPU::INS_CPY_ABS;
 
 		//Given:
-		cpu.Reset(CPU::RESET_VECTOR);	
+		cpu.TestReset(CPU::RESET_VECTOR);	
 
 		mem[0xFFFC] = ins;
 		mem[0xFFFD] = 0x00;

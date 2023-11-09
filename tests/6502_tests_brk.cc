@@ -22,7 +22,7 @@ TEST_F(MOS6502BRKTests, BRKImplied) {
 	constexpr Word STACK_FRAME = 0x0100 | CPU::INITIAL_SP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	mem[0xFFFC] = ins;
 	mem[0xFFFE] = 0x00;
 	mem[0xFFFF] = 0x60;

@@ -20,7 +20,7 @@ TEST_F(MOS6502JSRTests, JsrAbsolute) {
 	Byte ins = CPU::INS_JSR_ABS;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x21;

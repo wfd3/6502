@@ -21,7 +21,7 @@ TEST_F(MOS6502ASLTests, AslAccumulator) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -45,7 +45,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
 	Byte data = 0b10000001;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -69,7 +69,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
 	Byte data = 0b01000001;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -93,7 +93,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
 	Byte data = 0b00000000;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -117,7 +117,7 @@ TEST_F(MOS6502ASLTests, AslZeroPage) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -142,7 +142,7 @@ TEST_F(MOS6502ASLTests, AslZeroPageX) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -168,7 +168,7 @@ TEST_F(MOS6502ASLTests, AslAbsolute) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -194,7 +194,7 @@ TEST_F(MOS6502ASLTests, AslAbsoluteX) {
 	Byte data = 0b01010101;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;

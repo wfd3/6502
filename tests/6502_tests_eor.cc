@@ -20,7 +20,7 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -43,7 +43,7 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 	Byte ins = CPU::INS_EOR_ZP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -67,7 +67,7 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 	Byte ins = CPU::INS_EOR_ZPX;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -92,7 +92,7 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 	Byte ins = CPU::INS_EOR_ABS;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -117,7 +117,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 	Byte ins = CPU::INS_EOR_ABX;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -143,7 +143,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 	Byte ins = CPU::INS_EOR_ABY;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -169,7 +169,7 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 	Byte ins = CPU::INS_EOR_IDX;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -196,7 +196,7 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 	Byte ins = CPU::INS_EOR_IDY;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -224,7 +224,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -247,7 +247,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
 	Byte ins = CPU::INS_EOR_IMM;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;

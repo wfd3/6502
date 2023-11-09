@@ -74,9 +74,8 @@ constexpr Address_t apple1SampleAddress = 0x0000;
 std::vector<unsigned char> apple1SampleProg =
 	{ 0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00 };
 
-//////////
-// Let's pretend to be an Apple1
-int main() {
+// Called by CPU::Reset();
+void setup(){
 
 	// Map 64k of RAM, making this one hefty Apple 1
 	mem.mapRAM(0x0000, 0xffff);
@@ -85,13 +84,6 @@ int main() {
 	// addresses.
 	mem.mapDevice(pia);
 	mem.mapROM(0xf000, 0xf0ff);
-
-	fmt::print("A Very Simple Apple I\n");
-	fmt::print("  Reset        = Control-\\\n");
-	fmt::print("  Clear screen = Control-^\n");
-	fmt::print("  Debugger     = Control-]\n");
-	fmt::print("  Quit         = Control-minus\n");
-	fmt::print("\n");
 
 	// Load Wozmon, Apple Basic or Applesoft Basic Lite and the
 	// Apple 1 sample program
@@ -103,7 +95,7 @@ int main() {
 	mem.loadRomFromFile(WOZMON_FILE, wozmonAddress);
 
 #ifdef APPLE_INTEGER_BASIC
-	fmt::print("# Loading Apple Integer Basic at {:04x}\n",
+	fmt::print("# Loading Apple I Basic at {:04x}\n",
 		appleBasicAddress);
 	mem.loadDataFromFile(APPLESOFT_BASIC_FILE, appleBasicAddress);
 #endif
@@ -114,13 +106,27 @@ int main() {
 	mem.loadDataFromFile(APPLE_INTEGER_BASIC_FILE,
 		applesoftBasicLiteAddress);
 #endif
+}
+
+//////////
+// Let's pretend to be an Apple1
+int main() {
+
+	
+	fmt::print("A Very Simple Apple I\n");
+	fmt::print("  Reset        = Control-\\\n");
+	fmt::print("  Clear screen = Control-^\n");
+	fmt::print("  Debugger     = Control-]\n");
+	fmt::print("  Quit         = Control-minus\n");
+	fmt::print("\n");
+
+	MOS6820<Address, Cell>::setup();	// Set the keyboard non-blocking
 
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(&MOS6820<Address, Cell>::teardown, &MOS6820<Address, Cell>::setup);
 
-	MOS6820<Address, Cell>::setup();	// Set the keyboard non-blocking
-
+	cpu.setupFunction(setup);
 	cpu.Cycles.enableTimingEmulation();
 	cpu.Reset();	    // Exit the CPU from reset
 

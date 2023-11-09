@@ -19,7 +19,7 @@ TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLC_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:
@@ -38,7 +38,7 @@ TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SEC_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:
@@ -57,7 +57,7 @@ TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLD_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:
@@ -76,7 +76,7 @@ TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SED_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:
@@ -95,7 +95,7 @@ TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLI_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:
@@ -114,7 +114,7 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_SEI_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:
@@ -134,7 +134,7 @@ TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_CLV_IMP;
 
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	// Given:

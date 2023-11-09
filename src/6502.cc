@@ -38,9 +38,18 @@ void CPU::setInterruptVector(Word address) {
 }
 
 void CPU::exitReset() {
-	SP = pendingResetSP;
-	PC = pendingResetPC;
+	if (_setupFunction)
+		_setupFunction();
 
+	if (_testReset) {
+		SP = testResetSP;
+		PC = testResetPC;
+	} else { 
+		PC = readWord(RESET_VECTOR);
+		SP = INITIAL_SP;
+	}
+
+	_testReset = false;
 	debugMode = false;
 	debug_alwaysShowPS = false;
 
@@ -53,21 +62,21 @@ void CPU::exitReset() {
 }	
 
 // This is only intended for testing, not for emulation.
-// TODO: Change this function name and update all the 6502 tests.
-void CPU::Reset(Word initialPC, Byte initialSP)  {
+void CPU::TestReset(Word initialPC, Byte initialSP)  {
+	_inReset = false;
+	_pendingReset = true;
+	_testReset = true;
+	testResetPC = initialPC;
+	testResetSP = initialSP;
+}
+
+void CPU::Reset() {
 	if (!_inReset) {
 		_inReset = true;
 	} else {
 		_inReset = false;
 		_pendingReset = true;
-		pendingResetPC = initialPC;
-		pendingResetSP = initialSP;
-	} 
-}
-
-void CPU::Reset() {
-	Address_t resetVector = readWord(RESET_VECTOR);
-	Reset(resetVector, INITIAL_SP);
+	}
 }
 
 //////////

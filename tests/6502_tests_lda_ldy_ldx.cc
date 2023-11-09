@@ -54,7 +54,7 @@ void MOS6502LDTests::TestST(Byte ins, Word addr, Byte &reg) {
 	 
 // LDA
 TEST_F(MOS6502LDTests, LDAImmediate) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFD] = 0x0F;
@@ -62,7 +62,7 @@ TEST_F(MOS6502LDTests, LDAImmediate) {
 }
 
 TEST_F(MOS6502LDTests, LDAZeroPage) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFD] = 0x0F;
@@ -70,7 +70,7 @@ TEST_F(MOS6502LDTests, LDAZeroPage) {
 	TestLD(CPU::INS_LDA_ZP, cpu.A);
 }
 TEST_F(MOS6502LDTests, LDAZeroPageX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFD] = 0x0F;
@@ -79,7 +79,7 @@ TEST_F(MOS6502LDTests, LDAZeroPageX) {
 	TestLD(CPU::INS_LDA_ZPX, cpu.A);
 }
 TEST_F(MOS6502LDTests, LDAAbsolute) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -88,7 +88,7 @@ TEST_F(MOS6502LDTests, LDAAbsolute) {
 	TestLD(CPU::INS_LDA_ABS, cpu.A);
 }
 TEST_F(MOS6502LDTests, LDAAbsoluteX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -100,14 +100,14 @@ TEST_F(MOS6502LDTests, LDAAbsoluteX) {
 
 // LDX
 TEST_F(MOS6502LDTests, LDXImmediate) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x0F;
 	TestLD(CPU::INS_LDX_IMM, cpu.X);
 }
 TEST_F(MOS6502LDTests, LDXZeroPage) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x0F;
@@ -115,7 +115,7 @@ TEST_F(MOS6502LDTests, LDXZeroPage) {
 	TestLD(CPU::INS_LDX_ZP, cpu.X);
 }
 TEST_F(MOS6502LDTests, LDXZeroPageY) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x0F;
@@ -124,7 +124,7 @@ TEST_F(MOS6502LDTests, LDXZeroPageY) {
 	TestLD(CPU::INS_LDX_ZPY, cpu.X);
 }
 TEST_F(MOS6502LDTests, LDXAbsolute) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -133,7 +133,7 @@ TEST_F(MOS6502LDTests, LDXAbsolute) {
 	TestLD(CPU::INS_LDX_ABS, cpu.X);
 }
 TEST_F(MOS6502LDTests, LDXAbsoluteX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -145,7 +145,7 @@ TEST_F(MOS6502LDTests, LDXAbsoluteX) {
 
 // LDY
 TEST_F(MOS6502LDTests, LDYImmediate) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x0F;
@@ -153,7 +153,7 @@ TEST_F(MOS6502LDTests, LDYImmediate) {
 }
 
 TEST_F(MOS6502LDTests, LDYZeroPage) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x0F;
@@ -161,7 +161,7 @@ TEST_F(MOS6502LDTests, LDYZeroPage) {
 	TestLD(CPU::INS_LDY_ZP, cpu.Y);
 }
 TEST_F(MOS6502LDTests, LDYZeroPageX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x0F;
@@ -170,7 +170,7 @@ TEST_F(MOS6502LDTests, LDYZeroPageX) {
 	TestLD(CPU::INS_LDY_ZPX, cpu.Y);
 }
 TEST_F(MOS6502LDTests, LDYAbsolute) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -179,7 +179,7 @@ TEST_F(MOS6502LDTests, LDYAbsolute) {
 	TestLD(CPU::INS_LDY_ABS, cpu.Y);
 }
 TEST_F(MOS6502LDTests, LDYAbsoluteX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -191,7 +191,7 @@ TEST_F(MOS6502LDTests, LDYAbsoluteX) {
 
 // STA
 TEST_F(MOS6502LDTests, STAAbsolute) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -201,7 +201,7 @@ TEST_F(MOS6502LDTests, STAAbsolute) {
 }
 
 TEST_F(MOS6502LDTests, STAZeroPage) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x20;
@@ -210,7 +210,7 @@ TEST_F(MOS6502LDTests, STAZeroPage) {
 }
 
 TEST_F(MOS6502LDTests, STAZeroPageX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x20;
@@ -220,7 +220,7 @@ TEST_F(MOS6502LDTests, STAZeroPageX) {
 }
 
 TEST_F(MOS6502LDTests, STAAbsoluteX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -231,7 +231,7 @@ TEST_F(MOS6502LDTests, STAAbsoluteX) {
 }
 
 TEST_F(MOS6502LDTests, STAAbsoluteY) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -242,7 +242,7 @@ TEST_F(MOS6502LDTests, STAAbsoluteY) {
 }
 
 TEST_F(MOS6502LDTests, STAIndirectX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x10;
@@ -255,7 +255,7 @@ TEST_F(MOS6502LDTests, STAIndirectX) {
 }
 
 TEST_F(MOS6502LDTests, STAIndirectY) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -268,7 +268,7 @@ TEST_F(MOS6502LDTests, STAIndirectY) {
 
 // STX
 TEST_F(MOS6502LDTests, STXZeroPage) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x20;
@@ -277,7 +277,7 @@ TEST_F(MOS6502LDTests, STXZeroPage) {
 }
 
 TEST_F(MOS6502LDTests, STXZeroPageY) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x20;
@@ -287,7 +287,7 @@ TEST_F(MOS6502LDTests, STXZeroPageY) {
 }
 
 TEST_F(MOS6502LDTests, STXAbsolute) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;
@@ -298,7 +298,7 @@ TEST_F(MOS6502LDTests, STXAbsolute) {
 
 // STY
 TEST_F(MOS6502LDTests, STYZeroPage) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x20;
@@ -307,7 +307,7 @@ TEST_F(MOS6502LDTests, STYZeroPage) {
 }
 
 TEST_F(MOS6502LDTests, STYZeroPageX) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x20;
@@ -317,7 +317,7 @@ TEST_F(MOS6502LDTests, STYZeroPageX) {
 }
 
 TEST_F(MOS6502LDTests, STYAbsolute) {
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	
 	mem[0xFFFD] = 0x00;

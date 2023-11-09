@@ -737,6 +737,72 @@ bool CPU::labelAddress(const std::string& label, Word& address) {
 	return true;
 }
 
+//////////
+// Load and save hex files
+
+bool CPU::loadHexFile(const std::string& filename) {
+	std::ifstream inFile(filename);
+	if (!inFile) {
+		fmt::print("Error opening file: {}", filename);
+		return false;
+	}
+
+	std::string line;
+	while (std::getline(inFile, line)) {
+		std::istringstream lineStream(line);
+		Word address;
+		char colon;
+		lineStream >> std::hex >> address >> colon; // Read the address.
+		
+		uint64_t element;
+		while (lineStream >> std::hex >> element) {
+			mem[address] = static_cast<Byte>(element);
+			address++;
+		}
+	}
+
+	return true;
+}
+
+bool CPU::saveToHexFile(const std::string& filename, const std::vector<std::pair<Word, Word>>& addressRanges) {
+	std::ofstream outFile(filename);
+	if (!outFile) {
+		fmt::print("Error opening file: {}", filename);
+		return false;
+	}
+
+	for (const auto& range : addressRanges) {
+		Word startAddress = range.first;
+		Word endAddress = range.second;
+
+		if (startAddress > endAddress) {
+			fmt::print("Invalid address range: {:04x} to {:04x}", 
+				startAddress, endAddress);
+			return false;
+		}
+
+		std::string out;
+		for (Word i = startAddress; i <= endAddress; i += 16) {
+			out = fmt::format("{:0>4X}: ", i);
+			for (Word j = 0; j < 16 && (i + j) <= endAddress; ++j) {
+				Byte element = mem[i+j];
+				out += fmt::format("{:02X} ", element);
+			}
+			outFile << out << '\n';
+		}
+	}
+
+	return true;
+}
+
+bool CPU::saveToHexFile(const std::string& filename, Word startAddress, Word endAddress) {
+	std::vector<std::pair<Word, Word>> range = {{startAddress, endAddress}};
+	return saveToHexFile(filename, range);
+}
+
+//////////
+// command file
+
 bool CPU::parseCommandFile(const std::string& filename) {
     std::ifstream file(filename);
     if(!file.is_open()) {
@@ -794,6 +860,9 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		{ "loadcmd",      "L",  &CPU::loadcmdCmd, true,
 		  "'load a command file <file>"
 		},
+		{ "loadhex",      "",  &CPU::loadhexCmd, true,
+		  "'load a kex file <file>"
+		},
 		{ "run",   "r",  &CPU::runCmd, false,
 		  "Run program at current Program Counter.  Optionally "
 		  "run for [x] instructions then return to debugger"
@@ -806,6 +875,9 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "xxxx' adds a breakpoint at address xxxx, 'break "
 		  "-xxxx' removes the breakpoint at address xxxx, and "
 		  "'break' alone will list active breakpoints"
+		},
+		{ "save",      "",   &CPU::savememCmd, false, 
+		  "Save memory in Wozmon format" 
 		},
 		{ "state",     "p",  &CPU::cpustateCmd, false,
 		  "Show current CPU state"},
@@ -931,6 +1003,63 @@ int CPU::runCmd(std::string &line, uint64_t &returnValue) {
 		returnValue = 1;
 	}
 	return ACTION_RETURN;
+}
+
+int CPU::loadhexCmd([[maybe_unused]] std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+	line = stripLeadingSpaces(line);
+	line = stripTrailingSpaces(line);
+
+	loadHexFile(line);
+	return ACTION_CONTINUE;
+}
+
+int CPU::savememCmd([[maybe_unused]] std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+	std::vector<std::pair<Word, Word>> ranges;
+	std::string addressRanges, filename;
+	
+	auto splitInput = [&addressRanges, &filename](const std::string& input) -> bool {
+		std::regex pattern(R"(^([\da-fA-F]{4}:[\da-fA-F]{4}(?:,[\da-fA-F]{4}:[\da-fA-F]{4})*?)\s+([^\s]+)$)");
+		std::smatch match;
+
+		if (std::regex_match(input, match, pattern)) {
+			addressRanges = match[1].str();
+			filename = match[2].str();
+			return true;
+		}
+		return false;
+	};
+
+	auto parseAddressRange = [](const std::string& r) -> std::vector<std::pair<Word, Word>> {
+    	std::vector<std::pair<Word, Word>> result;
+        std::regex pattern(R"([\da-fA-F]{4}:[\da-fA-F]{4})");
+        std::smatch match;
+        for (std::sregex_iterator it(r.begin(), r.end(), pattern); it != std::sregex_iterator(); ++it) {
+        	match = *it;
+            std::istringstream iss(match.str());
+      	  	Word start, end;
+        	char colon;
+        	if ((iss >> std::hex >> start >> colon >> end) && colon == ':') {
+           		result.push_back({start, end});
+        	} else {
+				return {};
+			}
+        }
+        return result;
+    };
+
+	if (!splitInput(line)) {
+		fmt::print("Parse error\n");
+		return ACTION_CONTINUE;
+	}
+		
+	ranges = parseAddressRange(line);
+	if (ranges.empty()) {
+		fmt::print("Parse error\n");
+		return ACTION_CONTINUE;
+	}
+
+	saveToHexFile(filename, ranges);
+	return ACTION_CONTINUE;
 }
 
 int CPU::stackCmd([[maybe_unused]] std::string &line,

@@ -20,7 +20,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 	Byte ins = CPU::INS_ORA_IMM;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -44,7 +44,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 	Byte ins = CPU::INS_ORA_IMM;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;

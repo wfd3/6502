@@ -22,7 +22,7 @@ TEST_F(MOS6502OpcodeTests, InvalidOpcodeThrowsException) {
     Byte ins = 0xff;  
 
     //Given:
-    cpu.Reset(CPU::RESET_VECTOR);
+    cpu.TestReset(CPU::RESET_VECTOR);
     mem[0xFFFC] = ins;
 
     try {

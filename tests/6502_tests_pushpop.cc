@@ -20,7 +20,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 	Byte ins = CPU::INS_PHA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.A = 0x52;
@@ -41,7 +41,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	Byte ins = CPU::INS_PLA_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
+	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
 	
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -64,7 +64,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 	Byte ins = CPU::INS_PHP_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -86,7 +86,7 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 	Byte ins = CPU::INS_PLP_IMP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
+	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
 	
 
 	mem[0xFFFC] = ins;

@@ -19,7 +19,7 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 	Byte ins = CPU::INS_BIT_ABS;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -44,7 +44,7 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -68,7 +68,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -92,7 +92,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;
@@ -116,7 +116,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
 	Byte ins = CPU::INS_BIT_ZP;
 
 	//Given:
-	cpu.Reset(CPU::RESET_VECTOR);
+	cpu.TestReset(CPU::RESET_VECTOR);
 	
 
 	mem[0xFFFC] = ins;

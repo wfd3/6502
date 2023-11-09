@@ -50,7 +50,7 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterrupt) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.Reset(0x1000);
+	cpu.TestReset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.raiseIRQ();
@@ -73,7 +73,7 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterruptDoesNotInterruptWhenIFlagSe
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.Reset(0x1000);
+	cpu.TestReset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.Flags.I = 1;
@@ -97,7 +97,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.Reset(0x1000);
+	cpu.TestReset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	EXPECT_FALSE(cpu.pendingIRQ());
@@ -122,7 +122,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterrupt) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.Reset(0x1000);
+	cpu.TestReset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 
@@ -145,7 +145,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
-	cpu.Reset(0x1000);
+	cpu.TestReset(0x1000);
 	cpu.setExitAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.Flags.I = 1;
@@ -179,7 +179,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
 
 	//Given:
 	mem.loadData(thisProgram, 0x1000);
-	cpu.Reset(0x1000);
+	cpu.TestReset(0x1000);
 	cpu.setExitAddress(0x1005);
 	cpu.setInterruptVector(0x4000);
 	mem.loadData(rtiProgram, 0x4000);
