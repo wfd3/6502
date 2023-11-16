@@ -93,7 +93,7 @@ void CPU::interrupt() {
 }
 
 bool CPU::NMI() {
-	if (_pendingNMI.load()) {
+	if (_pendingNMI) {
 		addBacktraceInterrupt(PC);
 		_IRQCount++;
 		interrupt();
@@ -105,7 +105,7 @@ bool CPU::NMI() {
 }
 
 bool CPU::IRQ() {
-	if (_pendingIRQ && Flags.I == 0) {
+	if (_pendingIRQ && !IRQBlocked()) {
 		addBacktraceInterrupt(PC);
 		_NMICount++;
 		interrupt();
@@ -138,11 +138,15 @@ bool CPU::isNegative(Byte val) {
 }
 
 void CPU::setFlagN(Byte val) {
-	Flags.N = (val & NegativeBit) != 0;
+	Flags.N = isNegative(val);
 }
 
 void CPU::setFlagZ(Byte val) {
 	Flags.Z = (val == 0);
+}
+
+bool CPU::IRQBlocked() {
+	return Flags.I == 1;
 }
 
 //////////

@@ -32,10 +32,10 @@
 
 //
 // Memory is a simple vector of Elements, where each element is a
-// storage container for a Cell.  Elements are of four different
-// types: Unmapped, RAM, ROM and MIO (memory-mapped I/O).  Unmapped
-// elements are represented by the base Element class.  RAM, ROM and
-// MIO are represented by their own derived class.
+// storage container for a Cell.  Elements are of five different
+// types: Unmapped, RAM, ROM, MIO (memory-mapped I/O) and MemMappedDevice. 
+// Unmapped elements are represented by the base Element class.  RAM, ROM, 
+// MIO and MemMappedDevice are represented by their own derived class.
 //
 // Each element is organized and accessed via the Memory class.
 // 

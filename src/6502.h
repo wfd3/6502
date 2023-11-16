@@ -159,6 +159,7 @@ private:
 	void setFlagZ(Byte);
 	void setFlagN(Byte);
 	bool isNegative(Byte);
+	bool IRQBlocked();
 
 	// Stack operations
 	void push(Byte);
@@ -379,8 +380,8 @@ private:
 	constexpr static Byte ADDR_MODE_IMP = 11; // Implied
 	constexpr static Byte ADDR_MODE_ACC = 12; // Accumulator
 
-        // How the CPU should add cycle counts on branches and when
-        // instructions fetch data across page boundries.
+    // How the CPU should add cycle counts on branches and when
+    // instructions fetch data across page boundaries.
 	constexpr static Byte NONE         = 0;
 	constexpr static Byte CYCLE_BRANCH = 1;
 	constexpr static Byte CYCLE_PAGE   = 2;
