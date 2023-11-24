@@ -32,7 +32,7 @@
 #include <fmt/core.h>
 
 #include <stdio.h>
-#ifdef __linux__
+#if defined(__linux__) || defined(__MACH__)
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <signal.h>
@@ -143,7 +143,7 @@ bool CPU::lookupAddress(const std::string& line, Word& address) {
 	return false;
 }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__MACH__)
 //////////
 // readline helpers
 void getReadline(std::string &line) {

@@ -38,8 +38,6 @@ void CPU::setInterruptVector(Word address) {
 }
 
 void CPU::exitReset() {
-	if (_setupFunction)
-		_setupFunction();
 
 	if (_testReset) {
 		SP = testResetSP;

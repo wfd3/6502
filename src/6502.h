@@ -93,10 +93,6 @@ public:
 	}
 	bool inReset() { return _inReset; }
 
-	void setupFunction(void (*func)(void)) {
-		_setupFunction = func;
-	}
-
 	void setInterruptVector(Word);
 	void raiseIRQ() { _pendingIRQ = true; }
 	void raiseNMI() { _pendingNMI = true; }
@@ -128,7 +124,6 @@ private:
 	Word testResetPC = 0;
 	Byte testResetSP = INITIAL_SP;
 	bool _testReset = false;
-	void (*_setupFunction)(void);
 
 	Address_t _exitAddress = 0;
 	bool _exitAddressSet = false;

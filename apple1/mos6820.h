@@ -1,8 +1,14 @@
 #pragma once
 #include <cstdint>
 
-#if defined(__linux__) 
+#if defined(__linux__) || defined(__MACH__)
+# ifdef __linux__
 # include <termio.h>
+# endif
+# ifdef __MACH__
+# include <termios.h>
+# include <sys/ioctl.h>
+# endif
 # include <unistd.h>
 # include <cstdio>
 #elif defined(_WIN64)
@@ -28,7 +34,7 @@ public:
 		MemMappedDevice<Address, Cell>::addAddress(KEYBOARDCR);
 	}
 
-  	Device::BusSignals housekeeping() {
+  	Device::BusSignals housekeeping() override {
         std::vector<Device::Lines> r;
 		auto d = displayHousekeeping();
         r.push_back(d);
@@ -68,7 +74,7 @@ public:
 		}
 	}	
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__MACH__)
 
     // Make the terminal non-blocking
     static void setup()
@@ -99,6 +105,10 @@ public:
 #endif
 
 private:
+
+	static std::string createCLS() {
+		return "\033[2J\033[H";
+	}
     // Apple 1 keycodes
     static constexpr char CTRL_BACKSLASH = 0x1c; // ascii 27
     static constexpr char CTRL_RBRACKET  = 0x1d; // ascii 29
@@ -106,7 +116,7 @@ private:
     static constexpr char CTRL_MINUS     = 0x1f; // ascii 31
     static constexpr char CR             = 0x0d;
     static constexpr char BELL           = 0x0a;
-    static constexpr std::string CLS     = "\033[2J\033[H";
+    static constexpr std::string CLS     = createCLS(); //"\033[2J\033[H";
     #ifdef _WIN64
     static constexpr char DEL            = '\b';
     #else
@@ -124,7 +134,7 @@ private:
         fmt::print("\033[2J\033[H");
     }
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__MACH__)
     
      bool getch(char &kbdCh) {
         int byteswaiting;

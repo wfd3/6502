@@ -43,6 +43,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     #  Also, this is a hack to make this work on Windows.
     include_directories(AFTER "..\\vcpkg\\installed\\x64-windows\\include")
 
+elseif (APPLE)
+  message(STATUS "Using MacOS compiler: ${CMAKE_CXX_COMPILER_VERSION}")
+  add_compile_options(-std=gnu++2b)
+  include_directories(AFTER "/opt/homebrew/include")
+  find_package(fmt CONFIG REQUIRED)
+
 else()
   message(STATUS "Using unknown compiler")
 

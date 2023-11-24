@@ -76,7 +76,7 @@ std::vector<unsigned char> apple1SampleProg =
 
 // Called by CPU::Reset();
 void setup(){
-
+	mem.Reset();
 	// Map 64k of RAM, making this one hefty Apple 1
 	mem.mapRAM(0x0000, 0xffff);
 
@@ -120,13 +120,13 @@ int main() {
 	fmt::print("  Quit         = Control-minus\n");
 	fmt::print("\n");
 
+	setup();
 	MOS6820<Address, Cell>::setup();	// Set the keyboard non-blocking
 
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(&MOS6820<Address, Cell>::teardown, &MOS6820<Address, Cell>::setup);
 
-	cpu.setupFunction(setup);
 	cpu.Cycles.enableTimingEmulation();
 	cpu.Reset();	    // Exit the CPU from reset
 
