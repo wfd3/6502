@@ -392,9 +392,3 @@ bool CPU::executeOne() {
 	}
 	return false;
 }
-
-void CPU::execute() {
-	while (!executeOne()) 
-		;
-}
-

@@ -93,6 +93,10 @@ public:
 	}
 	bool inReset() { return _inReset; }
 
+	void setupFunction(void (*func)(void)) {
+		_setupFunction = func;
+	}
+
 	void setInterruptVector(Word);
 	void raiseIRQ() { _pendingIRQ = true; }
 	void raiseNMI() { _pendingNMI = true; }
@@ -111,7 +115,6 @@ public:
 	// Execution
 	std::tuple<uint64_t, uint64_t> executeOneInstruction();
 	bool executeOne();
-	void execute();
 
 private:
 	// Setup & reset
@@ -124,6 +127,7 @@ private:
 	Word testResetPC = 0;
 	Byte testResetSP = INITIAL_SP;
 	bool _testReset = false;
+	void (*_setupFunction)(void);
 
 	Address_t _exitAddress = 0;
 	bool _exitAddressSet = false;

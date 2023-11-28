@@ -41,9 +41,11 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	//Then:
 	std::cout << "# This test takes about 20 seconds..." << std::endl;
 
-// Uncomment to start in debugger
-//	cpu.SetDebug(true);
-	cpu.execute();
+	// Uncomment to start in debugger
+	//cpu.SetDebug(true);
+	
+	while (!cpu.executeOne())
+		;
 
 	EXPECT_EQ(cpu.PC, exitAddress);
 #endif

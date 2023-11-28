@@ -33,6 +33,11 @@ public:
 	
 	virtual void TearDown()	{
 	}
+
+	void execute() {
+		while(!cpu.executeOne())
+			;
+	}
 };
 
 // label: dex
@@ -104,7 +109,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
 	EXPECT_FALSE(cpu.pendingNMI());
 
 	// When
-	std::thread runProgram(&CPU::execute, &cpu);
+	std::thread runProgram(&MOS6502InterruptTests_MaskableInterrupt_Test::execute, this);
 	usleep(250);
 	cpu.raiseIRQ();
 	usleep(250);
@@ -127,7 +132,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterrupt) {
 	cpu.setInterruptVector(0x4000);
 
 	// When
-	std::thread runProgram(&CPU::execute, &cpu);
+	std::thread runProgram(&MOS6502InterruptTests_MaskableInterrupt_Test::execute, this);
 	usleep(250);
 	cpu.raiseNMI();
 	usleep(250);
@@ -151,7 +156,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 	cpu.Flags.I = 1;
 
 	// When
-	std::thread runProgram(&CPU::execute, &cpu);
+	std::thread runProgram(&MOS6502InterruptTests_MaskableInterrupt_Test::execute, this);
 	usleep(250);
 	cpu.raiseNMI();
 	usleep(250);
@@ -186,7 +191,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
 
 	// When
 	cpu.raiseIRQ();
-	std::thread runProgram(&CPU::execute, &cpu);
+	std::thread runProgram(&MOS6502InterruptTests_MaskableInterrupt_Test::execute, this);
 	runProgram.join();
 
 	// Expect
