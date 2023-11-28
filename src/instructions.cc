@@ -22,7 +22,7 @@
 // Helper functions
 
 // Set PC to @address if @condition is true
-void CPU::doBranch(bool condition, Word address, uint64_t &expectedCyclesToUse) {
+void CPU::doBranch(bool condition, Word address, Cycles_t &expectedCyclesToUse) {
 	if (condition) {
 		Cycles++;	// Branch taken
 		expectedCyclesToUse++;
@@ -105,7 +105,7 @@ void CPU::doADC(Byte operand) {
 // CPU Instructions
 
 // ADC
-void CPU::ins_adc(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_adc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte operand = getData(opcode, expectedCyclesToUse);
 	
 	if (Flags.D) {
@@ -117,7 +117,7 @@ void CPU::ins_adc(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // AND
-void CPU::ins_and(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_and(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(opcode, expectedCyclesToUse);
@@ -127,7 +127,7 @@ void CPU::ins_and(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // ASL
-void CPU::ins_asl(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_asl(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
@@ -156,7 +156,7 @@ void CPU::ins_asl(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BCC
-void CPU::ins_bcc(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bcc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -164,7 +164,7 @@ void CPU::ins_bcc(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BCS
-void CPU::ins_bcs(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bcs(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -172,7 +172,7 @@ void CPU::ins_bcs(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BEQ
-void CPU::ins_beq(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_beq(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -180,7 +180,7 @@ void CPU::ins_beq(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BIT
-void CPU::ins_bit(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bit(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(opcode, expectedCyclesToUse);
@@ -190,7 +190,7 @@ void CPU::ins_bit(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BMI
-void CPU::ins_bmi(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bmi(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -198,7 +198,7 @@ void CPU::ins_bmi(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BNE
-void CPU::ins_bne(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bne(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -206,7 +206,7 @@ void CPU::ins_bne(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BPL
-void CPU::ins_bpl(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bpl(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -215,7 +215,7 @@ void CPU::ins_bpl(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // BRK
 void CPU::ins_brk([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	// push PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 	addBacktrace(PC - 1);
@@ -226,7 +226,7 @@ void CPU::ins_brk([[maybe_unused]] Byte opcode,
 }
 
 // BVC
-void CPU::ins_bvc(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bvc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -234,7 +234,7 @@ void CPU::ins_bvc(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // BVS
-void CPU::ins_bvs(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_bvs(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 
 	address = getAddress(opcode, expectedCyclesToUse);
@@ -243,34 +243,34 @@ void CPU::ins_bvs(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // CLC
 void CPU::ins_clc([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.C = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLD
 void CPU::ins_cld([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.D = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLI
 void CPU::ins_cli([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.I = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLV
 void CPU::ins_clv([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.V = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CMP
-void CPU::ins_cmp(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_cmp(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data = getData(opcode, expectedCyclesToUse);
 
 	Flags.C = A >= data;
@@ -281,7 +281,7 @@ void CPU::ins_cmp(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // CPX
-void CPU::ins_cpx(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_cpx(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data = getData(opcode, expectedCyclesToUse);
 
 	Flags.C = X >= data;
@@ -292,7 +292,7 @@ void CPU::ins_cpx(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // CPY
-void CPU::ins_cpy(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_cpy(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data = getData(opcode, expectedCyclesToUse);
 	Flags.C = Y >= data;
 	Flags.Z = Y == data;
@@ -302,7 +302,7 @@ void CPU::ins_cpy(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // DEC
-void CPU::ins_dec(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_dec(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
@@ -319,7 +319,7 @@ void CPU::ins_dec(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // DEX
 void CPU::ins_dex([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X--;
 	setFlagN(X);
 	setFlagZ(X);
@@ -328,7 +328,7 @@ void CPU::ins_dex([[maybe_unused]] Byte opcode,
 
 // DEY
 void CPU::ins_dey([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Y--;
 	setFlagN(Y);
 	setFlagZ(Y);
@@ -336,7 +336,7 @@ void CPU::ins_dey([[maybe_unused]] Byte opcode,
 }
 
 // EOR
-void CPU::ins_eor(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_eor(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(opcode, expectedCyclesToUse);
@@ -346,7 +346,7 @@ void CPU::ins_eor(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // INC
-void CPU::ins_inc(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_inc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 
@@ -363,7 +363,7 @@ void CPU::ins_inc(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // INX
 void CPU::ins_inx([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X++;
 	setFlagZ(X);
 	setFlagN(X);
@@ -372,7 +372,7 @@ void CPU::ins_inx([[maybe_unused]] Byte opcode,
 
 // INY
 void CPU::ins_iny([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Y++;
 	setFlagZ(Y);
 	setFlagN(Y);
@@ -380,7 +380,7 @@ void CPU::ins_iny([[maybe_unused]] Byte opcode,
 }
 
 // JMP
-void CPU::ins_jmp(Byte opcode, [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+void CPU::ins_jmp(Byte opcode, [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Word address = readWord(PC);
 	bool indirect = _instructions.at(opcode).addrmode == ADDR_MODE_IND;
 	
@@ -399,7 +399,7 @@ void CPU::ins_jmp(Byte opcode, [[maybe_unused]] uint64_t &expectedCyclesToUse) {
 
 // JSR
 void CPU::ins_jsr([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Word newPC;
 	
 	addBacktrace(PC - 1);
@@ -412,28 +412,28 @@ void CPU::ins_jsr([[maybe_unused]] Byte opcode,
 }
 
 // LDA
-void CPU::ins_lda(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_lda(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	A = getData(opcode, expectedCyclesToUse);
 	setFlagZ(A);
 	setFlagN(A);
 }
 
 // LDX
-void CPU::ins_ldx(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_ldx(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	X = getData(opcode, expectedCyclesToUse);
 	setFlagZ(X);
 	setFlagN(X);
 }
 
 // LDY
-void CPU::ins_ldy(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_ldy(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Y = getData(opcode, expectedCyclesToUse);
 	setFlagZ(Y);
 	setFlagN(Y);
 }
 
 // LSR
-void CPU::ins_lsr(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_lsr(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
 	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
@@ -462,14 +462,14 @@ void CPU::ins_lsr(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // NOP
 void CPU::ins_nop([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	// NOP, like all single byte instructions, takes
 	// two cycles.
 	Cycles++;
 }
 
 // ORA
-void CPU::ins_ora(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_ora(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(opcode, expectedCyclesToUse);
@@ -480,21 +480,21 @@ void CPU::ins_ora(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // PHA
 void CPU::ins_pha([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	push(A);
 	Cycles++;		// Single byte instruction
 }
 
 // PHP
 void CPU::ins_php([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	pushPS();
 	Cycles++;		// Single byte instruction
 }
 
 // PLA
 void CPU::ins_pla([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	A = pop();
 	setFlagN(A);
 	setFlagZ(A);
@@ -503,13 +503,13 @@ void CPU::ins_pla([[maybe_unused]] Byte opcode,
 
 // PLP
 void CPU::ins_plp([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	popPS();
 	Cycles += 2;
 }
 
 // ROL
-void CPU::ins_rol(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_rol(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data, carry;
 	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
@@ -540,7 +540,7 @@ void CPU::ins_rol(Byte opcode, uint64_t &expectedCyclesToUse) {
 }
 
 // ROR
-void CPU::ins_ror(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_ror(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data, zero;
 	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
@@ -572,7 +572,7 @@ void CPU::ins_ror(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // RTI
 void CPU::ins_rti([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	removeBacktrace();
 	popPS();
 	PC = popWord();
@@ -581,7 +581,7 @@ void CPU::ins_rti([[maybe_unused]] Byte opcode,
 
 // RTS
 void CPU::ins_rts([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	removeBacktrace();
 	
 	PC = popWord() + 1;
@@ -589,7 +589,7 @@ void CPU::ins_rts([[maybe_unused]] Byte opcode,
 }
 
 // SBC
-void CPU::ins_sbc(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_sbc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte operand = getData(opcode, expectedCyclesToUse);
 
 	if (Flags.D) {
@@ -602,46 +602,46 @@ void CPU::ins_sbc(Byte opcode, uint64_t &expectedCyclesToUse) {
 
 // SEC
 void CPU::ins_sec([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.C = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // SED
 void CPU::ins_sed([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.D = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // SEI
 void CPU::ins_sei([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Flags.I = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // STA
-void CPU::ins_sta(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_sta(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address = getAddress(opcode, expectedCyclesToUse);
 	writeByte(address, A);
 }
 
 // STX
-void CPU::ins_stx(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_stx(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address = getAddress(opcode, expectedCyclesToUse);
 	writeByte(address, X);
 }
 
 // STY
-void CPU::ins_sty(Byte opcode, uint64_t &expectedCyclesToUse) {
+void CPU::ins_sty(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address = getAddress(opcode, expectedCyclesToUse);
 	writeByte(address, Y);
 }
 
 // TAX
 void CPU::ins_tax([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X = A;
 	setFlagZ(X);
 	setFlagN(X);
@@ -650,7 +650,7 @@ void CPU::ins_tax([[maybe_unused]] Byte opcode,
 
 // TAY
 void CPU::ins_tay([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Y = A;
 	setFlagZ(Y);
 	setFlagN(Y);
@@ -659,7 +659,7 @@ void CPU::ins_tay([[maybe_unused]] Byte opcode,
 
 // TSX
 void CPU::ins_tsx([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X = SP;
 	setFlagZ(X);
 	setFlagN(X);
@@ -668,7 +668,7 @@ void CPU::ins_tsx([[maybe_unused]] Byte opcode,
 
 // TXA
 void CPU::ins_txa([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	A = X;
 	setFlagZ(A);
 	setFlagN(A);
@@ -677,14 +677,14 @@ void CPU::ins_txa([[maybe_unused]] Byte opcode,
 
 // TXS
 void CPU::ins_txs([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	SP = X;
 	Cycles++;
 }
 
 // TYA
 void CPU::ins_tya([[maybe_unused]] Byte opcode,
-		  [[maybe_unused]] uint64_t &expectedCyclesToUse) {
+		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	A = Y;
 	setFlagZ(A);
 	setFlagN(A);

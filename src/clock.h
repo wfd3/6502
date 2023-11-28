@@ -22,9 +22,9 @@
 #include <windows.h>
 #endif
 
-class Cycles_t {
+class Clock_t {
 public:
-Cycles_t() : _c(0), _emulateTiming(false),
+Clock_t() : _c(0), _emulateTiming(false),
 		_cycleDelay(std::chrono::nanoseconds(nsInMHz)) { } 
 
 	int64_t delayTimeNs() {

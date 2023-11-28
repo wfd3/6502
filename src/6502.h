@@ -30,12 +30,12 @@
 #include <cstdint>
 
 #include "memory.h"
-#include "clock.h"
 
 using Byte      = uint8_t;
 using SByte     = int8_t;
 using Word      = uint16_t;
 using Address_t = uint16_t;
+using Cycles_t  = uint8_t;
 using cMemory   = Memory<Address_t, Byte>;
 
 // Forward declaration with extern "C" linkage for later use as a
@@ -61,21 +61,21 @@ class CPU {
 // CPU
 ////////////////////	
 public:
-	Word PC = 0;		// Program counter
-	Byte SP = 0;		// Stack pointer
+	Word PC = 0;		 // Program counter
+	Byte SP = 0;		 // Stack pointer
 	Byte A = 0;
 	Byte X = 0;
-	Byte Y = 0;		// Registers
-	Cycles_t Cycles;	// Cycle counter
+	Byte Y = 0;		     // Registers
+	Cycles_t Cycles = 0; // Cycle counter
 	struct ProcessorStatusBits {
-		Byte C:1; 	// Carry (bit 0)
-		Byte Z:1;	// Zero (bit 1)
-		Byte I:1;	// Interrupt disable (bit 2)
-		Byte D:1;	// Decimal mode (bit 3)
-		Byte B:1;	// Break (bit 4)
-		Byte _unused:1;	// Unused (bit 5)
-		Byte V:1;	// Overflow (bit 6)
-		Byte N:1;	// Negative (bit 7)
+		Byte C:1; 	     // Carry (bit 0)
+		Byte Z:1;	     // Zero (bit 1)
+		Byte I:1;	     // Interrupt disable (bit 2)
+		Byte D:1;	     // Decimal mode (bit 3)
+		Byte B:1;	     // Break (bit 4)
+		Byte _unused:1;	 // Unused (bit 5)
+		Byte V:1;	     // Overflow (bit 6)
+		Byte N:1;	     // Negative (bit 7)
 	};
 	union {
 		Byte PS = 0;
@@ -113,7 +113,7 @@ public:
 	}
 
 	// Execution
-	std::tuple<uint64_t, uint64_t> executeOneInstruction();
+	std::tuple<Cycles_t, Cycles_t> executeOneInstruction();
 	bool executeOne();
 
 private:
@@ -137,7 +137,7 @@ private:
 
 	void exitReset();
 	// Instruction map
-	typedef void (CPU::*opfn_t)(Byte, uint64_t &);
+	typedef void (CPU::*opfn_t)(Byte, Cycles_t &);
 	struct instruction {
 		const char *name;
 	    Byte addrmode;
@@ -177,8 +177,8 @@ private:
 	Word readWord(Word);
 
 	// Address decoding
-	Word getAddress(Byte, uint64_t &);
-	Byte getData(Byte, uint64_t &);
+	Word getAddress(Byte, Cycles_t &);
+	Byte getData(Byte, Cycles_t &);
 
 	// Interrupts
 	void interrupt();
@@ -189,7 +189,7 @@ private:
 	uint64_t _BRKCount = 0;
 
 	// Helper functions
-	void doBranch(bool, Word, uint64_t &);
+	void doBranch(bool, Word, Cycles_t &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
@@ -395,62 +395,62 @@ private:
 	constexpr static Word STACK_FRAME = 0x0100;
 
 	// Instruction implementations
-	void ins_adc(Byte, uint64_t &);
-	void ins_and(Byte, uint64_t &);
-	void ins_asl(Byte, uint64_t &);
-	void ins_bcc(Byte, uint64_t &);
-	void ins_bcs(Byte, uint64_t &);
-	void ins_beq(Byte, uint64_t &);
-	void ins_bit(Byte, uint64_t &);
-	void ins_bmi(Byte, uint64_t &);
-	void ins_bne(Byte, uint64_t &);
-	void ins_bpl(Byte, uint64_t &);
-	void ins_brk(Byte, uint64_t &);
-	void ins_bvc(Byte, uint64_t &);
-	void ins_bvs(Byte, uint64_t &);
-	void ins_clc(Byte, uint64_t &);
-	void ins_cld(Byte, uint64_t &);
-	void ins_cli(Byte, uint64_t &);
-	void ins_clv(Byte, uint64_t &);
-	void ins_cmp(Byte, uint64_t &);
-	void ins_cpx(Byte, uint64_t &);
-	void ins_cpy(Byte, uint64_t &);
-	void ins_dec(Byte, uint64_t &);
-	void ins_dex(Byte, uint64_t &);
-	void ins_dey(Byte, uint64_t &);
-	void ins_eor(Byte, uint64_t &);
-	void ins_inc(Byte, uint64_t &);
-	void ins_inx(Byte, uint64_t &);
-	void ins_iny(Byte, uint64_t &);
-	void ins_jmp(Byte, uint64_t &);
-	void ins_jsr(Byte, uint64_t &);
-	void ins_lda(Byte, uint64_t &);
-	void ins_ldx(Byte, uint64_t &);
-	void ins_ldy(Byte, uint64_t &);
-	void ins_lsr(Byte, uint64_t &);
-	void ins_nop(Byte, uint64_t &);
-	void ins_ora(Byte, uint64_t &);
-	void ins_pha(Byte, uint64_t &);
-	void ins_pla(Byte, uint64_t &);
-	void ins_php(Byte, uint64_t &);
-	void ins_plp(Byte, uint64_t &);
-	void ins_rol(Byte, uint64_t &);
-	void ins_ror(Byte, uint64_t &);
-	void ins_rti(Byte, uint64_t &);
-	void ins_rts(Byte, uint64_t &);
-	void ins_sbc(Byte, uint64_t &);
-	void ins_sec(Byte, uint64_t &);
-	void ins_sed(Byte, uint64_t &);
-	void ins_sei(Byte, uint64_t &);
-	void ins_sta(Byte, uint64_t &);
-	void ins_stx(Byte, uint64_t &);
-	void ins_sty(Byte, uint64_t &);
-	void ins_tax(Byte, uint64_t &);
-	void ins_tay(Byte, uint64_t &);
-	void ins_tsx(Byte, uint64_t &);
-	void ins_txa(Byte, uint64_t &);
-	void ins_txs(Byte, uint64_t &);
-	void ins_tya(Byte, uint64_t &);
+	void ins_adc(Byte, Cycles_t &);
+	void ins_and(Byte, Cycles_t &);
+	void ins_asl(Byte, Cycles_t &);
+	void ins_bcc(Byte, Cycles_t &);
+	void ins_bcs(Byte, Cycles_t &);
+	void ins_beq(Byte, Cycles_t &);
+	void ins_bit(Byte, Cycles_t &);
+	void ins_bmi(Byte, Cycles_t &);
+	void ins_bne(Byte, Cycles_t &);
+	void ins_bpl(Byte, Cycles_t &);
+	void ins_brk(Byte, Cycles_t &);
+	void ins_bvc(Byte, Cycles_t &);
+	void ins_bvs(Byte, Cycles_t &);
+	void ins_clc(Byte, Cycles_t &);
+	void ins_cld(Byte, Cycles_t &);
+	void ins_cli(Byte, Cycles_t &);
+	void ins_clv(Byte, Cycles_t &);
+	void ins_cmp(Byte, Cycles_t &);
+	void ins_cpx(Byte, Cycles_t &);
+	void ins_cpy(Byte, Cycles_t &);
+	void ins_dec(Byte, Cycles_t &);
+	void ins_dex(Byte, Cycles_t &);
+	void ins_dey(Byte, Cycles_t &);
+	void ins_eor(Byte, Cycles_t &);
+	void ins_inc(Byte, Cycles_t &);
+	void ins_inx(Byte, Cycles_t &);
+	void ins_iny(Byte, Cycles_t &);
+	void ins_jmp(Byte, Cycles_t &);
+	void ins_jsr(Byte, Cycles_t &);
+	void ins_lda(Byte, Cycles_t &);
+	void ins_ldx(Byte, Cycles_t &);
+	void ins_ldy(Byte, Cycles_t &);
+	void ins_lsr(Byte, Cycles_t &);
+	void ins_nop(Byte, Cycles_t &);
+	void ins_ora(Byte, Cycles_t &);
+	void ins_pha(Byte, Cycles_t &);
+	void ins_pla(Byte, Cycles_t &);
+	void ins_php(Byte, Cycles_t &);
+	void ins_plp(Byte, Cycles_t &);
+	void ins_rol(Byte, Cycles_t &);
+	void ins_ror(Byte, Cycles_t &);
+	void ins_rti(Byte, Cycles_t &);
+	void ins_rts(Byte, Cycles_t &);
+	void ins_sbc(Byte, Cycles_t &);
+	void ins_sec(Byte, Cycles_t &);
+	void ins_sed(Byte, Cycles_t &);
+	void ins_sei(Byte, Cycles_t &);
+	void ins_sta(Byte, Cycles_t &);
+	void ins_stx(Byte, Cycles_t &);
+	void ins_sty(Byte, Cycles_t &);
+	void ins_tax(Byte, Cycles_t &);
+	void ins_tay(Byte, Cycles_t &);
+	void ins_tsx(Byte, Cycles_t &);
+	void ins_txa(Byte, Cycles_t &);
+	void ins_txs(Byte, Cycles_t &);
+	void ins_tya(Byte, Cycles_t &);
 
 ///////////////////////////////
 // Debugger

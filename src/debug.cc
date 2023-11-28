@@ -258,7 +258,6 @@ void CPU::printCPUState() {
 		   yesno(_inReset), yesno(_pendingReset));
 	fmt::print("| IRQs: {}, NMIs: {}, BRKs: {}\n",
 		    _IRQCount, _NMICount, _BRKCount);
-	fmt::print("| Cycle: {}\n", Cycles.get());
 }
 
 void CPU::dumpStack() {
@@ -534,9 +533,6 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
 	std::string disassembly;
 
-	bool emulatedTimings = Cycles.timingEmulation();
-	Cycles.disableTimingEmulation();
-	
 	if (dPC > MAX_MEM) {
 		fmt::print("PC at end of memory");
 		return dPC;
@@ -547,9 +543,6 @@ Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
 		fmt::print("{}\n", disassembly);
 	} while (--cnt && dPC < MAX_MEM);
 	
-	if (emulatedTimings)
-		Cycles.enableTimingEmulation();
-
 	return dPC;
 }
 
@@ -917,9 +910,6 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		},
 		{ "map",       "M",  &CPU::memmapCmd, false,
 		  "Display the current memory map"
-		},
-		{ "clock",     "",   &CPU::clockCmd, false,
-		  "Toggle CPU speed emulation"
 		},
 		{ "find",      "f",  &CPU::findCmd, false, 
 		  "Find a string sequence in memory, with optional filter"
@@ -1475,20 +1465,6 @@ int CPU::labelCmd(std::string &line,
 		fmt::print("Parse error: {}\n", line);
 	}
 	
-	return ACTION_CONTINUE;
-}
-
-int CPU::clockCmd([[maybe_unused]] std::string &line,
-	     [[maybe_unused]] uint64_t &returnValue) {
-
-	Cycles.toggleTimingEmulation();
-	fmt::print("CPU timing emulation is ");
-	if (Cycles.timingEmulation()) 
-		fmt::print("enabled, per-cycle delay is {} ns\n",
-			   Cycles.delayTimeNs());
-	else
-		fmt::print("disabled\n");
-
 	return ACTION_CONTINUE;
 }
 

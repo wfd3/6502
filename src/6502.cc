@@ -24,7 +24,6 @@ CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
 				       _instructions(setupInstructionMap()),
 				       _debugCommands(setupDebugCommands()) {
 	
-	Cycles.disableTimingEmulation();
 	_inReset = true;
 	breakpoints.assign(m.size(), false);
 }
@@ -221,7 +220,7 @@ void CPU::popPS() {
 
 //////////
 // Address decoding
-Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
+Word CPU::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 	Word address;
 	SByte rel;
 
@@ -308,7 +307,7 @@ Word CPU::getAddress(Byte opcode, uint64_t &expectedCycles) {
 	return address;
 }
 
-Byte CPU::getData(Byte opcode, uint64_t &expectedCycles) {
+Byte CPU::getData(Byte opcode, Cycles_t &expectedCycles) {
 	Byte data;
 	Word address;
 
@@ -336,10 +335,10 @@ Byte CPU::getData(Byte opcode, uint64_t &expectedCycles) {
 
 //////////
 // Instruction execution
-std::tuple<uint64_t, uint64_t> CPU::executeOneInstruction() {
+std::tuple<Cycles_t, Cycles_t> CPU::executeOneInstruction() {
 	Byte opcode;
 	Cycles_t startCycles;
-	uint64_t expectedCyclesToUse;
+	Cycles_t expectedCyclesToUse;
 	Word startPC;
 	opfn_t op;
 
@@ -388,6 +387,7 @@ bool CPU::executeOne() {
 	} else if (isPCAtExitAddress()) {
 		return true;
 	} else {
+		Cycles = 0;
 		executeOneInstruction();
 	}
 	return false;

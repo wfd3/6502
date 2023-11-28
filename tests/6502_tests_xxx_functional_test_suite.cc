@@ -35,7 +35,6 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	cpu.setResetVector(0x0400);
 	cpu.setExitAddress(exitAddress);
 	cpu.toggleLoopDetection(); // Force break on 'jmp *'
-	cpu.Cycles.disableTimingEmulation();
 	cpu.Reset();
 
 	//Then:

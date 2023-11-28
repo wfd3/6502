@@ -41,7 +41,7 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 	uint64_t UsedCycles, ExpectedCycles;
 	Byte ins = CPU::INS_AND_IMM;
 
-	auto c = cpu.Cycles.get(); 
+	auto c = cpu.Cycles; 
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);

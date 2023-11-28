@@ -127,7 +127,6 @@ int main() {
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(&MOS6820<Address, Cell>::teardown, &MOS6820<Address, Cell>::setup);
 
-	cpu.Cycles.enableTimingEmulation();
 	cpu.Reset();	    // Exit the CPU from reset
 
 	// - Execute one instruction, consume however may clock cycles that takes
