@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502LSRTests, LsrAccumulator) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_LSR_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_LSR_ACC;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -26,8 +26,7 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 	cpu.A = 0b01010101;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -37,8 +36,8 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPage) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_LSR_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_LSR_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -48,8 +47,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 	mem[0x0020] = 0b01010101;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -59,8 +57,8 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 }
 
 TEST_F(MOS6502LSRTests, LsrZeroPageX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_LSR_ZPX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_LSR_ZPX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -71,8 +69,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 	mem[0x0020] = 0b01010101;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -82,8 +79,8 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_LSR_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_LSR_ABS;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -94,8 +91,7 @@ TEST_F(MOS6502LSRTests, LsrAbsolute) {
 	mem[0x2000] = 0b01010101;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -105,8 +101,8 @@ TEST_F(MOS6502LSRTests, LsrAbsolute) {
 }
 
 TEST_F(MOS6502LSRTests, LsrAbsoluteX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_LSR_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_LSR_ABX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -118,8 +114,7 @@ TEST_F(MOS6502LSRTests, LsrAbsoluteX) {
 	mem[0x2005] = 0b01010101;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);

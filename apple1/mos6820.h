@@ -183,7 +183,7 @@ std::string v = "";
 			v += "[\\a]";
 			break;
 		default:
-            v += fmt::format("[{:c}={:x}]", c, _data);
+            v += fmt::format("[{:x}={:c}]", c, c);
 			if (c >= 0x20 && c <= 0x7e)
 				fmt::print("{:c}", toupper(c));
 		}

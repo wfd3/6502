@@ -130,7 +130,7 @@ void CPU::ins_and(Byte opcode, Cycles_t &expectedCyclesToUse) {
 void CPU::ins_asl(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
-	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
+	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
 
 	if (accumulator) {
 		data = A;
@@ -151,7 +151,7 @@ void CPU::ins_asl(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	}
 	
 	Cycles++;
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;	
 }
 
@@ -313,7 +313,7 @@ void CPU::ins_dec(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 	Cycles++;
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;
 }
 
@@ -357,7 +357,7 @@ void CPU::ins_inc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	setFlagZ(data);
 	setFlagN(data);
 	Cycles++;
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;
 }
 
@@ -382,7 +382,7 @@ void CPU::ins_iny([[maybe_unused]] Byte opcode,
 // JMP
 void CPU::ins_jmp(Byte opcode, [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Word address = readWord(PC);
-	bool indirect = _instructions.at(opcode).addrmode == ADDR_MODE_IND;
+	bool indirect = _instructions.at(opcode).addrmode == AddressingMode::Indirect;
 	
 	if (indirect) {
 		if ((address & 0xff) == 0xff) { // JMP Indirect bug
@@ -436,7 +436,7 @@ void CPU::ins_ldy(Byte opcode, Cycles_t &expectedCyclesToUse) {
 void CPU::ins_lsr(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data;
-	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
+	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
 
 	if (accumulator)
 		data = A;
@@ -456,7 +456,7 @@ void CPU::ins_lsr(Byte opcode, Cycles_t &expectedCyclesToUse) {
 		writeByte(address, data);
 
 	Cycles++;
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;	
 }
 
@@ -512,7 +512,7 @@ void CPU::ins_plp([[maybe_unused]] Byte opcode,
 void CPU::ins_rol(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data, carry;
-	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
+	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
 
 	if (accumulator)
 		data = A;
@@ -535,7 +535,7 @@ void CPU::ins_rol(Byte opcode, Cycles_t &expectedCyclesToUse) {
 		writeByte(address, data);
 
 	Cycles++;
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;
 }
 
@@ -543,7 +543,7 @@ void CPU::ins_rol(Byte opcode, Cycles_t &expectedCyclesToUse) {
 void CPU::ins_ror(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Word address;
 	Byte data, zero;
-	bool accumulator = _instructions.at(opcode).addrmode == ADDR_MODE_ACC;
+	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
 
 	if (accumulator)
 		data = A;
@@ -566,7 +566,7 @@ void CPU::ins_ror(Byte opcode, Cycles_t &expectedCyclesToUse) {
 		writeByte(address, data);
 
 	Cycles++;
-	if (_instructions.at(opcode).addrmode == ADDR_MODE_ABX)
+	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;
 }
 

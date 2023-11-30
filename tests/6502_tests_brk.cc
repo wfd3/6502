@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502BRKTests, BRKImplied) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_BRK_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_BRK_IMP;
 	Word pushed_PC = CPU::RESET_VECTOR + 2;
 	constexpr Word STACK_FRAME = 0x0100 | CPU::INITIAL_SP;
 
@@ -28,7 +28,7 @@ TEST_F(MOS6502BRKTests, BRKImplied) {
 	mem[0xFFFF] = 0x60;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x6000);

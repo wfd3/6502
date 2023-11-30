@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502JSRTests, JsrAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_JSR_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_JSR_ABS;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -27,8 +27,7 @@ TEST_F(MOS6502JSRTests, JsrAbsolute) {
 	mem[0xFFFE] = 0x43;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4321);

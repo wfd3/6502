@@ -58,7 +58,10 @@ void CPU::exitReset() {
 	Cycles += 7;		
 }	
 
-// This is only intended for testing, not for emulation.
+// This is only intended for testing, not for emulation.  It
+// allows tests to set specific starting Program Counter and
+// Stack Pointer values, and arranges for the next call to execute...() 
+// to exit the CPU from reset.
 void CPU::TestReset(Word initialPC, Byte initialSP)  {
 	_inReset = false;
 	_pendingReset = true;
@@ -67,10 +70,12 @@ void CPU::TestReset(Word initialPC, Byte initialSP)  {
 	testResetSP = initialSP;
 }
 
+// 'Asserts' the Reset line if not asserted, de-asserts the Reset line
+// if asserted. 
 void CPU::Reset() {
-	if (!_inReset) {
+	if (!_inReset) {		// Not in Reset, assert the Reset line
 		_inReset = true;
-	} else {
+	} else {				// In Reset, de-assert Reset
 		_inReset = false;
 		_pendingReset = true;
 	}
@@ -226,80 +231,81 @@ Word CPU::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 
 	// Add a cycle if a page boundary is crossed
 	auto updateCycles = [&](Byte reg) {
-		if (( _instructions.at(opcode).flags == CYCLE_PAGE) &&
+		if (( _instructions.at(opcode).flags == InstructionFlags::PageBoundary) &&
 		    ((address + reg) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
 		}
 	};
 
-	switch (_instructions.at(opcode).addrmode) {
+	auto addressMode = _instructions.at(opcode).addrmode;
+	
+	switch(addressMode) {
 
     // ZeroPage mode
-	case ADDR_MODE_ZP:
+	case AddressingMode::ZeroPage:
 		address = readByteAtPC();
 		break;
 
 	// ZeroPage,X (with zero page wrap around)
-	case ADDR_MODE_ZPX:
+	case AddressingMode::ZeroPageX:
 		address = static_cast<Byte>(readByteAtPC() + X);
 		Cycles++;
 		break;
 
 	// ZeroPage,Y (with zero page wrap around)
-	case ADDR_MODE_ZPY:
+	case AddressingMode::ZeroPageY:
 		address = static_cast<Byte>(readByteAtPC() + Y);
 		Cycles++;
 		break;
 
 	// Relative
-	case ADDR_MODE_REL:
+	case AddressingMode::Relative:
 		rel = SByte(readByteAtPC());
 		address = (Word) (PC + rel);
 		break;
 
 	// Absolute
-	case ADDR_MODE_ABS:
+	case AddressingMode::Absolute:
 		address = readWordAtPC();
 		break;
 
 	// Absolute,X 
-	case ADDR_MODE_ABX:
+	case AddressingMode::AbsoluteX:
 		address = readWordAtPC();
 		updateCycles(X);
 		address += X;
 		break;
 
 	// Absolute,Y 
-	case ADDR_MODE_ABY:
+	case AddressingMode::AbsoluteY:
 		address = readWordAtPC();
 		updateCycles(Y);
 		address += Y;
 		break;
 
     // (Indirect,X) or Indexed Indirect (with zero page wrap around)
-	case ADDR_MODE_IDX:	
+	case AddressingMode::IndirectX:	
 		address = static_cast<Byte>(readByteAtPC() + X);
 		address = readWord(address);
 		Cycles++;
 		break;
 
 	// (Indirect),Y or Indirect Indexed
-	case ADDR_MODE_IDY:
+	case AddressingMode::IndirectY:
 		address = readByteAtPC();
 		address = readWord(address) + Y;
 		break;
 
-	case ADDR_MODE_IMP:
-	case ADDR_MODE_ACC:
-	case ADDR_MODE_IMM:
-	case ADDR_MODE_IND:
+	case AddressingMode::Implied:
+	case AddressingMode::Accumulator:
+	case AddressingMode::Immediate:
+	case AddressingMode::Indirect:
 		exception("Decoded address for Accumulator, Immediate or Indirect opcode");
 		break;
 
 	default:
-		auto s = fmt::format("Invalid addressing mode: {:#04x}",
-				     _instructions.at(opcode).addrmode);
+		auto s = fmt::format("Invalid addressing mode");
 		exception(s);
 		break;
 	}
@@ -311,16 +317,18 @@ Byte CPU::getData(Byte opcode, Cycles_t &expectedCycles) {
 	Byte data;
 	Word address;
 
-	switch (_instructions.at(opcode).addrmode) {
+	auto addressMode = _instructions.at(opcode).addrmode;
+	
+	switch(addressMode) {
 
 	// Implied and Accumulator
-	case ADDR_MODE_IMP:
-	case ADDR_MODE_ACC:
+	case AddressingMode::Implied:
+	case AddressingMode::Accumulator:
 		exception("Tried to fetch address or data for Implicit or Accumulator addressing mode");
 		break;
 
 	// Immediate mode
-	case ADDR_MODE_IMM:
+	case AddressingMode::Immediate:
 		data = readByteAtPC();
 		break;
 
@@ -335,22 +343,20 @@ Byte CPU::getData(Byte opcode, Cycles_t &expectedCycles) {
 
 //////////
 // Instruction execution
-std::tuple<Cycles_t, Cycles_t> CPU::executeOneInstruction() {
+void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse) {
 	Byte opcode;
-	Cycles_t startCycles;
-	Cycles_t expectedCyclesToUse;
 	Word startPC;
 	opfn_t op;
 
 	if (_inReset)
-		return std::make_tuple(0, 0);
+		return;
 
 	if (_pendingReset) {
 		exitReset();
 	}
 	
 	startPC = PC;
-	startCycles = Cycles;
+	Cycles = 0;
 
 	opcode = readByteAtPC();
 	if (_instructions.count(opcode) == 0) {
@@ -358,14 +364,14 @@ std::tuple<Cycles_t, Cycles_t> CPU::executeOneInstruction() {
 		auto s = fmt::format("Invalid opcode {:04x} at PC {:#04x}",
 				     opcode, PC);
 		exception(s);
-		return std::make_tuple(0, 0);
+		return;
 	}
 
 	expectedCyclesToUse = _instructions.at(opcode).cycles;
 	op = _instructions.at(opcode).opfn;
 
 	(this->*op)(opcode, expectedCyclesToUse);
-	auto usedCycles = Cycles - startCycles;
+	usedCycles = Cycles;
 
 	if (debug_loopDetection && startPC == PC) {
 		fmt::print("# Loop detected at {:04x}, entering debugger\n",
@@ -377,18 +383,21 @@ std::tuple<Cycles_t, Cycles_t> CPU::executeOneInstruction() {
 	// check for a pending interrupt request.  
 	if (!NMI())
 		IRQ();
-
-	return std::make_tuple(usedCycles, expectedCyclesToUse);
 }
 
-bool CPU::executeOne() {
+bool CPU::executeOneInstruction(Cycles_t& cyclesUsed) {
 	if (debugMode || isBreakpoint(PC)) {
 		debug();
 	} else if (isPCAtExitAddress()) {
 		return true;
 	} else {
-		Cycles = 0;
-		executeOneInstruction();
+		Cycles_t expected;
+		executeOneInstructionWithCycleCount(cyclesUsed, expected);
 	}
 	return false;
+}
+
+bool CPU::executeOneInstruction() {
+	Cycles_t used;
+	return executeOneInstruction(used);
 }

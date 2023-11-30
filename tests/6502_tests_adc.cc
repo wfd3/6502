@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -27,8 +27,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -40,8 +39,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -53,8 +52,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -66,8 +64,8 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ZPX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ZPX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -80,8 +78,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -93,8 +90,8 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ABS;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -107,8 +104,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -120,8 +116,8 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ABX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -135,8 +131,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -148,8 +143,8 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ABX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -163,8 +158,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -176,8 +170,8 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ABY;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ABY;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -191,8 +185,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -204,8 +197,8 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_ABY;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_ABY;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -219,8 +212,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -232,8 +224,8 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IDX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IDX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -248,8 +240,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -261,8 +252,8 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IDY;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IDY;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -277,8 +268,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -290,8 +280,8 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IDY;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IDY;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -306,8 +296,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 	cpu.A = 0x10;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x20);
@@ -319,8 +308,8 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -332,8 +321,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x21);
@@ -345,8 +333,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -358,8 +346,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, Byte(-3));
@@ -371,8 +358,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -384,8 +371,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 	cpu.Flags.C = 1;;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, Byte(-2));
@@ -397,8 +383,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -410,8 +396,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0);
@@ -423,8 +408,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -436,8 +421,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, Byte(0xf0+0x20));
@@ -449,8 +433,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -462,8 +446,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 127);
@@ -476,8 +459,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 
 // SBC tests
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -489,8 +472,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x09 - 0x01);
@@ -502,8 +484,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -515,8 +497,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x0);
@@ -528,8 +509,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 
 }
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -541,8 +522,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, Byte(-1));
@@ -555,8 +535,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -568,8 +548,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 128);
@@ -582,8 +561,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 
 // BCD ADC tests
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -595,8 +574,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 	cpu.Flags.D = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x60);
@@ -608,8 +586,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -622,8 +600,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:n
 	EXPECT_EQ(cpu.A, 0x60 + 1);
@@ -635,8 +612,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -648,8 +625,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	cpu.Flags.D = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0);
@@ -661,8 +637,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -675,8 +651,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 	cpu.Flags.D = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x98);
@@ -690,8 +665,8 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 // BCD SBC
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -704,8 +679,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x30);
@@ -717,8 +691,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -731,8 +705,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0);
@@ -744,8 +717,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNotSet) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -758,8 +731,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0);
@@ -771,8 +743,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarrySet) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -785,8 +757,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x87);
@@ -798,8 +769,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 }
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SBC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -812,8 +783,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x99);
@@ -825,8 +795,8 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 }
 
 TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ADC_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -839,8 +809,7 @@ TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x00);
@@ -850,5 +819,3 @@ TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	EXPECT_TRUE(cpu.Flags.C);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
-
-

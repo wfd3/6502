@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502EORTests, EorImmediate) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -28,8 +28,7 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -39,8 +38,8 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 }
 
 TEST_F(MOS6502EORTests, EorZeroPage) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -52,8 +51,7 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -63,8 +61,8 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 }
 
 TEST_F(MOS6502EORTests, EorZeroPageX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_ZPX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_ZPX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -77,8 +75,7 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -88,8 +85,8 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_ABS;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -102,8 +99,7 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -113,8 +109,8 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsoluteX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_ABX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -128,8 +124,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -139,8 +134,8 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 }
 
 TEST_F(MOS6502EORTests, EorAbsoluteY) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_ABY;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_ABY;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -154,8 +149,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -165,8 +159,8 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 }
 
 TEST_F(MOS6502EORTests, EorIndirectX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_IDX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_IDX;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -181,8 +175,7 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -192,8 +185,8 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 }
 
 TEST_F(MOS6502EORTests, EorIndirectY) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_IDY;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_IDY;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -209,8 +202,7 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x01);
@@ -220,8 +212,8 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 }
 
 TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -232,8 +224,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 	cpu.A = 0x0F;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x00);
@@ -243,8 +234,8 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 }
 
 TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_EOR_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_EOR_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -255,8 +246,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
 	cpu.A = 0xF0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0xFF);

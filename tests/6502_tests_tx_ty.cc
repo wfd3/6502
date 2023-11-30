@@ -18,8 +18,8 @@ public:
 // TAX
 
 TEST_F(MOS6502TXTYTests, TAX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TAX_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TAX_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -29,8 +29,7 @@ TEST_F(MOS6502TXTYTests, TAX) {
 	cpu.X = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -40,8 +39,8 @@ TEST_F(MOS6502TXTYTests, TAX) {
 }
 
 TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TAX_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TAX_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -51,8 +50,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 	cpu.X = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -62,8 +60,8 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TAX_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TAX_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -73,8 +71,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 	cpu.X = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -87,8 +84,8 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 // TXA
 
 TEST_F(MOS6502TXTYTests, TXA) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TXA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TXA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -98,8 +95,7 @@ TEST_F(MOS6502TXTYTests, TXA) {
 	cpu.X = 0x0B;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -109,8 +105,8 @@ TEST_F(MOS6502TXTYTests, TXA) {
 }
 
 TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TXA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TXA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -120,8 +116,7 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 	cpu.A = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -131,8 +126,8 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TXA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TXA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -142,8 +137,7 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 	cpu.A = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -155,8 +149,8 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 // TAY
 
 TEST_F(MOS6502TXTYTests, TAY) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TAY_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TAY_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -166,8 +160,7 @@ TEST_F(MOS6502TXTYTests, TAY) {
 	cpu.Y = 0x0B;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -177,8 +170,8 @@ TEST_F(MOS6502TXTYTests, TAY) {
 }
 
 TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TAY_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TAY_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -188,8 +181,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 	cpu.Y = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -199,8 +191,8 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TAY_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TAY_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -210,8 +202,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 	cpu.Y = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -223,8 +214,8 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 // TYA
 
 TEST_F(MOS6502TXTYTests, TYA) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TYA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TYA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -234,8 +225,7 @@ TEST_F(MOS6502TXTYTests, TYA) {
 	cpu.Y = 0x0B;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -245,8 +235,8 @@ TEST_F(MOS6502TXTYTests, TYA) {
 }
 
 TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TYA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TYA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -256,8 +246,7 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 	cpu.A = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -267,8 +256,8 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TYA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TYA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -278,8 +267,7 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 	cpu.A = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -291,8 +279,8 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 // TSX
 
 TEST_F(MOS6502TXTYTests, TSX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TSX_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TSX_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, 0x12);
@@ -301,8 +289,7 @@ TEST_F(MOS6502TXTYTests, TSX) {
 	cpu.X = 0x52;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -312,8 +299,8 @@ TEST_F(MOS6502TXTYTests, TSX) {
 }
 
 TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TSX_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TSX_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, 0);
@@ -322,8 +309,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 	cpu.X = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -333,8 +319,8 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 }
 
 TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TSX_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TSX_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, 0xff);
@@ -343,8 +329,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 	cpu.X = 0xAB;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -356,8 +341,8 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 // TXS
 
 TEST_F(MOS6502TXTYTests, TXS) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_TXS_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_TXS_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, 0x12);
@@ -366,8 +351,7 @@ TEST_F(MOS6502TXTYTests, TXS) {
 	cpu.X = 0x52;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);

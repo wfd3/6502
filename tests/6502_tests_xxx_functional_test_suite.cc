@@ -43,7 +43,7 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	// Uncomment to start in debugger
 	//cpu.SetDebug(true);
 	
-	while (!cpu.executeOne())
+	while (!cpu.executeOneInstruction())
 		;
 
 	EXPECT_EQ(cpu.PC, exitAddress);

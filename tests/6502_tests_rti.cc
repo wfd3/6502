@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502RTITests, RtiImplied) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_RTI_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_RTI_IMP;
 
 	//Given:
 	cpu.TestReset(0x2000, CPU::INITIAL_SP - 3);
@@ -31,7 +31,7 @@ TEST_F(MOS6502RTITests, RtiImplied) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0xAAFF);

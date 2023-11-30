@@ -16,16 +16,15 @@ public:
 };
 
 TEST_F(MOS6502NOPTests, Nop) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_NOP_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_NOP_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(UsedCycles, ExpectedCycles);

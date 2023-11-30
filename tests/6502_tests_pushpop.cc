@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502PushPopTests, PhaImmediate) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_PHA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_PHA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -26,8 +26,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 	cpu.A = 0x52;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(mem[0X01FF], 0x52);
@@ -37,8 +36,8 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 
 
 TEST_F(MOS6502PushPopTests, PlaImmediate) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_PLA_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_PLA_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
@@ -48,8 +47,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	cpu.A = 0xFF;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x52);
@@ -60,8 +58,8 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 }
 
 TEST_F(MOS6502PushPopTests, PhpImmediate) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_PHP_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_PHP_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -72,8 +70,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 	cpu.PS = 0b01010101;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(mem[0x01FF], 0b01110101);
@@ -82,8 +79,8 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 }
 
 TEST_F(MOS6502PushPopTests, PlpImmediate) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_PLP_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_PLP_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
@@ -94,8 +91,7 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 	cpu.PS = 0x52;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PS, 0b01000101);

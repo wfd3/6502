@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502ASLTests, AslAccumulator) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -28,8 +28,7 @@ TEST_F(MOS6502ASLTests, AslAccumulator) {
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -40,8 +39,8 @@ TEST_F(MOS6502ASLTests, AslAccumulator) {
 }
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
@@ -52,8 +51,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -64,8 +62,8 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
 }
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ACC;
 	Byte data = 0b01000001;
 
 	//Given:
@@ -76,8 +74,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -88,8 +85,8 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
 }
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ACC;
 	Byte data = 0b00000000;
 
 	//Given:
@@ -100,8 +97,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -112,8 +108,8 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
 }
 
 TEST_F(MOS6502ASLTests, AslZeroPage) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -125,8 +121,7 @@ TEST_F(MOS6502ASLTests, AslZeroPage) {
 	mem[0x0001] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -137,8 +132,8 @@ TEST_F(MOS6502ASLTests, AslZeroPage) {
 }
 
 TEST_F(MOS6502ASLTests, AslZeroPageX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ZPX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ZPX;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -151,8 +146,7 @@ TEST_F(MOS6502ASLTests, AslZeroPageX) {
 	mem[0x0003] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -163,8 +157,8 @@ TEST_F(MOS6502ASLTests, AslZeroPageX) {
 }
 
 TEST_F(MOS6502ASLTests, AslAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ABX;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -177,8 +171,7 @@ TEST_F(MOS6502ASLTests, AslAbsolute) {
 	mem[0x2000] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -189,8 +182,8 @@ TEST_F(MOS6502ASLTests, AslAbsolute) {
 }
 
 TEST_F(MOS6502ASLTests, AslAbsoluteX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ASL_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ASL_ABX;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -204,8 +197,7 @@ TEST_F(MOS6502ASLTests, AslAbsoluteX) {
 	mem[0x2002] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -214,5 +206,3 @@ TEST_F(MOS6502ASLTests, AslAbsoluteX) {
 	EXPECT_EQ(mem[0x2002], data << 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
-
-

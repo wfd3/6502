@@ -282,29 +282,29 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 					 std::string& opcodes, std::string& address, 
 					 std::string& computedAddr) {
 
-	Byte mode = _instructions.at(ins).addrmode;
+	auto mode = _instructions.at(ins).addrmode;
 	Byte byteval;
 	Word wordval;
 	SByte rel;
 	std::string out, addr, label;
 
 	switch (mode) {
-	case ADDR_MODE_IMP:
+	case AddressingMode::Implied:
 		break;
 
-	case ADDR_MODE_ACC:
+	case AddressingMode::Accumulator:
 		disassembly = "A";
 		address = "";
 		break;
 
-	case ADDR_MODE_IMM:  // #$xx
+	case AddressingMode::Immediate:  // #$xx
 		byteval = readByteAtPC();
 		disassembly = fmt::format("#${:02x}", byteval);
 		opcodes += fmt::format("{:02x} ", byteval);
 		address = "";
 		break;
 
-	case ADDR_MODE_ZP:  // $xx
+	case AddressingMode::ZeroPage:  // $xx
 		byteval = readByteAtPC();
 		label = addressLabelSearch(byteval);
 		addr = fmt::format("${:02x}", byteval);
@@ -319,7 +319,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 		opcodes += fmt::format("{:02x} ", byteval);
 		break;
 
-	case ADDR_MODE_ZPX:  // $xx,X
+	case AddressingMode::ZeroPageX:  // $xx,X
 		byteval = readByteAtPC();
 		label = addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
@@ -337,7 +337,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			computedAddr = fmt::format("${:04x}", byteval + X);
 		break;
 
-	case ADDR_MODE_ZPY:  // $xx,Y
+	case AddressingMode::ZeroPageY:  // $xx,Y
 		byteval = readByteAtPC();
 		label = addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
@@ -354,7 +354,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			computedAddr = fmt::format("${:04x}", byteval + Y);
 		break;
 
-	case ADDR_MODE_REL:
+	case AddressingMode::Relative:
 		rel = SByte(readByteAtPC());
 		wordval = PC + rel;
 		addr = fmt::format("${:04x}", wordval);
@@ -370,7 +370,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 		opcodes += fmt::format("{:02x} ", byteval);
 		break;
 
-	case ADDR_MODE_ABS:  // $xxxx
+	case AddressingMode::Absolute:  // $xxxx
 		wordval = readWordAtPC();
 		label = addressLabel(wordval);
 		addr = fmt::format("${:04x}", wordval);
@@ -386,7 +386,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 							  wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
-	case ADDR_MODE_ABX:  // $xxxx,X
+	case AddressingMode::AbsoluteX:  // $xxxx,X
 		wordval = readWordAtPC();
 		label = addressLabelSearch(wordval);
 		addr = fmt::format("${:04x}", wordval);
@@ -404,7 +404,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 	
 		break;		
 
-	case ADDR_MODE_ABY:  // $xxxx,Y
+	case AddressingMode::AbsoluteY:  // $xxxx,Y
 		wordval = readWordAtPC();
 		label = addressLabelSearch(wordval);
 		addr = fmt::format("${:04x}", wordval);
@@ -422,7 +422,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			computedAddr = fmt::format("${:04x}", wordval + Y);
 		break;
 		
-	case ADDR_MODE_IND:  // $(xxxx)
+	case AddressingMode::Indirect:  // $(xxxx)
 		wordval = readWordAtPC();
 
 		label = addressLabel(wordval);
@@ -438,7 +438,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 							  wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
-	case ADDR_MODE_IDX: // ($xx,X)
+	case AddressingMode::IndirectX: // ($xx,X)
 		byteval = readByteAtPC();
 		wordval = byteval + X;
 		if (wordval > 0xFF)
@@ -460,7 +460,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			computedAddr = fmt::format("${:04x}", wordval);
 		break;
 		
-	case ADDR_MODE_IDY:  // ($xx),Y
+	case AddressingMode::IndirectY:  // ($xx),Y
 		byteval = readByteAtPC();
 		wordval = readWord(byteval);
 		wordval += Y;
@@ -481,8 +481,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 		break;
 	
 	default:
-		disassembly += fmt::format("[Invalid addressing mode {}]",
-			   					   mode);
+		disassembly += fmt::format("[Invalid addressing mode]");
 	}
 }
 
@@ -1139,10 +1138,7 @@ int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 	const std::string wordPattern   = R"((\w+))";  				// A word, like a label or identifier
 	const std::string offsetPattern = R"(([+-][0-9a-fA-F]+)?)"; // Optional offset, positive or negative, in hexadecimal
 	const std::string valuePattern  = R"(([0-9a-fA-F]+))";  	// A value, in hexadecimal
-//	const std::string expressionPattern = R"((?:[+\-&|^%/*][\dA-Fa-f]+)+)";
-	
 	const std::string expressionPattern = R"((:?([+\-&|^%/*]?\w+)+))";
-
 	const std::string assignmentPattern = wordPattern + offsetPattern + "=" + valuePattern;  
 	const std::string rangePattern = wordPattern + offsetPattern + ":" + wordPattern + offsetPattern; 
 
@@ -1600,7 +1596,8 @@ void CPU::debug() {
 		count = debugPrompt();
 
 		while (count--) {
-			executeOneInstruction();
+			Cycles_t cyclesUsed, cyclesExpected;
+			executeOneInstructionWithCycleCount(cyclesUsed, cyclesExpected);
 			if (count)
 				disassemble(PC, 1);
 		}
@@ -1614,7 +1611,7 @@ void CPU::debug() {
 	}
 }
 
-std::tuple<uint64_t, uint64_t> CPU::traceOneInstruction() {
+void CPU::traceOneInstruction(Cycles_t& usedCycles, Cycles_t &expectedCycles) {
 	disassemble(PC, 1);
-	return executeOneInstruction();
+	executeOneInstructionWithCycleCount(usedCycles, expectedCycles);
 }

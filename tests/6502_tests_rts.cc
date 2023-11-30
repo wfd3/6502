@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502RTSTests, RtsImplied) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_RTS_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_RTS_IMP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 2);
@@ -27,7 +27,7 @@ TEST_F(MOS6502RTSTests, RtsImplied) {
 	mem[0xFFFC] = ins;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x2000 + 1);

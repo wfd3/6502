@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_CLC_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_CLC_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -27,16 +27,15 @@ TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.C , 0);
 }
 
 TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SEC_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SEC_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -46,16 +45,15 @@ TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 	cpu.Flags.C = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.C , 1);
 }
 
 TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_CLD_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_CLD_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -65,16 +63,15 @@ TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 	cpu.Flags.D = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.D , 0);
 }
 
 TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SED_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SED_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -84,16 +81,15 @@ TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 	cpu.Flags.D = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.D , 1);
 }
 
 TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_CLI_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_CLI_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -103,16 +99,15 @@ TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 	cpu.Flags.I = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.I , 0);
 }
 
 TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_SEI_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_SEI_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -122,8 +117,7 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 	cpu.Flags.I = 0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.I , 1);
@@ -131,8 +125,8 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 
 
 TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_CLV_IMP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_CLV_IMP;
 
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
@@ -142,10 +136,8 @@ TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
 	cpu.Flags.V = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.Flags.V , 0);
 }
-

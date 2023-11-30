@@ -52,7 +52,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadProgram) {
 
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 {
-	uint64_t UsedCycles, ExpectedCycles;
+	Cycles_t UsedCycles, ExpectedCycles;
 
 	// Given:
 
@@ -63,15 +63,14 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndRun)
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
-		std::tie(UsedCycles, ExpectedCycles) =
-			cpu.executeOneInstruction();
+		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 		EXPECT_EQ(UsedCycles, ExpectedCycles);
 	}
 }
 
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 {
-	uint64_t UsedCycles, ExpectedCycles;
+	Cycles_t UsedCycles, ExpectedCycles;
 
 	// Given:
 
@@ -82,8 +81,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
-		std::tie(UsedCycles, ExpectedCycles) =
-			cpu.executeOneInstruction();
+		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 		EXPECT_EQ(UsedCycles, ExpectedCycles);
 	}
 }
@@ -91,7 +89,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramFromAFileAndRun)
 
 TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 {
-	uint64_t UsedCycles, ExpectedCycles;
+	Cycles_t UsedCycles, ExpectedCycles;
 	// Given:
 	constexpr unsigned long loops = 2;
 
@@ -102,8 +100,7 @@ TEST_F(MOS6502LoadProgramTests, TestLoadAProgramAndTrace)
 
 	//Then:
 	for (unsigned long l = 0; l < sizeof(testProgram) * loops; l++) {
-		std::tie(UsedCycles, ExpectedCycles) =
-			cpu.traceOneInstruction();
+			cpu.traceOneInstruction(UsedCycles, ExpectedCycles);
 		EXPECT_EQ(UsedCycles, ExpectedCycles);
 	}
 }

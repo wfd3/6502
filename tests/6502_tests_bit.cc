@@ -15,8 +15,8 @@ public:
 };
 
 TEST_F(MOS6502BITTests, BitAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_BIT_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_BIT_ABS;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -29,8 +29,7 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 	cpu.A = 0xFF;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -40,8 +39,8 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPage) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_BIT_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_BIT_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -53,8 +52,7 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 	cpu.A = 0xFF;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -64,8 +62,8 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_BIT_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_BIT_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -77,8 +75,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 	cpu.A = 0x00;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.Z);
@@ -88,8 +85,8 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_BIT_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_BIT_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -101,8 +98,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 	cpu.A = 1 << 6;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);
@@ -112,8 +108,8 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 }
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_BIT_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_BIT_ZP;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -125,8 +121,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
 	cpu.A = 1 << 7;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.Z);

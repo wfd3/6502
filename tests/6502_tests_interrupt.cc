@@ -35,7 +35,7 @@ public:
 	}
 
 	void execute() {
-		while(!cpu.executeOne())
+		while(!cpu.executeOneInstruction())
 			;
 	}
 };

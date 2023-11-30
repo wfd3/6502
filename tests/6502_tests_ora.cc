@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ORA_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ORA_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -28,8 +28,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 	cpu.A = 0x0F;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x0F);
@@ -40,8 +39,8 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ORA_IMM;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ORA_IMM;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -52,8 +51,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 	cpu.A = 0xF0;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0xFF);

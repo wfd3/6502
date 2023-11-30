@@ -18,7 +18,7 @@ public:
 TEST_F(MOS6502OpcodeTests, InvalidOpcodeThrowsException) {
     bool caughtRuntimeException = false;
     bool caughtOtherException = false;
-    uint64_t UsedCycles, ExpectedCycles;
+    Cycles_t UsedCycles, ExpectedCycles;
     Byte ins = 0xff;  
 
     //Given:
@@ -27,7 +27,7 @@ TEST_F(MOS6502OpcodeTests, InvalidOpcodeThrowsException) {
 
     try {
         //When:
-        std::tie(UsedCycles, ExpectedCycles) = cpu.executeOneInstruction();
+        cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
     }
 
     catch ([[maybe_unused]] const std::runtime_error& e) {

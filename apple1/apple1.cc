@@ -26,56 +26,40 @@
 
 #include "mos6820.h"
 #include "apple1.h"
-
+#include "clock.h"
 
 using Address = uint16_t;
 using Cell = uint8_t;
 
-// Create the memory and CPU
+// Create the memory, CPU, PIA and bus clock
 Memory<Address, Cell> mem(CPU::MAX_MEM);
-
 CPU cpu(mem);
 auto pia = std::make_shared<MOS6820<Address, Cell>>();
+BusClock_t busClock;
 
 //////////
-// This section defines which and where the 'built-in' programs 
+// This section defines which and where the ROM and other 'built-in' programs 
 // will be loaded. 
 
-// Uncomment to load Apple INTEGER BASIC
-#define APPLE_INTEGER_BASIC
-
-//Uncomment to load Applesoft Basic Lite
-//#define APPLESOFT_BASIC_LITE
-
-#if defined(APPLE_INTEGER_BASIC) && defined(APPLESOFT_BASIC_LITE)
-# error "Can't have both Apple Integer Basic and Applesoft Basic loaded "\
-	"at the same time"
-#endif
-
-// Load addresses and data locations for various built in programs
+// Load addresses and data locations for WozMon (in ROM)
 constexpr Address_t wozmonAddress = 0xff00;
 static const char* WOZMON_FILE =
 BINFILE_PATH "/wozmon.bin";
 
-#ifdef APPLE_INTEGER_BASIC
+// Load address and data location for Apple Integer Basic (normally 
+// loaded from cassette)
 constexpr Address_t appleBasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE =
 BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
-#endif
 
-#ifdef APPLESOFT_BASIC_LITE
-constexpr Address_t applesoftBasicLiteAddress = 0x6000;
-static const char* APPLE_INTEGER_BASIC_FILE =
-BINFILE_PATH "/applesoft-lite-0.4-ram.bin";
-#endif
-
-// bytecode for the sample program from the Apple 1 Manual
+// bytecode for the sample program from the Apple 1 Manual (normally entered 
+// by hand via WozMon)
 constexpr Address_t apple1SampleAddress = 0x0000;
 std::vector<unsigned char> apple1SampleProg =
 	{ 0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00 };
 
-// Called by CPU::Reset();
-void setup(){
+// Setup memory map
+void setupMemMap(){
 	mem.Reset();
 	// Map 64k of RAM, making this one hefty Apple 1
 	mem.mapRAM(0x0000, 0xffff);
@@ -85,34 +69,24 @@ void setup(){
 	mem.mapDevice(pia);
 	mem.mapROM(0xf000, 0xf0ff);
 
-	// Load Wozmon, Apple Basic or Applesoft Basic Lite and the
-	// Apple 1 sample program
-	fmt::print("# Loading Apple I sample program at {:04x}\n",
+	// Map the Wozmon ROM into memory
+	fmt::print("# Mapping wozmon ROM at {:04x}\n", wozmonAddress);
+	mem.loadRomFromFile(WOZMON_FILE, wozmonAddress);
+	
+	// Load Apple 1 sample program and Apple-1 Basic 
+	fmt::print("# Loading Apple I sample program at {:04x}\n", 
 		apple1SampleAddress);
 	mem.loadData(apple1SampleProg, apple1SampleAddress);
 
-	fmt::print("# Loading wozmon at {:04x}\n", wozmonAddress);
-	mem.loadRomFromFile(WOZMON_FILE, wozmonAddress);
-
-#ifdef APPLE_INTEGER_BASIC
-	fmt::print("# Loading Apple I Basic at {:04x}\n",
-		appleBasicAddress);
+	fmt::print("# Loading Apple I Basic at {:04x}\n", appleBasicAddress);
 	mem.loadDataFromFile(APPLESOFT_BASIC_FILE, appleBasicAddress);
-#endif
-
-#ifdef APPLESOFT_BASIC_LITE
-	fmt::print("# Loading Applesoft Basic Lite at {:04x}\n",
-		applesoftBasicLiteAddress);
-	mem.loadDataFromFile(APPLE_INTEGER_BASIC_FILE,
-		applesoftBasicLiteAddress);
-#endif
 }
 
 //////////
 // Let's pretend to be an Apple1
 int main() {
+	Cycles_t cyclesUsed;
 
-	
 	fmt::print("A Very Simple Apple I\n");
 	fmt::print("  Reset        = Control-\\\n");
 	fmt::print("  Clear screen = Control-^\n");
@@ -120,20 +94,22 @@ int main() {
 	fmt::print("  Quit         = Control-minus\n");
 	fmt::print("\n");
 
-	setup();
-	MOS6820<Address, Cell>::setup();	// Set the keyboard non-blocking
+	setupMemMap();
+	MOS6820<Address, Cell>::setup();	
+	busClock.enableTimingEmulation();
 
 	// When the emulator enters debug mode we need to reset the
 	// display so that keyboard entry works in blocking mode.
 	cpu.setDebugEntryExitFunc(&MOS6820<Address, Cell>::teardown, &MOS6820<Address, Cell>::setup);
-
 	cpu.Reset();	    // Exit the CPU from reset
 
-	// - Execute one instruction, consume however may clock cycles that takes
-	// - Execute the housekeeping functions on all devices
-	// - If any device has asserted any control signals, handle them.
+	// Order of operations:
+	// - Execute one instruction, returning clock cycles that takes, then
+	// - Execute the housekeeping functions on all devices, then
+	// - Handle any control signals asserted by the devices, then 
+	// - Delay however many clock cycles we've used.
 	while (1) {
-		cpu.executeOne();
+		cpu.executeOneInstruction(cyclesUsed);
 		auto signals = pia->housekeeping();
 		for (const auto& signal : signals) {
 			switch(signal) {
@@ -152,6 +128,7 @@ int main() {
 				std::exit(0);
 			}
 		}
+		busClock.delay(cyclesUsed);
 	}
 
 	MOS6820<Address, Cell>::teardown();	// Set the keyboard blocking

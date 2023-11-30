@@ -16,8 +16,8 @@ public:
 };
 
 TEST_F(MOS6502JMPTests, JmpAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_JMP_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_JMP_ABS;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -27,8 +27,7 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 	mem[0xFFFE] = 0x43;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4321);
@@ -36,8 +35,8 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 }
 
 TEST_F(MOS6502JMPTests, JmpIndirect) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_JMP_IND;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_JMP_IND;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -49,8 +48,7 @@ TEST_F(MOS6502JMPTests, JmpIndirect) {
 	mem[0x2001] = 0x43;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4321);
@@ -58,8 +56,8 @@ TEST_F(MOS6502JMPTests, JmpIndirect) {
 }
 
 TEST_F(MOS6502JMPTests, JmpIndirectBug) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_JMP_IND;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_JMP_IND;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
@@ -74,8 +72,7 @@ TEST_F(MOS6502JMPTests, JmpIndirectBug) {
 	mem[0x3100] = 0x50;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_EQ(cpu.PC, 0x4080);

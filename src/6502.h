@@ -20,7 +20,6 @@
 #include <array>
 #include <map>
 #include <unordered_map>
-#include <tuple>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -43,6 +42,7 @@ using cMemory   = Memory<Address_t, Byte>;
 extern "C" char **readlineCompletionCallback(const char* text, int start,
 					     int end);
 
+
 //
 // The CPU class is broken up into three different sections:
 // 1) Core CPU public and private API
@@ -61,12 +61,21 @@ class CPU {
 // CPU
 ////////////////////	
 public:
+	// Total addressable memory
+	constexpr static Word MAX_MEM          = 0xFFFF;
+
+	// CPU initial vectors
+	constexpr static Byte INITIAL_SP       = 0xFF; 
+	constexpr static Word RESET_VECTOR     = 0xFFFC;
+	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
+
 	Word PC = 0;		 // Program counter
 	Byte SP = 0;		 // Stack pointer
-	Byte A = 0;
-	Byte X = 0;
-	Byte Y = 0;		     // Registers
+	Byte A = 0;			 // Accumulator 
+	Byte X = 0;			 // X Register
+	Byte Y = 0;			 // Y Register
 	Cycles_t Cycles = 0; // Cycle counter
+	
 	struct ProcessorStatusBits {
 		Byte C:1; 	     // Carry (bit 0)
 		Byte Z:1;	     // Zero (bit 1)
@@ -113,10 +122,67 @@ public:
 	}
 
 	// Execution
-	std::tuple<Cycles_t, Cycles_t> executeOneInstruction();
-	bool executeOne();
+	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
+	bool executeOneInstruction(Cycles_t &);
+	bool executeOneInstruction();
+
+	// Debugger
+	void traceOneInstruction(Cycles_t &, Cycles_t &);
+	void setDebug(bool);
+	bool isDebugEnabled() { return debugMode; }
+	void debug();
+	bool debuggerOnException() { return debug_OnException; }
+	void enterDebuggerOnException(bool t) { debug_OnException = t; }
+
+	// Callbacks to run before entering and exiting the debugger
+	typedef void (*debugEntryExitFn_t)(void);
+	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = nullptr,
+				   debugEntryExitFn_t exitfn = nullptr) {
+
+		debugEntryFunc = entryfn;
+		debugExitFunc = exitfn;
+	}
+
+	// The GNU readline command completion needs access to the
+	// _debugCommands vector.
+	friend char *readlineCommandGenerator(const char*, int);
+	friend char **readlineCompletionCallback(const char*, int, int);
 
 private:
+	// Bits for PS byte
+	constexpr static Byte BreakBit    = 1 << 4;
+	constexpr static Byte UnusedBit   = 1 << 5;
+	constexpr static Byte NegativeBit = 1 << 7;
+
+	// 6502 stack is one page at 01ff down to 0100.  This is the
+	// stack frame for that page.
+	constexpr static Word STACK_FRAME = 0x0100;
+
+	// Addressing modes
+	enum class AddressingMode {
+		Immediate,
+		ZeroPage,
+		ZeroPageX,
+		ZeroPageY,
+		Relative,
+		Absolute,
+		AbsoluteX,
+		AbsoluteY,
+		Indirect,
+		IndirectX,
+		IndirectY,
+		Implied,
+		Accumulator
+	};
+	
+    // How the CPU should add cycle counts on branches and when
+    // instructions fetch data across page boundaries.
+	enum class InstructionFlags {
+		None,
+		Branch,
+		PageBoundary
+	};
+	
 	// Setup & reset
 	cMemory& mem;
 	std::atomic_bool _inReset = false;      // CPU is held in reset
@@ -128,22 +194,22 @@ private:
 	Byte testResetSP = INITIAL_SP;
 	bool _testReset = false;
 	void (*_setupFunction)(void);
-
 	Address_t _exitAddress = 0;
 	bool _exitAddressSet = false;
+
+	void exitReset();
 	bool isPCAtExitAddress() {
 		return _exitAddressSet && (PC == _exitAddress);
 	}
 
-	void exitReset();
 	// Instruction map
 	typedef void (CPU::*opfn_t)(Byte, Cycles_t &);
 	struct instruction {
 		const char *name;
-	    Byte addrmode;
+	    AddressingMode addrmode;
 		Byte bytes;
 		Byte cycles;
-		Byte flags;
+		InstructionFlags flags;
 		opfn_t opfn;
 	};
 	const std::map<Byte, instruction> _instructions;
@@ -188,29 +254,173 @@ private:
 	uint64_t _NMICount = 0;
 	uint64_t _BRKCount = 0;
 
-	// Helper functions
+	// Instruction implementations
+	void ins_adc(Byte, Cycles_t &);
+	void ins_and(Byte, Cycles_t &);
+	void ins_asl(Byte, Cycles_t &);
+	void ins_bcc(Byte, Cycles_t &);
+	void ins_bcs(Byte, Cycles_t &);
+	void ins_beq(Byte, Cycles_t &);
+	void ins_bit(Byte, Cycles_t &);
+	void ins_bmi(Byte, Cycles_t &);
+	void ins_bne(Byte, Cycles_t &);
+	void ins_bpl(Byte, Cycles_t &);
+	void ins_brk(Byte, Cycles_t &);
+	void ins_bvc(Byte, Cycles_t &);
+	void ins_bvs(Byte, Cycles_t &);
+	void ins_clc(Byte, Cycles_t &);
+	void ins_cld(Byte, Cycles_t &);
+	void ins_cli(Byte, Cycles_t &);
+	void ins_clv(Byte, Cycles_t &);
+	void ins_cmp(Byte, Cycles_t &);
+	void ins_cpx(Byte, Cycles_t &);
+	void ins_cpy(Byte, Cycles_t &);
+	void ins_dec(Byte, Cycles_t &);
+	void ins_dex(Byte, Cycles_t &);
+	void ins_dey(Byte, Cycles_t &);
+	void ins_eor(Byte, Cycles_t &);
+	void ins_inc(Byte, Cycles_t &);
+	void ins_inx(Byte, Cycles_t &);
+	void ins_iny(Byte, Cycles_t &);
+	void ins_jmp(Byte, Cycles_t &);
+	void ins_jsr(Byte, Cycles_t &);
+	void ins_lda(Byte, Cycles_t &);
+	void ins_ldx(Byte, Cycles_t &);
+	void ins_ldy(Byte, Cycles_t &);
+	void ins_lsr(Byte, Cycles_t &);
+	void ins_nop(Byte, Cycles_t &);
+	void ins_ora(Byte, Cycles_t &);
+	void ins_pha(Byte, Cycles_t &);
+	void ins_pla(Byte, Cycles_t &);
+	void ins_php(Byte, Cycles_t &);
+	void ins_plp(Byte, Cycles_t &);
+	void ins_rol(Byte, Cycles_t &);
+	void ins_ror(Byte, Cycles_t &);
+	void ins_rti(Byte, Cycles_t &);
+	void ins_rts(Byte, Cycles_t &);
+	void ins_sbc(Byte, Cycles_t &);
+	void ins_sec(Byte, Cycles_t &);
+	void ins_sed(Byte, Cycles_t &);
+	void ins_sei(Byte, Cycles_t &);
+	void ins_sta(Byte, Cycles_t &);
+	void ins_stx(Byte, Cycles_t &);
+	void ins_sty(Byte, Cycles_t &);
+	void ins_tax(Byte, Cycles_t &);
+	void ins_tay(Byte, Cycles_t &);
+	void ins_tsx(Byte, Cycles_t &);
+	void ins_txa(Byte, Cycles_t &);
+	void ins_txs(Byte, Cycles_t &);
+	void ins_tya(Byte, Cycles_t &);
+
+	// Helper functions for instruction implementations
 	void doBranch(bool, Word, Cycles_t &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
 
-////////////////////
-// CPU constants
-////////////////////
+	////
+	// Built-in Debugger
+
+	bool debugMode = false;
+	debugEntryExitFn_t debugEntryFunc = nullptr;
+	debugEntryExitFn_t debugExitFunc = nullptr;
+	std::string debug_lastCmd = "";
+	bool debug_alwaysShowPS = false;
+	bool debug_loopDetection = false;
+	bool debug_OnException = false;
+
+	void toggleDebug();
+	uint64_t debugPrompt();
+	void dumpStack();
+	void printCPUState();
+	void parseMemCommand(std::string);
+	
+	// Disassembler
+	void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
+	Address_t disassemble(Address_t, uint64_t);
+	Address_t disassembleAt(Address_t dPC, std::string &);
+
+	typedef int (CPU::*debugFn_t)(std::string &, uint64_t &);
+
+	// Debugger commands
+	struct debugCommand {
+		const char *command;
+		const char *shortcut;
+		const CPU::debugFn_t func;
+		const bool doFileCompletion;
+		const std::string helpMsg;
+	};
+	const std::vector<debugCommand> _debugCommands;
+
+	static std::vector<debugCommand> setupDebugCommands();
+	bool matchCommand(const std::string &, debugFn_t &);
+	int helpCmd(std::string &, uint64_t &);
+	int listCmd(std::string &, uint64_t &);
+	int loadCmd(std::string &, uint64_t &);
+	int runCmd(std::string &, uint64_t &);
+	int stackCmd(std::string &, uint64_t &);
+	int breakpointCmd(std::string &, uint64_t &);
+	int cpustateCmd(std::string &, uint64_t &);
+	int autostateCmd(std::string &, uint64_t &);
+	int resetListPCCmd(std::string &, uint64_t &);
+	int memdumpCmd(std::string &, uint64_t &);
+	int memmapCmd(std::string &, uint64_t &);
+	int setCmd(std::string &, uint64_t &);
+	int resetCmd(std::string &, uint64_t &);
+	int continueCmd(std::string &, uint64_t &);
+	int loopdetectCmd(std::string &, uint64_t &);
+	int backtraceCmd(std::string &, uint64_t &);
+	int labelCmd(std::string &, uint64_t &);
+	int whereCmd(std::string &, uint64_t &);
+	int watchCmd(std::string &, uint64_t &);
+	int quitCmd(std::string &, uint64_t &);
+	int findCmd(std::string &, uint64_t &);
+	int clockCmd(std::string &, uint64_t &);
+	int loadcmdCmd(std::string &, uint64_t &);
+	int savememCmd(std::string &, uint64_t &);
+	int loadhexCmd(std::string &, uint64_t &);
+
+	// Hex file
+	bool loadHexFile(const std::string&);
+	bool saveToHexFile(const std::string&, const std::vector<std::pair<Word, Word>>&);
+	bool saveToHexFile(const std::string&, Word startAddress, Word);
+
+	// Breakpoints
+	std::vector<bool> breakpoints;
+	void listBreakpoints();
+	bool isBreakpoint(Word);
+	void deleteBreakpoint(Word);
+	void addBreakpoint(Word);
+	void deleteAllBreakpoints() { 
+		breakpoints.assign(mem.size(), false);
+		fmt::print("Deleted all breakpoints\n");
+	}
+
+	// Backtrace
+	std::vector<std::string> backtrace;
+	void showBacktrace();
+	void addBacktrace(Word);
+	void addBacktraceInterrupt(Word);
+	void removeBacktrace();
+
+	// Labels
+	std::unordered_map<Word, std::string> addrToLabel;
+	std::unordered_map<std::string, Word> labelToAddr;
+	void showLabels();
+	void addLabel(Word, const std::string);
+	std::string addressLabel(const Word);
+	std::string addressLabelSearch(const Word, const int8_t searchWidth = 3);
+	bool labelAddress(const std::string&, Word&);
+	void removeLabel(const Word);
+	bool lookupAddress(const std::string&, Word&);
+	bool parseCommandFile(const std::string&);
+	std::string getLabelByte(const uint8_t);
+};
+
+// 6502 Opcode definitions
+//   These are public because they're needed by the tests.
+class Opcodes {
 public:
-	// CPU addressable memory
-	constexpr static Word MAX_MEM          = 0xFFFF;
-
-	// CPU initial vectors
-	// TODO: These could be private, will need
-	// some way for the tests to access
-	constexpr static Byte INITIAL_SP       = 0xFF; 
-	constexpr static Word RESET_VECTOR     = 0xFFFC;
-	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
-
-	// 6502 Opcode definitions
-	//  These are public because they're needed by the 
-	//  tests. 
 	constexpr static Byte INS_BRK_IMP = 0x00;
 	constexpr static Byte INS_ORA_IDX = 0x01;
 	constexpr static Byte INS_ASL_ACC = 0x0a;
@@ -362,215 +572,4 @@ public:
 	constexpr static Byte INS_RTS_IMP = 0x60;
 	constexpr static Byte INS_ADC_IDX = 0x61;
 	constexpr static Byte INS_PLA_IMP = 0x68;
-
-private:
-	// Addressing modes
-	constexpr static Byte ADDR_MODE_IMM = 0;  // Immediate
-	constexpr static Byte ADDR_MODE_ZP  = 1;  // Zero Page
-	constexpr static Byte ADDR_MODE_ZPX = 2;  // Zero Page,X
-	constexpr static Byte ADDR_MODE_ZPY = 3;  // Zero Page,Y
-	constexpr static Byte ADDR_MODE_REL = 4;  // Relative
-	constexpr static Byte ADDR_MODE_ABS = 5;  // Absolute
-	constexpr static Byte ADDR_MODE_ABX = 6;  // Absolute,X
-	constexpr static Byte ADDR_MODE_ABY = 7;  // Absolute,y
-	constexpr static Byte ADDR_MODE_IND = 8;  // Indirect
-	constexpr static Byte ADDR_MODE_IDX = 9;  // Indexed Ind
-	constexpr static Byte ADDR_MODE_IDY = 10; // Indirect Idx
-	constexpr static Byte ADDR_MODE_IMP = 11; // Implied
-	constexpr static Byte ADDR_MODE_ACC = 12; // Accumulator
-
-    // How the CPU should add cycle counts on branches and when
-    // instructions fetch data across page boundaries.
-	constexpr static Byte NONE         = 0;
-	constexpr static Byte CYCLE_BRANCH = 1;
-	constexpr static Byte CYCLE_PAGE   = 2;
-
-	// Bits for PS byte
-	constexpr static Byte BreakBit    = 1 << 4;
-	constexpr static Byte UnusedBit   = 1 << 5;
-	constexpr static Byte NegativeBit = 1 << 7;
-
-	// 6502 stack is one page at 01ff down to 0100.  This is the
-	// stack frame for that page.
-	constexpr static Word STACK_FRAME = 0x0100;
-
-	// Instruction implementations
-	void ins_adc(Byte, Cycles_t &);
-	void ins_and(Byte, Cycles_t &);
-	void ins_asl(Byte, Cycles_t &);
-	void ins_bcc(Byte, Cycles_t &);
-	void ins_bcs(Byte, Cycles_t &);
-	void ins_beq(Byte, Cycles_t &);
-	void ins_bit(Byte, Cycles_t &);
-	void ins_bmi(Byte, Cycles_t &);
-	void ins_bne(Byte, Cycles_t &);
-	void ins_bpl(Byte, Cycles_t &);
-	void ins_brk(Byte, Cycles_t &);
-	void ins_bvc(Byte, Cycles_t &);
-	void ins_bvs(Byte, Cycles_t &);
-	void ins_clc(Byte, Cycles_t &);
-	void ins_cld(Byte, Cycles_t &);
-	void ins_cli(Byte, Cycles_t &);
-	void ins_clv(Byte, Cycles_t &);
-	void ins_cmp(Byte, Cycles_t &);
-	void ins_cpx(Byte, Cycles_t &);
-	void ins_cpy(Byte, Cycles_t &);
-	void ins_dec(Byte, Cycles_t &);
-	void ins_dex(Byte, Cycles_t &);
-	void ins_dey(Byte, Cycles_t &);
-	void ins_eor(Byte, Cycles_t &);
-	void ins_inc(Byte, Cycles_t &);
-	void ins_inx(Byte, Cycles_t &);
-	void ins_iny(Byte, Cycles_t &);
-	void ins_jmp(Byte, Cycles_t &);
-	void ins_jsr(Byte, Cycles_t &);
-	void ins_lda(Byte, Cycles_t &);
-	void ins_ldx(Byte, Cycles_t &);
-	void ins_ldy(Byte, Cycles_t &);
-	void ins_lsr(Byte, Cycles_t &);
-	void ins_nop(Byte, Cycles_t &);
-	void ins_ora(Byte, Cycles_t &);
-	void ins_pha(Byte, Cycles_t &);
-	void ins_pla(Byte, Cycles_t &);
-	void ins_php(Byte, Cycles_t &);
-	void ins_plp(Byte, Cycles_t &);
-	void ins_rol(Byte, Cycles_t &);
-	void ins_ror(Byte, Cycles_t &);
-	void ins_rti(Byte, Cycles_t &);
-	void ins_rts(Byte, Cycles_t &);
-	void ins_sbc(Byte, Cycles_t &);
-	void ins_sec(Byte, Cycles_t &);
-	void ins_sed(Byte, Cycles_t &);
-	void ins_sei(Byte, Cycles_t &);
-	void ins_sta(Byte, Cycles_t &);
-	void ins_stx(Byte, Cycles_t &);
-	void ins_sty(Byte, Cycles_t &);
-	void ins_tax(Byte, Cycles_t &);
-	void ins_tay(Byte, Cycles_t &);
-	void ins_tsx(Byte, Cycles_t &);
-	void ins_txa(Byte, Cycles_t &);
-	void ins_txs(Byte, Cycles_t &);
-	void ins_tya(Byte, Cycles_t &);
-
-///////////////////////////////
-// Debugger
-///////////////////////////////
-public:
-	void setDebug(bool);
-	bool isDebugEnabled() { return debugMode; }
-	void debug();
-	bool debuggerOnException() { return debug_OnException; }
-	void enterDebuggerOnException(bool t) { debug_OnException = t; }
-	std::tuple<uint64_t, uint64_t> traceOneInstruction();
-
-	// Callbacks to run before entering and exiting the debugger
-	typedef void (*debugEntryExitFn_t)(void);
-	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = nullptr,
-				   debugEntryExitFn_t exitfn = nullptr) {
-
-		debugEntryFunc = entryfn;
-		debugExitFunc = exitfn;
-	}
-
-	// The GNU readline command completion needs access to the
-	// _debugCommands vector.
-	friend char *readlineCommandGenerator(const char*, int);
-	friend char **readlineCompletionCallback(const char*, int, int);
-
-private:
-	// Disassembler
-	void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
-	Address_t disassemble(Address_t, uint64_t);
-	Address_t disassembleAt(Address_t dPC, std::string &);
-
-	// Debugger
-	bool debugMode = false;
-	debugEntryExitFn_t debugEntryFunc = nullptr;
-	debugEntryExitFn_t debugExitFunc = nullptr;
-	std::string debug_lastCmd = "";
-	bool debug_alwaysShowPS = false;
-	bool debug_loopDetection = false;
-	bool debug_OnException = false;
-
-	void toggleDebug();
-	uint64_t debugPrompt();
-	void dumpStack();
-	void printCPUState();
-	void parseMemCommand(std::string);
-
-	typedef int (CPU::*debugFn_t)(std::string &, uint64_t &);
-
-	// Debugger commands
-	struct debugCommand {
-		const char *command;
-		const char *shortcut;
-		const CPU::debugFn_t func;
-		const bool doFileCompletion;
-		const std::string helpMsg;
-	};
-	const std::vector<debugCommand> _debugCommands;
-
-	static std::vector<debugCommand> setupDebugCommands();
-	bool matchCommand(const std::string &, debugFn_t &);
-	int helpCmd(std::string &, uint64_t &);
-	int listCmd(std::string &, uint64_t &);
-	int loadCmd(std::string &, uint64_t &);
-	int runCmd(std::string &, uint64_t &);
-	int stackCmd(std::string &, uint64_t &);
-	int breakpointCmd(std::string &, uint64_t &);
-	int cpustateCmd(std::string &, uint64_t &);
-	int autostateCmd(std::string &, uint64_t &);
-	int resetListPCCmd(std::string &, uint64_t &);
-	int memdumpCmd(std::string &, uint64_t &);
-	int memmapCmd(std::string &, uint64_t &);
-	int setCmd(std::string &, uint64_t &);
-	int resetCmd(std::string &, uint64_t &);
-	int continueCmd(std::string &, uint64_t &);
-	int loopdetectCmd(std::string &, uint64_t &);
-	int backtraceCmd(std::string &, uint64_t &);
-	int labelCmd(std::string &, uint64_t &);
-	int whereCmd(std::string &, uint64_t &);
-	int watchCmd(std::string &, uint64_t &);
-	int quitCmd(std::string &, uint64_t &);
-	int findCmd(std::string &, uint64_t &);
-	int clockCmd(std::string &, uint64_t &);
-	int loadcmdCmd(std::string &, uint64_t &);
-	int savememCmd(std::string &, uint64_t &);
-	int loadhexCmd(std::string &, uint64_t &);
-
-	// Hex file
-	bool loadHexFile(const std::string&);
-	bool saveToHexFile(const std::string&, const std::vector<std::pair<Word, Word>>&);
-	bool saveToHexFile(const std::string&, Word startAddress, Word);
-
-	// Breakpoints
-	std::vector<bool> breakpoints;
-	void listBreakpoints();
-	bool isBreakpoint(Word);
-	void deleteBreakpoint(Word);
-	void addBreakpoint(Word);
-	void deleteAllBreakpoints() { 
-		breakpoints.assign(mem.size(), false);
-		fmt::print("Deleted all breakpoints\n");
-	}
-
-	// Backtrace
-	std::vector<std::string> backtrace;
-	void showBacktrace();
-	void addBacktrace(Word);
-	void addBacktraceInterrupt(Word);
-	void removeBacktrace();
-
-	// Labels
-	std::unordered_map<Word, std::string> addrToLabel;
-	std::unordered_map<std::string, Word> labelToAddr;
-	void showLabels();
-	void addLabel(Word, const std::string);
-	std::string addressLabel(const Word);
-	std::string addressLabelSearch(const Word, const int8_t searchWidth = 3);
-	bool labelAddress(const std::string&, Word&);
-	void removeLabel(const Word);
-	bool lookupAddress(const std::string&, Word&);
-	bool parseCommandFile(const std::string&);
-	std::string getLabelByte(const uint8_t);
-};	
+};

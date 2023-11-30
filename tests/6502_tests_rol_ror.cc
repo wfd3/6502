@@ -16,20 +16,18 @@ public:
 };
 
 TEST_F(MOS6502RORROLTests, RolAccumulator) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROL_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROL_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -39,20 +37,18 @@ TEST_F(MOS6502RORROLTests, RolAccumulator) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROL_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROL_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -62,21 +58,19 @@ TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 }
 
 TEST_F(MOS6502RORROLTests, RolZeroPage) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROL_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROL_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
 	mem[0x0020] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -86,13 +80,12 @@ TEST_F(MOS6502RORROLTests, RolZeroPage) {
 }
 
 TEST_F(MOS6502RORROLTests, RolZeroPageX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROL_ZPX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROL_ZPX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -100,8 +93,7 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 	mem[0x0020] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -111,22 +103,20 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROL_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROL_ABS;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
 	mem[0xFFFE] = 0x20;
 	mem[0x2000] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -136,14 +126,13 @@ TEST_F(MOS6502RORROLTests, RolAbsolute) {
 }
 
 TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROL_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROL_ABX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
 	mem[0xFFFE] = 0x20;
@@ -151,8 +140,7 @@ TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
 	mem[0x2005] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -163,20 +151,18 @@ TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
 
 // ROR
 TEST_F(MOS6502RORROLTests, RorAccumulator) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -186,20 +172,18 @@ TEST_F(MOS6502RORROLTests, RorAccumulator) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	cpu.A = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -209,21 +193,19 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ACC;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ACC;
 	Byte data = 0b10000000;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	cpu.A = data;
 	cpu.Flags.C = 1;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_FALSE(cpu.Flags.C);
@@ -233,21 +215,19 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 }
 
 TEST_F(MOS6502RORROLTests, RorZeroPage) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ZP;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
 	mem[0x0020] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -257,13 +237,12 @@ TEST_F(MOS6502RORROLTests, RorZeroPage) {
 }
 
 TEST_F(MOS6502RORROLTests, RorZeroPageX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ZPX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ZPX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -271,8 +250,7 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 	mem[0x0020] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -283,13 +261,12 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 
 //HERE
 TEST_F(MOS6502RORROLTests, RorAbsolute) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ABS;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ABS;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -297,8 +274,7 @@ TEST_F(MOS6502RORROLTests, RorAbsolute) {
 	mem[0x2000] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);
@@ -308,13 +284,12 @@ TEST_F(MOS6502RORROLTests, RorAbsolute) {
 }
 
 TEST_F(MOS6502RORROLTests, RorAbsoluteX) {
-	uint64_t UsedCycles, ExpectedCycles;
-	Byte ins = CPU::INS_ROR_ABX;
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = Opcodes::INS_ROR_ABX;
 	Byte data = 0b01010101;
 	
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -323,8 +298,7 @@ TEST_F(MOS6502RORROLTests, RorAbsoluteX) {
 	mem[0x2005] = data;
 
 	//When:
-	std::tie(UsedCycles, ExpectedCycles) =
-		cpu.executeOneInstruction();
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
 	EXPECT_TRUE(cpu.Flags.C);

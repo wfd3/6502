@@ -102,7 +102,7 @@ printf("// --------------------------------------------------------------\n");
 foreach my $opcode (sort keys(%i)) {
     $ins    = lc($i{$opcode}{"ins"});
     $amode  = $i{$opcode}{"amode"};
-    $fn     = "&CPU::ins_" . lc($ins);		# ins_xxx -- note no '()' 
+    $fn     = "&Opcodes::INS_" . lc($ins);		# ins_xxx -- note no '()' 
     $const  = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM
     $cycles = $i{$opcode}{"cycles"};
     $bytes  = $i{$opcode}{"bytes"};
