@@ -295,7 +295,7 @@ public:
 		uint64_t _size = _endAddress + 1;
 
 		if (_size > _mem.max_size()) {
-			auto s = fmt::format("End address {:{}x} exceeds host "
+			auto s = fmt::format("End address {:0{}x} exceeds host "
 					     "system memory limits",
 					     endAddress, AddressWidth);
 			exception(s);
@@ -350,7 +350,7 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			fmt::print("mem[{:{}x}] {:{}x} -> {:{}x}\n",
+			fmt::print("mem[{:0{}x}] {:0{}x} -> {:0{}x}\n",
 				   address, AddressWidth, _mem.at(address)->Read(address), 
 				   CellWidth, l, CellWidth);
 		}
@@ -371,7 +371,7 @@ public:
 	bool mapRAM(const Address start, const Address end) {
 		boundsCheck(end);
 		if (addressRangeOverlapsExistingMap(start, end)) {
-			auto s = fmt::format("Address range {:{}x}:{:{}x} overlaps "
+			auto s = fmt::format("Address range {:0{}x}:{:0{}x} overlaps "
 					     "with existing map",
 					     start, AddressWidth, end, AddressWidth);
 			exception(s);
@@ -394,7 +394,7 @@ public:
 		boundsCheck(start + rom.size());
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(start, start+rom.size())) {
-			auto s = fmt::format("Address range {:{}x}:{:{}x} overlaps "
+			auto s = fmt::format("Address range {:0{}x}:{:0{}x} overlaps "
 					     "with existing map",
 					     start, AddressWidth, start + rom.size(), AddressWidth);
 			exception(s);
@@ -403,7 +403,7 @@ public:
 
 		if (start + rom.size() - 1 > _endAddress) {
 			auto s = fmt::format("ROM will not fit into memory at "
-					     "start address {:#{}x} (data "
+					     "start address {:0{}x} (data "
 					     "length {} bytes)",
 					     start, AddressWidth, rom.size());
 			exception(s);
@@ -434,7 +434,7 @@ public:
 		boundsCheck(address);
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(address, address)) {
-			auto s = fmt::format("Address {:{}x} overlaps with "
+			auto s = fmt::format("Address {:0{}x} overlaps with "
 					     "existing map", address, AddressWidth);
 			exception(s);
 			return false;
@@ -450,7 +450,7 @@ public:
 		for (const auto& a : device->getAddressSet()) {
 			boundsCheck(a);
 			if (!overwriteExistingElements && isAddressMapped(a)) {
-				auto s = fmt::format("Address {:{}x} overlaps with existing map", 
+				auto s = fmt::format("Address {:0{}x} overlaps with existing map", 
 					a, AddressWidth); 
 				exception(s);
 				return false;
@@ -479,8 +479,12 @@ public:
 			return;
 		}
 
-		fmt::print("Memory {:#{}x}:{:#{}x} with expression 'value {}'\n", 
+		fmt::print("Memory {:0{}x}:{:0{}x}", 
 			start, AddressWidth, end, AddressWidth, valueExpression); 
+
+		if (!valueExpression.empty()) 
+			fmt::print(" with expression '{}'", valueExpression);
+		fmt::print("\n"); 
 
 		int lineEnd = 16 / sizeof(Cell);
 		while (AddressWidth + 2 + (CellWidth + 1) * lineEnd + lineEnd > 80) {
@@ -586,12 +590,12 @@ public:
 
 		if (startAddress > _endAddress) {
 			auto s = fmt::format("Data load address is not a valid "
-					     "address: {:#{}x}", startAddress, AddressWidth);
+					     "address: {:0{}x}", startAddress, AddressWidth);
 			exception(s);
 		}
 		if (startAddress + data.size() - 1 > _endAddress) {
 			auto s = fmt::format("Data will not fit into memory at "
-					     "start address {:#{}x} (data "
+					     "start address {:0{}x} (data "
 					     "length {} bytes)",
 					     startAddress, AddressWidth, data.size());
 			exception(s);
@@ -628,7 +632,7 @@ public:
 		Address addr = 0;
 		for(const auto& watching : _watch) {  
 			if (watching)
-				fmt::print("{:{}x}\n", addr, AddressWidth);
+				fmt::print("{:0{}x}\n", addr, AddressWidth);
 			addr++;
 		}
 	}
@@ -667,7 +671,7 @@ private:
 
 	void boundsCheck(const Address address) {
 		if (!boundsCheckNoThrow(address)) {
-			auto s = fmt::format("Address {:{}x} out of range",
+			auto s = fmt::format("Address {:0{}x} out of range",
 					     address, AddressWidth);
 			exception(s);
 		}
