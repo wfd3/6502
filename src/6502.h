@@ -330,7 +330,7 @@ private:
 	bool debug_OnException = false;
 
 	void toggleDebug();
-	uint64_t debugPrompt();
+	bool executeDebuggerCmd(std::string);
 	void dumpStack();
 	void printCPUState();
 	void parseMemCommand(std::string);
@@ -340,7 +340,7 @@ private:
 	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
-	typedef int (CPU::*debugFn_t)(std::string &, uint64_t &);
+	typedef bool (CPU::*debugFn_t)(std::string &);
 
 	// Debugger commands
 	struct debugCommand {
@@ -354,31 +354,30 @@ private:
 
 	static std::vector<debugCommand> setupDebugCommands();
 	bool matchCommand(const std::string &, debugFn_t &);
-	int helpCmd(std::string &, uint64_t &);
-	int listCmd(std::string &, uint64_t &);
-	int loadCmd(std::string &, uint64_t &);
-	int runCmd(std::string &, uint64_t &);
-	int stackCmd(std::string &, uint64_t &);
-	int breakpointCmd(std::string &, uint64_t &);
-	int cpustateCmd(std::string &, uint64_t &);
-	int autostateCmd(std::string &, uint64_t &);
-	int resetListPCCmd(std::string &, uint64_t &);
-	int memdumpCmd(std::string &, uint64_t &);
-	int memmapCmd(std::string &, uint64_t &);
-	int setCmd(std::string &, uint64_t &);
-	int resetCmd(std::string &, uint64_t &);
-	int continueCmd(std::string &, uint64_t &);
-	int loopdetectCmd(std::string &, uint64_t &);
-	int backtraceCmd(std::string &, uint64_t &);
-	int labelCmd(std::string &, uint64_t &);
-	int whereCmd(std::string &, uint64_t &);
-	int watchCmd(std::string &, uint64_t &);
-	int quitCmd(std::string &, uint64_t &);
-	int findCmd(std::string &, uint64_t &);
-	int clockCmd(std::string &, uint64_t &);
-	int loadcmdCmd(std::string &, uint64_t &);
-	int savememCmd(std::string &, uint64_t &);
-	int loadhexCmd(std::string &, uint64_t &);
+	bool helpCmd(std::string &);
+	bool listCmd(std::string &);
+	bool loadCmd(std::string &);
+	bool stackCmd(std::string &);
+	bool breakpointCmd(std::string &);
+	bool cpustateCmd(std::string &);
+	bool autostateCmd(std::string &);
+	bool resetListPCCmd(std::string &);
+	bool memdumpCmd(std::string &);
+	bool memmapCmd(std::string &);
+	bool setCmd(std::string &);
+	bool resetCmd(std::string &);
+	bool continueCmd(std::string &);
+	bool loopdetectCmd(std::string &);
+	bool backtraceCmd(std::string &);
+	bool labelCmd(std::string &);
+	bool whereCmd(std::string &);
+	bool watchCmd(std::string &);
+	bool quitCmd(std::string &);
+	bool findCmd(std::string &);
+	bool clockCmd(std::string &);
+	bool loadScriptCmd(std::string &);
+	bool savememCmd(std::string &);
+	bool loadhexCmd(std::string &);
 
 	// Hex file
 	bool loadHexFile(const std::string&);

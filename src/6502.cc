@@ -361,7 +361,7 @@ void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& ex
 	opcode = readByteAtPC();
 	if (_instructions.count(opcode) == 0) {
 		PC--;
-		auto s = fmt::format("Invalid opcode {:04x} at PC {:#04x}",
+		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}",
 				     opcode, PC);
 		exception(s);
 		return;

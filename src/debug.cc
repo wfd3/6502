@@ -40,9 +40,6 @@
 
 #include "6502.h"
 
-constexpr uint8_t ACTION_RETURN = 0;
-constexpr uint8_t ACTION_CONTINUE = 1;
-
 Word listPC;
 
 ///////////
@@ -114,9 +111,13 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
     return result;
 }
 
+bool isHexDigit(const char ch) {
+	return std::isxdigit(ch) || ch == 'x' || ch == 'X';
+}
+
 bool isHexNumber(const std::string& str) {
     for(char ch : str) {
-        if(!std::isxdigit(ch))
+        if(!isHexDigit(ch))
             return false;
     }
     return true;
@@ -135,11 +136,12 @@ bool CPU::lookupAddress(const std::string& line, Word& address) {
 			return true;
 		}
 		catch(...) {
-			fmt::print("Parse error: {}\n", line);
+			fmt::print("Parse error: Invalid hexadecimal number: {}\n", line);
 			return false;
 		}
 	}
 
+	fmt::print("Address provided is neither a hexadecimal number nor a label: {}\n", line);
 	return false;
 }
 
@@ -147,7 +149,7 @@ bool CPU::lookupAddress(const std::string& line, Word& address) {
 //////////
 // readline helpers
 void getReadline(std::string &line) {
-	char *c_line = readline(":");
+	char *c_line = readline(": ");
 	if (c_line == nullptr) { // ^D
 		line = "continue";
 	} else if (c_line[0] == '\0') {
@@ -246,18 +248,19 @@ void CPU::printCPUState() {
 		return b ? std::toupper(c) : std::tolower(c);
 	};
 
-	fmt::print("| PC: {:04x} SP: {:02x}\n", PC, SP );
+	fmt::print("  | PC: {:04x} SP: {:02x}\n", PC, SP );
 	// fmt::print() doesn't like to print out union/bit-field members?
-	fmt::print("| Flags: {}{}{}{}{}{}{} PS: {:#x}\n",
+	fmt::print("  | Flags: {}{}{}{}{}{}{} (PS: {:#x})\n",
 		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D),
 		fl('B', Flags.B), fl('V', Flags.V), fl('N', Flags.N), PS);
-	fmt::print("| A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print("| Pending: IRQ - {}, NMI - {}, Reset - {}, "
+	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print("  | Pending: IRQ - {}, NMI - {}, Reset - {}, "
 			   "PendingReset - {}\n",
 		   yesno(pendingIRQ()), yesno(pendingNMI()),
 		   yesno(_inReset), yesno(_pendingReset));
-	fmt::print("| IRQs: {}, NMIs: {}, BRKs: {}\n",
+	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n",
 		    _IRQCount, _NMICount, _BRKCount);
+	fmt::print("\n");
 }
 
 void CPU::dumpStack() {
@@ -651,7 +654,7 @@ void CPU::showLabels() {
 
 	fmt::print("Address labels:\n");
 	for (const auto& [address, label] : addrToLabel) {
-		fmt::print("{:#04x}: {}\n", address, label);
+		fmt::print("{:#06x}: {}\n", (Word) address, label);
 	}
 }
 
@@ -682,7 +685,7 @@ std::string CPU::addressLabel(const Word address) {
 
 std::unordered_map<Word, std::string> addrToLabel;
 std::list<Word> recentAddresses;  // Cache for recent addresses
-const size_t cacheSize = 10; // Adjust the cache size as neede
+const size_t cacheSize = 10;      // Adjust the cache size as needed
 std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth) {
 	std::string label;
 
@@ -710,7 +713,7 @@ std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth
 		recentAddresses.remove(*it);
         recentAddresses.push_back(*it);
     } else {
-        label = fmt::format("{:x}", address);
+        label = fmt::format("{:04x}", address);
     }
 
     // Ensure the cache does not exceed its size
@@ -808,24 +811,8 @@ bool CPU::parseCommandFile(const std::string& filename) {
             continue;
         }
 
-        std::istringstream iss(line);
-        std::string command, hexValue, label;
-        iss >> command >> hexValue >> label;
-
-        if(command != "label" || !isHexNumber(hexValue) || label.empty()) {
-            std::cerr << "Error: Invalid syntax." << std::endl;
-            return false;
-        }
-
-        Word address;
-        try {
-            address = std::stoul(hexValue, nullptr, 16);
-        } catch(const std::exception& e) {
-            fmt::print("Error: Invalid address\n");
-			return false;
-        }
-
-        addLabel(address, label);
+		if (!executeDebuggerCmd(line))
+			return false;	
     }
     
     return true;
@@ -849,15 +836,11 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "command will fail if it attempts to load data on non-RAM "
 		  "memory."
 		},
-		{ "loadcmd",      "L",  &CPU::loadcmdCmd, true,
-		  "'load a command file <file>"
+		{ "script",      "",  &CPU::loadScriptCmd, true,
+		  "'load a command/script from file <file>"
 		},
 		{ "loadhex",      "",  &CPU::loadhexCmd, true,
 		  "'load a kex file <file>"
-		},
-		{ "run",   "r",  &CPU::runCmd, false,
-		  "Run program at current Program Counter.  Optionally "
-		  "run for [x] instructions then return to debugger"
 		},
 		{ "stack",     "S",  &CPU::stackCmd, false,
 		  "Show current stack elements"
@@ -919,29 +902,25 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 	};
 }
 
-int CPU::helpCmd([[maybe_unused]] std::string &line,
-		 [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::helpCmd([[maybe_unused]] std::string &line) {
 	for (const auto& cmd : _debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
 			   // Add ': '
 			   wrapText(cmd.helpMsg, 80 - (10 + 2), 10+2)); 
 	}
-	
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::listCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::listCmd(std::string &line) {
 
 	if (!lookupAddress(line, listPC) && !line.empty()) {
-		return ACTION_CONTINUE;
+		return false;
 	};
 	listPC = disassemble(listPC, 10);
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::loadCmd(std::string &line,
-		 [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::loadCmd(std::string &line) {
 	std::string fname;
 	Address_t address;
 
@@ -950,7 +929,7 @@ int CPU::loadCmd(std::string &line,
 
 	if (address > CPU::MAX_MEM) {
 		fmt::print("Invalid address: {:04x}\n", address);
-		return ACTION_CONTINUE;
+		return false;
 	}
 
 	fmt::print("Loading file {} at address {:04x}\n", fname, address);
@@ -965,10 +944,10 @@ int CPU::loadCmd(std::string &line,
 		fmt::print("Load error: unknown exception\n");
 	}
 	
-	return ACTION_CONTINUE;
+	return false;
 }
 
-int CPU::loadcmdCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::loadScriptCmd(std::string &line) {
 	std::string fname;
 
 	std::istringstream iss(line);
@@ -976,33 +955,20 @@ int CPU::loadcmdCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 	
 	fmt::print("Loading command file {}\n", fname);
 	
-	if (parseCommandFile(fname) == false) 
+	auto r = parseCommandFile(fname);
+	if (r == false) 
 		fmt::print("Command file failed\n");
-	
-	
-	return ACTION_CONTINUE;
+	return r;
 }
 
-int CPU::runCmd(std::string &line, uint64_t &returnValue) {
-
-	try {
-		returnValue = std::stoul(line);
-	}
-	catch(...) {
-		returnValue = 1;
-	}
-	return ACTION_RETURN;
-}
-
-int CPU::loadhexCmd([[maybe_unused]] std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::loadhexCmd([[maybe_unused]] std::string &line) {
 	line = stripLeadingSpaces(line);
 	line = stripTrailingSpaces(line);
 
-	loadHexFile(line);
-	return ACTION_CONTINUE;
+	return loadHexFile(line);
 }
 
-int CPU::savememCmd([[maybe_unused]] std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::savememCmd([[maybe_unused]] std::string &line) {
 	std::vector<std::pair<Word, Word>> ranges;
 	std::string addressRanges, filename;
 	
@@ -1038,35 +1004,30 @@ int CPU::savememCmd([[maybe_unused]] std::string &line, [[maybe_unused]] uint64_
 
 	if (!splitInput(line)) {
 		fmt::print("Parse error\n");
-		return ACTION_CONTINUE;
+		return false;
 	}
 		
 	ranges = parseAddressRange(line);
 	if (ranges.empty()) {
 		fmt::print("Parse error\n");
-		return ACTION_CONTINUE;
+		return false;
 	}
 
-	saveToHexFile(filename, ranges);
-	return ACTION_CONTINUE;
+	return saveToHexFile(filename, ranges);
 }
 
-int CPU::stackCmd([[maybe_unused]] std::string &line,
-		  [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::stackCmd([[maybe_unused]] std::string &line) {
 	dumpStack();
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::breakpointCmd(std::string &line,
-		       [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::breakpointCmd(std::string &line) {
 	Word addr;
 	bool remove = false;
 
 	if (line.empty()) {
 		listBreakpoints();
-		return ACTION_CONTINUE;
+		return true;
 	}
 
 	if (line[0] == '-') {
@@ -1076,43 +1037,36 @@ int CPU::breakpointCmd(std::string &line,
 
 	if (remove && line == "*") {
 		deleteAllBreakpoints();
-		return ACTION_CONTINUE;
+		return true;
 	}
 	
 	if (!lookupAddress(line, addr)) {
-		return ACTION_CONTINUE;
+		return false;
 	}
 	
 	if (remove) 
 		deleteBreakpoint(addr);
 	else
 		addBreakpoint(addr);
-
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::cpustateCmd([[maybe_unused]] std::string &line,
-		     [[maybe_unused]] uint64_t &returnValue) {
-
-	printCPUState(); 
-	return ACTION_CONTINUE;
+bool CPU::cpustateCmd([[maybe_unused]] std::string &line) {
+	printCPUState();
+	return true;
 }
 
-int CPU::autostateCmd([[maybe_unused]] std::string &line,
-		      [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::autostateCmd([[maybe_unused]] std::string &line) {
 	debug_alwaysShowPS = !debug_alwaysShowPS;
 	fmt::print("Processor status auto-display ");
 	if (debug_alwaysShowPS)
 		fmt::print("enabled\n");
 	else 
 		fmt::print("disabled\n");
-	
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::resetListPCCmd(std::string &line,
-			[[maybe_unused]] uint64_t &returnValue) {
+bool CPU::resetListPCCmd(std::string &line) {
 	Word i;
 
 	try {
@@ -1120,7 +1074,7 @@ int CPU::resetListPCCmd(std::string &line,
 		if (i > MAX_MEM) {
 			fmt::print("Error: Program Counter address outside of "
 				   "available address range\n");
-			return ACTION_CONTINUE;
+			return false;
 		}
 		listPC = i;
 	}
@@ -1129,12 +1083,11 @@ int CPU::resetListPCCmd(std::string &line,
 	}
 
 	fmt::print("List reset to PC {:04x}\n", listPC);
-	
-	return ACTION_CONTINUE;
+	return true;
 }
 
 
-int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::memdumpCmd(std::string &line) {
 	const std::string wordPattern   = R"((\w+))";  				// A word, like a label or identifier
 	const std::string offsetPattern = R"(([+-][0-9a-fA-F]+)?)"; // Optional offset, positive or negative, in hexadecimal
 	const std::string valuePattern  = R"(([0-9a-fA-F]+))";  	// A value, in hexadecimal
@@ -1183,7 +1136,7 @@ int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
     if (std::regex_match(line, matches, labelWithOptionalOffsetR) && matches.size() > 1) {
 		if (calculateAddress(matches, addr1, addr2, false) && rangeCheckAddr(addr1)) {
 			fmt::print("[{:04x}] {:02x}\n", addr1, mem.Read(addr1));
-			return ACTION_CONTINUE;
+			return true;
 		}
     } else if (std::regex_match(line, matches, assignValueToLabelR) && matches.size() > 3) {
 		value = std::stoul(matches[3], nullptr, 16);
@@ -1191,43 +1144,40 @@ int CPU::memdumpCmd(std::string &line, [[maybe_unused]] uint64_t &returnValue) {
 			Byte oldval = mem.Read(addr1);
 			mem.Write(addr1, (Byte) value);
 			fmt::print("[{:04x}] {:02x} -> {:02x}\n", addr1, oldval, (Byte) value);
-			return ACTION_CONTINUE;
+			return true;
 		}
     } else if (std::regex_match(line, matches, rangeBetweenLabelsR) && matches.size() > 2) {
 		if (calculateAddress(matches, addr1, addr2, true) && 
 			rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
 			mem.hexdump(addr1, addr2);
-			return ACTION_CONTINUE;
+			return true;
 		}
     } else if (std::regex_match(line, matches, filterRangeWithValueR) && matches.size() > 4) {
         auto valueExpression = matches[5].str();
-		fmt::print("valueExpression = {}\n", valueExpression);
 		if (calculateAddress(matches, addr1, addr2, true) && rangeCheckAddr(addr1) && 
 			rangeCheckAddr(addr2)) {
 			mem.hexdump(addr1, addr2, valueExpression);
-			return ACTION_CONTINUE;
+			return true;
 		}
     } else if (std::regex_match(line, matches, assignValueToRangeR) && matches.size() > 4) {
         value = std::stoul(matches[5], nullptr, 16);
 		if (calculateAddress(matches, addr1, addr2, true) &&
 			rangeCheckAddr(addr1) && rangeCheckAddr(addr2) && rangeCheckValue(value)) {
 				mem.assign(addr1, addr2, (Byte) value);
-			return ACTION_CONTINUE;
+			return true;
 		}
 	} 
 
 	fmt::print("Parse error: '{}'\n", line);
-	return ACTION_CONTINUE;
+	return false;
 }
 
-int CPU::memmapCmd([[maybe_unused]] std::string &line,
-		   [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::memmapCmd([[maybe_unused]] std::string &line) {
 	mem.printMap();
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::setCmd(std::string &line,
-		[[maybe_unused]] uint64_t &returnValue) {
+bool CPU::setCmd(std::string &line) {
 	std::string v;
 	std::string reg;					
 	uint64_t value;
@@ -1239,9 +1189,8 @@ int CPU::setCmd(std::string &line,
 	if (reg.empty()) {
 		fmt::print("Parse Error: register or flag required for set "
 			   "command\n");
-		return ACTION_CONTINUE;
+		return false;
 	}
-
 
 	// reg contains the register, s is the value.
 	std::transform(reg.begin(), reg.end(), reg.begin(), ::toupper);
@@ -1251,7 +1200,7 @@ int CPU::setCmd(std::string &line,
 		    (reg == "PC" && value > 0xffff)) {
 			fmt::print("Error: value would overflow register {}\n",
 				   reg);
-			return ACTION_CONTINUE;
+			return false;
 		}
 	}
 	catch(...) {
@@ -1267,7 +1216,7 @@ int CPU::setCmd(std::string &line,
 		else {
 			fmt::print("Parse Error: '{}' is not a valid value for "
 				   "set\n", v);
-			return ACTION_CONTINUE;
+			return false;
 		}
 	}
 
@@ -1318,70 +1267,59 @@ int CPU::setCmd(std::string &line,
 			Flags.N = !Flags.N;
 		else
 			Flags.N = (bool) value;
-	else 
+	else {
 		fmt::print("No register or status flag '{}'\n", reg);
+		return false;
+	}
 
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::resetCmd([[maybe_unused]] std::string &line,
-		  [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::resetCmd([[maybe_unused]] std::string &line) {
 	fmt::print("Resetting 6502\n");
 	setDebug(false);
-	Reset();    // Enter reset
+	Reset();    	// Enter reset
 	if (inReset())
 		Reset();    // Exit reset
-	returnValue = 1;
-	return ACTION_RETURN;
+	return true;
 }
 		
-int CPU::continueCmd([[maybe_unused]] std::string &line,
-		     [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::continueCmd([[maybe_unused]] std::string &line) {
 	if (_hitException) {
 		fmt::print("CPU Exception hit; can't continue.  Reset CPU to clear.\n");
-		return ACTION_CONTINUE;
+		return false;
 	}
 	toggleDebug();
-	returnValue = 1;
-	return ACTION_RETURN;
+	return true;
 }
 
-int CPU::loopdetectCmd([[maybe_unused]] std::string &line,
-		       [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::loopdetectCmd([[maybe_unused]] std::string &line) {
 	toggleLoopDetection();
 	fmt::print("Loop detection ");
 	if (debug_loopDetection)
 		fmt::print("enabled\n");
 	else 
 		fmt::print("disabled\n");
-	
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::backtraceCmd([[maybe_unused]] std::string &line,
-		      [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::backtraceCmd([[maybe_unused]] std::string &line) {
 	showBacktrace();
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::whereCmd([[maybe_unused]] std::string &line,
-		  [[maybe_unused]] uint64_t &returnValue) {
-
+bool CPU::whereCmd([[maybe_unused]] std::string &line) {
 	disassemble(PC, 1);
-	return ACTION_CONTINUE;
+	return true;
 }
 
-int CPU::watchCmd(std::string &line,
-		  [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::watchCmd(std::string &line) {
 	Word addr;
 	bool remove = false;
 
 	if (line.empty()) {
 		mem.listWatch();
-		return ACTION_CONTINUE;
+		return true;
 	}
 	
 	if (line[0] == '-') {
@@ -1394,7 +1332,7 @@ int CPU::watchCmd(std::string &line,
 		if (addr > MAX_MEM) {
 			fmt::print("Error: Watchpoint address outside of "
 				   "available address range\n");
-			return ACTION_CONTINUE;
+			return false;
 		}
 		if (remove) {
 			mem.clearWatch(addr);
@@ -1408,19 +1346,19 @@ int CPU::watchCmd(std::string &line,
 	}
 	catch(...) {
 		fmt::print("Parse error: {}\n", line);
+		return false;
 	}
-	
-	return ACTION_CONTINUE;
+
+	return true;
 }
 
-int CPU::labelCmd(std::string &line,
-		  [[maybe_unused]] uint64_t &returnValue) {
+bool CPU::labelCmd(std::string &line) {
 	Word addr;
 	bool remove = false;
 
 	if (line.empty()) {
 		showLabels();
-		return ACTION_CONTINUE;
+		return true;
 	}
 	
 	if (line[0] == '-') {
@@ -1428,13 +1366,13 @@ int CPU::labelCmd(std::string &line,
 		remove = true;
 	}
 
-	// Handle '-0xfoof' or '-label'
+	// Handle '-0xf00f' or '-label'
 	if (remove) {
 		line = stripSpaces(line);
 		if (lookupAddress(line, addr)) {
 			removeLabel(addr);
 			fmt::print("Label for address {:04x} removed\n", addr);
-			return ACTION_CONTINUE;
+			return true;
 		}
 	}
 
@@ -1443,9 +1381,8 @@ int CPU::labelCmd(std::string &line,
 		addr = (Word) std::stoul(line, &index, 16);
 		
 		if (addr > MAX_MEM) {
-			fmt::print("Error: Label address outside of "
-				   "available address range\n");
-			return ACTION_CONTINUE;
+			fmt::print("Error: Label address outside of available address range\n");
+			return false;
 		}
 		if (line[index] != ' ') {
 			throw std::invalid_argument("Invalid number");
@@ -1459,23 +1396,24 @@ int CPU::labelCmd(std::string &line,
 	}
 	catch(...) {
 		fmt::print("Parse error: {}\n", line);
+		return false;
 	}
-	
-	return ACTION_CONTINUE;
+
+	return true;
 }
 
-int CPU::quitCmd([[maybe_unused]] std::string& line,
-	[[maybe_unused]] uint64_t& returnValue) {
+bool CPU::quitCmd([[maybe_unused]] std::string& line) {
 	fmt::print("Exiting emulator\n");
 	exit(0);
+	return true;
 }
 
-int CPU::findCmd(std::string& line, [[maybe_unused]] uint64_t& returnValue) {
+bool CPU::findCmd(std::string& line) {
 	line = stripLeadingSpaces(line);
 	auto sequence = split(line, " ");
 	if (sequence.empty()) {
 		fmt::print("Error: no search sequence provided\n");
-		return ACTION_CONTINUE;
+		return false;
 	}
 	line = stripSpaces(line);
 	uint8_t filter = 0xff;
@@ -1487,25 +1425,26 @@ int CPU::findCmd(std::string& line, [[maybe_unused]] uint64_t& returnValue) {
 			filter = std::stoul(line, &cProcessed, 16);
 			if (cProcessed != len) {
 				fmt::print("Error: filter is not a hexadecimal number\n");
-				return ACTION_CONTINUE;
+				return false;
 			}
 		}
 		catch(...) {
 			fmt::print("Error: filter is not a hexadecimal number\n");
-			return ACTION_CONTINUE;
+			return false;
 		}
 	} 
 
 	auto locations = mem.find(sequence, filter);
 	if (locations.empty()) {
 		fmt::print("Sequence not found\n");
-		return ACTION_CONTINUE;
+		return true;
 	}
+
 	fmt::print("Sequence found at addresses:\n");
 	for (const auto& addr : locations) 
 		fmt::print(" {:04x}\n", addr);
 
-	return ACTION_CONTINUE;
+	return true;
 }
 
 bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
@@ -1520,89 +1459,77 @@ bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
 	return false;
 }
 
-uint64_t CPU::debugPrompt() {
-	uint64_t returnValue, count = 1;
-	std::string line;
+bool CPU::executeDebuggerCmd(std::string line) {
 	debugFn_t f;
 
-	setupReadline();
-	
-	listPC = PC;
-	disassemble(PC, 1);
+	line = stripTrailingSpaces(line);
+	line = stripLeadingSpaces(line);
 
-	while(1) {
-		if (debug_alwaysShowPS) 
-			printCPUState();
+	if (line.empty() && debug_lastCmd.empty()) // Blank input
+		return true;
 
-		getReadline(line);
-		line = stripTrailingSpaces(line);
-		line = stripLeadingSpaces(line);
-
-		if (line.empty() && debug_lastCmd.empty()) // Blank input
-			continue;
-
-		if (line.empty() && !debug_lastCmd.empty()) {
-			line = debug_lastCmd;
-			fmt::print(": {}\n", line);
-		}
-
-		// Check if command is numbers, convert them to
-		// integer and return it.
-		try {
-			count = std::stol(line);
-			debug_lastCmd = line;
-			return count;
-		}
-		catch(...) {
-			// line isn't numbers, continue.
-		}
-
-		auto savedLine = line;
-		auto command = split(line, " ");
-		if (command == "") 
-			continue;
-
-		if (matchCommand(command, f) == false) {
-			fmt::print("Unknown command '{}'\n", command);
-			continue;
-		}
-
-		if (line != "continue") 
-			debug_lastCmd = savedLine;
-
-		auto action = (this->*f)(line, returnValue);
-		if (action == ACTION_CONTINUE)
-			continue;
-		if (action == ACTION_RETURN)
-			return returnValue;
-
+	if (line.empty() && !debug_lastCmd.empty()) {
+		line = debug_lastCmd;
+		fmt::print(": {}\n", line);
 	}
-	return 1;
+
+	// Check if command is numbers, convert them to
+	// integer and execute that many instructions.
+	try {
+		uint64_t insCnt = std::stol(line);
+		debug_lastCmd = line;
+		while (insCnt--) {
+			Cycles_t cyclesUsed, cyclesExpected;
+			executeOneInstructionWithCycleCount(cyclesUsed, cyclesExpected);
+			if (debug_alwaysShowPS) 
+				printCPUState();
+			disassemble(PC, 1);
+		}
+		return true;
+	}
+	catch(...) {
+		// line isn't numbers, continue.
+	}
+
+	auto savedLine = line;
+	auto command = split(line, " ");
+	if (command == "") {
+		fmt::print("Invalid command: ""\n");
+		return false;
+	}
+
+	if (matchCommand(command, f) == false) {
+		fmt::print("Unknown command '{}'\n", command);
+		return false;
+	}
+
+	if (line != "continue") 
+		debug_lastCmd = savedLine;
+
+	return (this->*f)(line);
 }
 
 void CPU::debug() {
-	uint64_t count;
+	std::string line;
+	debugMode = true;
+	listPC = PC;
 
 	if (debugEntryFunc) {
 		captureSignals();
 		debugEntryFunc();
 	}
+	setupReadline();
 
-	fmt::print("\nDebugger starting at PC {:#04x}\n", PC);
+	fmt::print("\nDebugger starting at PC {:#06x}\n", PC);
+	printCPUState();
+	disassemble(PC, 1);
 
-	debugMode = true;
-
-	while (debugMode) {
-		count = debugPrompt();
-
-		while (count--) {
-			Cycles_t cyclesUsed, cyclesExpected;
-			executeOneInstructionWithCycleCount(cyclesUsed, cyclesExpected);
-			if (count)
-				disassemble(PC, 1);
-		}
+	while (debugMode) {	
+		getReadline(line);
+		executeDebuggerCmd(line);
+		if (debug_alwaysShowPS) 
+			printCPUState();
 	}
-
 	fmt::print("Exiting debugger\n");
 
 	if (debugExitFunc) {
@@ -1611,6 +1538,7 @@ void CPU::debug() {
 	}
 }
 
+// This is used for basic disassembler testing
 void CPU::traceOneInstruction(Cycles_t& usedCycles, Cycles_t &expectedCycles) {
 	disassemble(PC, 1);
 	executeOneInstructionWithCycleCount(usedCycles, expectedCycles);
