@@ -215,17 +215,6 @@ void setupReadline() {
 	rl_attempted_completion_function = readlineCompletionCallback;
 }
 
-// Capture ^C and ^-Backslash
-void captureSignals() {
-	signal(SIGINT, SIG_IGN);
-	signal(SIGQUIT, SIG_IGN);
-
-}
-
-void restoreSignals() {
-	signal(SIGINT, SIG_DFL);
-	signal(SIGQUIT, SIG_DFL);
-}
 #endif
 
 #ifdef _WIN64
@@ -235,6 +224,9 @@ void getReadline(std::string& line) {
 	fmt::print(": ");
 	std::getline(std::cin, line);
 }
+
+void captureSignals() {}
+void restoreSignals() {}
 #endif
 
 //////////
@@ -564,7 +556,7 @@ void CPU::setDebug(bool d) {
 
 void CPU::listBreakpoints() {
 	fmt::print("Active breakpoints:\n");
-	for (size_t i = 0; i < breakpoints.size(); i++) {
+	for (Word i = 0; i < breakpoints.size(); i++) {
 		if (breakpoints[i]) {
 			fmt::print("{:04x}", i);
 			auto label = addressLabel(i);
@@ -1139,7 +1131,7 @@ bool CPU::memdumpCmd(std::string &line) {
 			return true;
 		}
     } else if (std::regex_match(line, matches, assignValueToLabelR) && matches.size() > 3) {
-		value = std::stoul(matches[3], nullptr, 16);
+		value = (Word) std::stoul(matches[3], nullptr, 16);
 		if (calculateAddress(matches, addr1, addr2, false) && rangeCheckAddr(addr1) && rangeCheckValue(value)) {
 			Byte oldval = mem.Read(addr1);
 			mem.Write(addr1, (Byte) value);
@@ -1160,7 +1152,7 @@ bool CPU::memdumpCmd(std::string &line) {
 			return true;
 		}
     } else if (std::regex_match(line, matches, assignValueToRangeR) && matches.size() > 4) {
-        value = std::stoul(matches[5], nullptr, 16);
+        value = (Word) std::stoul(matches[5], nullptr, 16);
 		if (calculateAddress(matches, addr1, addr2, true) &&
 			rangeCheckAddr(addr1) && rangeCheckAddr(addr2) && rangeCheckValue(value)) {
 				mem.assign(addr1, addr2, (Byte) value);
@@ -1422,7 +1414,7 @@ bool CPU::findCmd(std::string& line) {
 		try {
 			size_t cProcessed;
 			auto len = line.length();
-			filter = std::stoul(line, &cProcessed, 16);
+			filter = (uint8_t) std::stoul(line, &cProcessed, 16);
 			if (cProcessed != len) {
 				fmt::print("Error: filter is not a hexadecimal number\n");
 				return false;
@@ -1515,7 +1507,6 @@ void CPU::debug() {
 	listPC = PC;
 
 	if (debugEntryFunc) {
-		captureSignals();
 		debugEntryFunc();
 	}
 	setupReadline();
@@ -1533,7 +1524,6 @@ void CPU::debug() {
 	fmt::print("Exiting debugger\n");
 
 	if (debugExitFunc) {
-		restoreSignals();
 		debugExitFunc();
 	}
 }

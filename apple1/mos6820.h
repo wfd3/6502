@@ -1,3 +1,23 @@
+//
+// MOS6820 Peripheral Interface Adaptor emulator, handling keyboard input and display output.  This also 
+// handles control keys (reset, clear screen, debugger entry and emulator exit) input but not processing
+// of these keys.
+//
+// Copyright (C) 2023 Walt Drummond
+//
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 #include <cstdint>
 
@@ -13,6 +33,7 @@
 # include <cstdio>
 #elif defined(_WIN64)
 # include <conio.h>
+# include <windows.h>
 #else 
 # error "No platform-specific implementation of getch()"
 #endif
@@ -22,16 +43,26 @@
 template<class Address = uint16_t, class Cell = uint8_t>
 class MOS6820 : public MemMappedDevice<Address, Cell> {
 public:	
-	static constexpr Word KEYBOARD   = 0xd010;
-	static constexpr Word KEYBOARDCR = 0xd011;
-	static constexpr Word DISPLAY    = 0xd012;
-	static constexpr Word DISPLAYCR  = 0xd013;
+	
+	// Offsets from baseAddress for these memory-mapped I/O ports.  These are in order and
+	// cannot change.
+	static constexpr Word KEYBOARD   = 0;
+	static constexpr Word KEYBOARDCR = 1;
+	static constexpr Word DISPLAY    = 2;
+	static constexpr Word DISPLAYCR  = 3;
 
-	MOS6820() {
-		MemMappedDevice<Address, Cell>::addAddress(DISPLAY);
-		MemMappedDevice<Address, Cell>::addAddress(KEYBOARD);
-		MemMappedDevice<Address, Cell>::addAddress(DISPLAYCR);
-		MemMappedDevice<Address, Cell>::addAddress(KEYBOARDCR);
+	MOS6820(Address base) {
+		Map(base);
+	}
+	MOS6820() {}
+
+	void Map(Address base) {
+		baseAddress = base;
+
+		MemMappedDevice<Address, Cell>::addAddress(baseAddress + DISPLAY);
+		MemMappedDevice<Address, Cell>::addAddress(baseAddress + KEYBOARD);
+		MemMappedDevice<Address, Cell>::addAddress(baseAddress + DISPLAYCR);
+		MemMappedDevice<Address, Cell>::addAddress(baseAddress + KEYBOARDCR);
 	}
 
   	Device::BusSignals housekeeping() override {
@@ -48,35 +79,38 @@ public:
     }
 
 	Cell Read(Address address) override {
-		switch (address) {
-			case DISPLAY:    return displayRead(address);
-			case DISPLAYCR:  return displayRead(address);
-			case KEYBOARD:   return keyboardRead(address);
-			case KEYBOARDCR: return keyboardRead(address);
+		auto addr = address - baseAddress;
+
+		switch (addr) {
+		case DISPLAY:
+		case DISPLAYCR:
+			return displayRead(addr);
+		case KEYBOARD:
+		case KEYBOARDCR:
+			return keyboardRead(addr);
 		}
+
 		return 0;
 	}
 
-	void Write(Address address, Cell c) override { 
-		switch (address) {
-			case DISPLAY:    
-				displayWrite(address, c);
-				break;
-			case DISPLAYCR:  
-				displayWrite(address, c);
-				break;
-			case KEYBOARD:   
-				keyboardWrite(address, c);
-				break;
-			case KEYBOARDCR: 
-				keyboardWrite(address, c);
-				break;
+	void Write(Address address, Cell c) override {
+		uint8_t addr = address - baseAddress;
+		switch (addr) {
+		case DISPLAY:
+		case DISPLAYCR:
+			displayWrite(addr, c);
+			break;
+		case KEYBOARD:
+		case KEYBOARDCR:
+			keyboardWrite(addr, c);
+			break;
 		}
 	}	
 
 #if defined(__linux__) || defined(__MACH__)
 
-    // Make the terminal non-blocking
+    // Make the terminal non-blocking and allow Control-C, Control-\ to
+	// pass through to the read() call.
     static void setup()
     {
         termios term;
@@ -87,6 +121,10 @@ public:
         setbuf(stdin, nullptr);
         setbuf(stdout, nullptr);
         tcflush(0, TCIFLUSH);
+
+		// Ignore ^C and ^-Backslash
+		signal(SIGINT, SIG_IGN);
+		signal(SIGQUIT, SIG_IGN);
     }
 
     static void teardown()
@@ -95,33 +133,62 @@ public:
         tcgetattr(STDIN_FILENO, &term);
         term.c_lflag |= ICANON | ECHO | ISIG;
         tcsetattr(0, TCSANOW, &term);
-    }
+
+		// Restore ^C and ^-Backslash 
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
+	}
 
 #elif defined(_WIN64)
-    
-    static void setup() {}
-    static void teardown() {}
+
+	static void setup() {
+		CtrlC_Pressed = false;
+		SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+	}
+	static void teardown() {
+		SetConsoleCtrlHandler(ConsoleCtrlHandler, FALSE);
+	}
+
+	bool wasCtrlCPressed() {
+		auto r = CtrlC_Pressed;
+		CtrlC_Pressed = false;
+		return r;
+	}
 
 #endif
 
 private:
 
-	static std::string createCLS() {
-		return "\033[2J\033[H";
-	}
     // Apple 1 keycodes
-    static constexpr char CTRL_BACKSLASH = 0x1c; // ascii 27
-    static constexpr char CTRL_RBRACKET  = 0x1d; // ascii 29
-    static constexpr char CTRL_CARET     = 0x1e; // ascii 30
-    static constexpr char CTRL_MINUS     = 0x1f; // ascii 31
-    static constexpr char CR             = 0x0d;
-    static constexpr char BELL           = 0x0a;
-    static constexpr std::string CLS     = createCLS(); //"\033[2J\033[H";
-    #ifdef _WIN64
-    static constexpr char DEL            = '\b';
-    #else
-    static constexpr char DEL            = 0x7f;
-    #endif
+	static constexpr char NEWLINE        = 0x0a;
+	static constexpr char CARRAGE_RETURN = 0x0d;
+	static constexpr char BELL			 = 0x0a;
+#ifdef _WIN64
+	static constexpr char CTRL_C		 = 0x03;
+	static constexpr char DEL			 = '\b';
+#else
+	static constexpr char DEL			 = 0x7f; // Backspace on unix/linux
+#endif
+
+#ifdef _WIN64   
+	static constexpr char CTRL_BACKSPACE = 0x7f; // Quit emulator
+#else
+	static constexpr char CTRL_BACKSPACE = 0x08; 
+#endif
+	static constexpr char CTRL_LBRACKET = 0x1b;  // Clear screen
+	static constexpr char CTRL_BACKSLASH = 0x1c; // Reset/Jump to Wozmon
+	static constexpr char CTRL_RBRACKET = 0x1d;  // Enter debugger
+
+	// These are encoded in getch() and returned as signed char.  Should be 
+	// non-printable ASCII characters.
+	static constexpr char CLEARSCR_CHAR  = 0x00;
+	static constexpr char RESET_CHAR     = 0x01;
+	static constexpr char DEBUGGER_CHAR  = 0x02; // 0x03 is Control-C
+	static constexpr char EXIT_CHAR      = 0x04;
+
+	// Where this device is mapped in memory. 
+	// TODO: this should go away.
+	Address baseAddress            = 0;
 
 	// Display
 	unsigned char _data = 0;
@@ -129,10 +196,6 @@ private:
 	// Keyboard
 	bool kbdCRRead = false;
 	std::queue<Cell> queue;
-
-    void cls() {
-        fmt::print("\033[2J\033[H");
-    }
 
 #if defined(__linux__) || defined(__MACH__)
     
@@ -149,41 +212,85 @@ private:
         return true;
     }
 
+	 void clearScreen() {
+		 fmt::print("{}", CLS)
+	 }
+
 #elif defined(_WIN64) 
-  
-     bool getch(char& kbdCh) {
-        if (_kbhit()) {
-            kbdCh = _getch();
-            return true;
-        }
-        return false;
+
+	static bool CtrlC_Pressed;
+
+	static BOOL WINAPI ConsoleCtrlHandler(DWORD CtrlType) {
+		switch (CtrlType) {
+		case CTRL_C_EVENT:
+			CtrlC_Pressed = true;
+			return true;
+		case CTRL_BREAK_EVENT:
+		case CTRL_CLOSE_EVENT:
+		case CTRL_LOGOFF_EVENT:
+		case CTRL_SHUTDOWN_EVENT:
+			return false;
+		}
+
+		return false;
+	}
+
+	void clearScreen() {
+		system("cls");
+	}
+
+	bool getch(char& kbdCh) {
+		
+		if (wasCtrlCPressed()) {
+			fmt::print("^C\n");
+			kbdCh = CTRL_C;
+			return true;
+		}
+
+		if (_kbhit()) {
+			auto c = _getch();
+			if (GetAsyncKeyState(VK_CONTROL) < 0) { // Control was held when key was pressed
+				switch (c) {
+				case CTRL_BACKSPACE:
+					kbdCh = EXIT_CHAR;
+					return true;
+				case CTRL_BACKSLASH:
+					kbdCh = RESET_CHAR;
+					return true;
+				case CTRL_LBRACKET:
+					kbdCh = CLEARSCR_CHAR;
+					return true;
+				case CTRL_RBRACKET:
+					kbdCh = DEBUGGER_CHAR;
+					return true;
+				}
+			}
+		
+			kbdCh = c;
+			return true;
+		}
+
+		return false;
     }
 
 #endif
 
-std::string v = "";
 	Device::Lines displayHousekeeping() {
 		if (!_haveData) 
 			return Device::None;
 
 		auto c = _data & 0x7f;		// clear hi bit
 		switch (c) {
-		case CR:	// \r
+		case CARRAGE_RETURN:	// \r
 			fmt::print("\n");
-			v+= "[\\n]";
-            //fmt::print("{}\n", v);
-            v = "";
 			break;
 		case '_':		// Backspace
 			fmt::print("\b");
-			v += "[\\b]";
 			break;
 		case BELL:		// Bell
 			fmt::print("\a");
-			v += "[\\a]";
 			break;
 		default:
-            v += fmt::format("[{:x}={:c}]", c, c);
 			if (c >= 0x20 && c <= 0x7e)
 				fmt::print("{:c}", toupper(c));
 		}
@@ -199,71 +306,64 @@ std::string v = "";
         if (getch(ch) == false) 
 			return retval;
 		
-		// Map modern ascii to Apple 1 keycodes
+		// Handle control characters or map modern ascii to Apple 1 keycodes
 		switch (ch) {
 
-		// Control characters
-		case CTRL_BACKSLASH:
-            retval = Device::Reset;
-            break;
+		// Control characters; don't queue these.
+		case RESET_CHAR:
+            return Device::Reset;
 
-		case CTRL_RBRACKET:
-			retval = Device::Debug;
-            break;
+		case DEBUGGER_CHAR:
+			return Device::Debug;
 
-        case CTRL_CARET: 
-            cls();
-            break;
+        case EXIT_CHAR: 
+			return Device::Exit;
 		
-		case CTRL_MINUS:
-			retval = Device::Exit;
-            break;
+		case CLEARSCR_CHAR:
+			clearScreen();
+			return Device::None;
 
-		// Regular characters
-		case '\n':
-			ch = CR;
+		// Regular characters; do queue these
+		case NEWLINE:
+			ch = CARRAGE_RETURN;
 			break;
 		
 		case DEL:
 			ch = '_';
 			break;
-		
-		default:
-			ch = std::toupper(ch);
-			break;
 		}
 
+		ch = std::toupper(ch);
 		ch |= 0x80;
 		queue.push(ch);
-		
+
         return retval;
 	}
 
-	void displayWrite(Address address, Cell c) {
-		switch (address) {
+	void displayWrite(uint8_t addr, Cell c) {
+		switch (addr) {
 		case DISPLAY:
 			_data = c;
 			_haveData = true;
 			break;
-		case DISPLAYCR:
-			break;
 		}
 	}
 
-	Cell displayRead(Address address) {
-		switch (address) {
+	Cell displayRead(uint8_t addr) {
+		switch (addr) {
 		case DISPLAY:
 			return 0x7f;
-		case DISPLAYCR:
+		case DISPLAYCR: 
 			return 0;
 		}
+	
 		return 0;
 	}
 
-	Cell keyboardRead(Address address) {
-		Cell ch; 
+	Cell keyboardRead(uint8_t addr) {
+		Cell ch;
 
-		switch(address) {
+		switch (addr) {
 		case KEYBOARDCR:
 			// Check if characters are pending, return key code if so
 			kbdCRRead = true;
@@ -285,16 +385,20 @@ std::string v = "";
 			// before removing the character from the queue, thus preventing an 
 			// infinite loop.
 			if (kbdCRRead) {
-				queue.pop();	
+				queue.pop();
 				kbdCRRead = false;
 			}
 			return ch;
 
 		default:
-				fmt::print("Unknown address in keyboard: {:x}\n", address);
-		}	
-		return 0;
+			return 0;
+		}
 	}
 
-	void keyboardWrite([[maybe_unused]] Address a, [[maybe_unused]] Cell c) { }
+	void keyboardWrite([[maybe_unused]] uint8_t a, [[maybe_unused]] Cell c) { }
 };
+
+#ifdef _WIN64
+template <typename Address, typename Cell>
+bool MOS6820<Address, Cell>::CtrlC_Pressed = false;
+#endif

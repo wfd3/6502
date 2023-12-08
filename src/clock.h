@@ -18,6 +18,8 @@
 #pragma once
 
 #include <cstdint>
+#include <chrono>
+
 #ifdef _WIN64
 #include <windows.h>
 #endif
@@ -66,7 +68,7 @@ private:
 	std::chrono::nanoseconds _cycleDelay;
 
 #ifdef _WIN64
-	void windowsDelay(unt64_t cycles) {
+	void windowsDelay(uint64_t cycles) {
 		// Use the Windows high-performance counter to busy-wait a
 		//certain number of nanoseconds.
 		LARGE_INTEGER frequency;

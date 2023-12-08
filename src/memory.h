@@ -329,13 +329,14 @@ public:
        for (size_t i = 0; i <= _mem.size() - sequence.size(); ++i) {
             bool matches = true;
             for (size_t j = 0; j < sequence.size(); ++j) {
-                if (sequence[j] != (_mem[i + j]->Read(i + j) & filter)) {
+				Address a = static_cast<Address>(i + j);
+                if (sequence[j] != (_mem[a]->Read(a) & filter)) {
                     matches = false;
                     break;
                 }
             }
             if (matches) {
-                positions.push_back(i);
+                positions.push_back(static_cast<Address>(i));
             }
         }
 
@@ -387,30 +388,25 @@ public:
 		return true;
 	}
 
-	bool mapROM(const Address start,
-		    const std::vector<Cell> &rom,
-		    const bool overwriteExistingElements = true) {
+	bool mapROM(const Address start, const std::vector<Cell> &rom, const bool overwriteExistingElements = true) {
 		
-		boundsCheck(start + rom.size());
+		boundsCheck(static_cast<Address>(start + rom.size()));
 		if (!overwriteExistingElements &&
-		    addressRangeOverlapsExistingMap(start, start+rom.size())) {
-			auto s = fmt::format("Address range {:0{}x}:{:0{}x} overlaps "
-					     "with existing map",
+		    addressRangeOverlapsExistingMap(start, static_cast<Address>(start+rom.size()))) {
+			auto s = fmt::format("Address range {:0{}x}:{:0{}x} overlaps with existing map",
 					     start, AddressWidth, start + rom.size(), AddressWidth);
 			exception(s);
 			return false;
 		}
 
 		if (start + rom.size() - 1 > _endAddress) {
-			auto s = fmt::format("ROM will not fit into memory at "
-					     "start address {:0{}x} (data "
-					     "length {} bytes)",
+			auto s = fmt::format("ROM will not fit into memory at start address {:0{}x} (data length {} bytes)",
 					     start, AddressWidth, rom.size());
 			exception(s);
 		}
 
 		auto startIdx = _mem.begin() + start;
-		auto endIdx   = _mem.begin() + rom.size();
+		auto endIdx   = startIdx + rom.size();
 		unsigned long i = 0;
 
 		for (auto it = startIdx; it != endIdx && it != _mem.end(); it++, i++) {
@@ -434,8 +430,8 @@ public:
 		boundsCheck(address);
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(address, address)) {
-			auto s = fmt::format("Address {:0{}x} overlaps with "
-					     "existing map", address, AddressWidth);
+			auto s = fmt::format("Address {:0{}x} overlaps with existing map", 
+				address, AddressWidth);
 			exception(s);
 			return false;
 		}
@@ -505,7 +501,7 @@ public:
 				hexdump += fmt::format("{:0>{}x}  ", addr, AddressWidth);
 			}
 			Cell c;
-			Address address = std::distance(_mem.begin(), it);
+			Address address = static_cast<Address>(std::distance(_mem.begin(), it));
 			c = (*it)->Read(address);
 
 			c = calculateValue(valueExpression, c);
@@ -514,7 +510,7 @@ public:
 			hexdump += fmt::format("{:0>{}x} ", c, CellWidth);
 
 			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
-				uint8_t byte_value = (c >> (byte_idx * 8));
+				uint8_t byte_value = static_cast<uint8_t>(c >> (byte_idx * 8));
 				if (isascii(byte_value) && isprint(byte_value))
 					ascii += byte_value;
 				else
@@ -550,10 +546,9 @@ public:
 			  ((*next_it)->type() != (*range_start)->type());
 			
 			if (endOfRange) {
-				Address bytes = 1 + (Address) std::distance(range_start, it);
-				Address start = (Address) std::distance(_mem.begin(), 
-						range_start);
-				Address end = (Address) std::distance(_mem.begin(), it);
+				Address bytes = 1 + static_cast<Address>(std::distance(range_start, it));
+				Address start = static_cast<Address>(std::distance(_mem.begin(), range_start));
+				Address end = static_cast<Address>(std::distance(_mem.begin(), it));
 				auto type = (*it)->type();
 
 				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n",
@@ -692,12 +687,12 @@ private:
 	}
 
 	Cell calculateValue(const std::string& expression, Cell initialValue) {
-		std::vector<int64_t> values;
+		std::vector<Cell> values;
 		std::vector<char> ops;
 
 		auto applyOp = [&]() {
-			int64_t right = values.back(); values.pop_back();
-			int64_t left = values.back(); values.pop_back();
+			Cell right = values.back(); values.pop_back();
+			Cell left = values.back(); values.pop_back();
 			char op = ops.back(); ops.pop_back();
 			switch(op) {
 				case '+': values.push_back(left + right); break;
@@ -722,9 +717,12 @@ private:
 			}
 		};
 
+		if (expression.empty())
+			return initialValue;
+
 		std::istringstream stream(expression);
 		char op;
-		int64_t num;
+		Cell num;
 		stream >> op >> std::hex >> num;
 		values.push_back(initialValue);
 		ops.push_back(op);

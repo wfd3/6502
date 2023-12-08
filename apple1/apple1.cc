@@ -28,8 +28,7 @@
 #include "apple1.h"
 #include "clock.h"
 
-using Address = uint16_t;
-using Cell = uint8_t;
+constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
 // Create the memory, CPU, PIA and bus clock
 Memory<Address, Cell> mem(CPU::MAX_MEM);
@@ -46,7 +45,7 @@ constexpr Address_t wozmonAddress = 0xff00;
 static const char* WOZMON_FILE =
 BINFILE_PATH "/wozmon.bin";
 
-// Load address and data location for Apple Integer Basic (normally 
+// Load address and data location for Apple Integer Basic (normally     
 // loaded from cassette)
 constexpr Address_t appleBasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE =
@@ -66,6 +65,7 @@ void setupMemMap(){
 
 	// Keyboard and display memory-mapped IO, overwriting existing
 	// addresses.
+	pia->Map(PIA_BASE_ADDRESS);
 	mem.mapDevice(pia);
 	mem.mapROM(0xf000, 0xf0ff);
 
@@ -89,13 +89,13 @@ int main() {
 
 	fmt::print("A Very Simple Apple I\n");
 	fmt::print("  Reset        = Control-\\\n");
-	fmt::print("  Clear screen = Control-^\n");
+	fmt::print("  Clear screen = Control-[\n");
 	fmt::print("  Debugger     = Control-]\n");
-	fmt::print("  Quit         = Control-minus\n");
+	fmt::print("  Quit         = Control-Backspace\n");
 	fmt::print("\n");
 
 	setupMemMap();
-	MOS6820<Address, Cell>::setup();	
+	pia->setup();	
 	busClock.enableTimingEmulation();
 
 	// When the emulator enters debug mode we need to reset the
@@ -131,7 +131,7 @@ int main() {
 		busClock.delay(cyclesUsed);
 	}
 
-	MOS6820<Address, Cell>::teardown();	// Set the keyboard blocking
+	pia->teardown();	// Set the keyboard blocking
 
 	return 0;
 }
