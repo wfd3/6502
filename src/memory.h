@@ -187,43 +187,49 @@ private:
 	bool _active = false;
 };
 
-// Memory mapped Device class.  A more idiomatic version of the MIO 
-// Class above.
+// Memory mapped Device class.  A more idiomatic version of the MIO Class above.
 template<class Address, class Cell>
 class MemMappedDevice : public Device, public Element<Address, Cell> {
 public:
 
 	MemMappedDevice() {}
-	MemMappedDevice(std::vector<Address>& addresses) {
-		for (auto& a : addresses) {
-			_addresses.insert(a);
-		}
-	}
-	MemMappedDevice(std::initializer_list<Address> a) : _addresses(a.begin(), a.end()) {}
 	virtual ~MemMappedDevice() {}
 
-	void addAddress(Address a) { 
-		_addresses.insert(a);
+	void setBaseAddress(Address base) {
+		_baseAddress = base;
 	}
-
+	
 	bool validAddress(Address address) const {
-		return _addresses.find(address) != _addresses.end();
+		auto port = address - _baseAddress;
+		return _ioPorts.find(port) != _ioPorts.end();
 
 	}
-
-	const std::set<Address>& getAddressSet() const {
-		return _addresses;
+	
+	const std::set<Address> getAddressSet() const {
+		std::set<Address> computedAddresses;
+	
+		// Add _baseAddress to all the _ioPorts, return that new std::set
+		std::transform(_ioPorts.begin(), _ioPorts.end(), 
+			std::inserter(computedAddresses, computedAddresses.begin()),
+				[this](int value) { return value + _baseAddress; });
+	
+		return computedAddresses;
 	}
 
 	virtual std::string type() const override { return "MemMappedDevice"; }
 
 protected:
-	std::set<Address> _addresses;
+	Address _baseAddress;				// Where this is mapped in memory
+	std::set<uint8_t> _ioPorts;			// I/O ports that will be mapped into memory at _baseAddress
+
+	uint8_t decodeAddress(Address address) {
+		return address - _baseAddress;
+	}
 };
 
 /////////
 // memory class
-template<class Address = unsigned long, class Cell = unsigned char>
+template<class Address = uint64_t, class Cell = uint8_t>
 class Memory {
 public:
 	class MemoryProxy {
@@ -407,7 +413,7 @@ public:
 
 		auto startIdx = _mem.begin() + start;
 		auto endIdx   = startIdx + rom.size();
-		unsigned long i = 0;
+		uint64_t i = 0;
 
 		for (auto it = startIdx; it != endIdx && it != _mem.end(); it++, i++) {
 			(*it) = std::make_shared<::ROM<Address,Cell>>(rom[i]);
@@ -440,6 +446,23 @@ public:
 		return true;
 	}
 
+	bool mapDevice(std::shared_ptr<MemMappedDevice<Address,Cell>> device, Address base, 
+		const bool overwriteExistingElements = true) {
+		
+		device->setBaseAddress(base);
+		for (const auto& addr : device->getAddressSet()) {
+			boundsCheck(addr);
+			if (!overwriteExistingElements && isAddressMapped(addr)) {
+				auto s = fmt::format("Address {:0{}x} overlaps with existing map", 
+				addr, AddressWidth); 
+				exception(s);
+				return false;
+			}
+			_mem[addr] = device;
+		}
+		return true;
+	}
+#if 0
 	bool mapDevice(std::shared_ptr<MemMappedDevice<Address,Cell>> device, 
 		const bool overwriteExistingElements = true) {
 
@@ -455,6 +478,7 @@ public:
 		}
 		return true;
 	}
+#endif
 
 	bool isAddressMapped(const Address address) const {
 		return isAddressMapped(_mem[address]);
@@ -533,7 +557,8 @@ public:
 	void printMap() const {
 		auto it = _mem.begin();
 		auto range_start = it;
-		unsigned long mappedBytes = 0;
+		uint64_t mappedBytes = 0;
+		std::map<std::string, uint64_t> sizeByType;
 
 		fmt::print("Memory map:\n");
 
@@ -550,6 +575,7 @@ public:
 				Address start = static_cast<Address>(std::distance(_mem.begin(), range_start));
 				Address end = static_cast<Address>(std::distance(_mem.begin(), it));
 				auto type = (*it)->type();
+				sizeByType[type] += bytes;
 
 				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n",
 					   start, AddressWidth, end, AddressWidth, type, bytes);
@@ -561,7 +587,12 @@ public:
 		}
 		
 		fmt::print("Total bytes mapped:   {} bytes\n", mappedBytes * sizeof(Cell));
-		fmt::print("Total memory size :   {} bytes\n", _mem.size() * sizeof(Cell));
+
+		fmt::print("\nBytes by memory type:\n");
+		for (const auto& [type, size] : sizeByType) {
+			fmt::print("Bytes {:<9}:      {:>5} bytes\n", type, size * sizeof(Cell));
+		}
+
 	}
 
 	// Loading data into memory

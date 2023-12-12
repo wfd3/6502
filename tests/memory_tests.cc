@@ -187,31 +187,38 @@ TEST_F(MemoryTests, MemoryClassWithDefaultTemplateTypes) {
 	EXPECT_EQ(mem[0x42], 0x42);
 }	
 
+// Memory mapped device
 template<class Address, class Cell> 
 class testdev : public MemMappedDevice<Address, Cell> {
 public:
-	std::map<Address, Cell> _t;
+	std::map<uint8_t, Cell> _t;
 
-	testdev(std::vector<Address>& addresses) : MemMappedDevice<Address, Cell>(addresses) {
-		for (const auto& a : addresses)
+	testdev(std::vector<Address>& addresses) : MemMappedDevice<Address, Cell>() {
+		for (const auto& a : addresses) {
+			this->_ioPorts.insert(a);
 			_t[a] = 'Z';
+		}
 	}
 
-	testdev(std::initializer_list<Address> addresses) : MemMappedDevice<Address, Cell>(addresses) {
-		for (const auto& a : addresses)
+	testdev(std::initializer_list<Address> addresses) : MemMappedDevice<Address, Cell>() {
+		for (const auto& a : addresses) {
+			this->_ioPorts.insert(a);
 			_t[a] = 'Z';
+		}
 	}
 
 	testdev() { }
 
 	Cell Read([[maybe_unused]] const Address address) override { // TODO: bounds checking 
-		if (_t.find(address) == _t.end())
+		auto port = this->decodeAddress(address);
+		if (_t.find(port) == _t.end())
 			return 0;
-		return _t[address]; 
+		return _t[port]; 
 	}
 
 	void Write([[maybe_unused]] const Address address, [[maybe_unused]] const Cell c) override { // TODO: Bounds checking
-		_t[address] = c; 
+		auto port = this->decodeAddress(address);
+		_t[port] = c; 
 	}
 
 	virtual std::string type() const override {
@@ -223,7 +230,8 @@ TEST_F(MemoryTests, MemoryClassCanInsertAndWriteToCustomDevice) {
 	Memory<Address, Cell> mem(0x100);
 	auto d = std::make_shared<testdev<Address,Cell>>(std::initializer_list<Address>{0x10, 0x15});
 
-	mem.mapDevice(d);
+	#define BASE 0
+	mem.mapDevice(d, BASE);
 	mem[0x10] = 'K';
 
 	EXPECT_EQ(d->_t[0x10], 'K');
@@ -232,8 +240,9 @@ TEST_F(MemoryTests, MemoryClassCanInsertAndWriteToCustomDevice) {
 TEST_F(MemoryTests, MemoryClassCanInsertAndReadFromCustomDevice) {
 	Memory<Address, Cell> mem(0x100);
 	auto d = std::make_shared<testdev<Address,Cell>>(std::initializer_list<Address>{0x10,0x15});
-
-	mem.mapDevice(d);
+	
+	#define BASE 0
+	mem.mapDevice(d, BASE);
 	mem[0x10] = 'W';
 	EXPECT_EQ(mem[0x10], 'W');
 }
@@ -242,9 +251,10 @@ TEST_F(MemoryTests, MemoryHexDumpWithMappedDevice) {
 	Memory<uint16_t, uint8_t> mem(0x100);	
 	std::vector<uint16_t> addrs = {0x10, 0x13, 0x15};
 	auto d = std::make_shared<testdev<uint16_t,uint8_t>>(addrs);
-
+	
+	#define BASE 0
 	mem.mapRAM(0, 0x100);
-	mem.mapDevice(d);
+	mem.mapDevice(d, BASE);
 	EXPECT_EQ(mem[0x10], 'Z');
 
 	mem[0x12] = 'z';
@@ -256,9 +266,10 @@ TEST_F(MemoryTests, MemoryHexDumpWithMappedDeviceExplicitAddressList) {
 	Memory<uint16_t, uint8_t> mem(0x100);	
 	auto addrs = std::initializer_list<uint16_t>{0x15, 0x16, 0x17, 0x18, 0x19, /* gap */ 0x20};
 	auto d = std::make_shared<testdev<uint16_t,uint8_t>>(addrs);
-
+	
+	#define BASE 0
 	mem.mapRAM(0, 0x100);
-	mem.mapDevice(d);
+	mem.mapDevice(d, BASE);
 	EXPECT_EQ(mem[0x15], 'Z');
 
 	mem[0x18] = 'z';

@@ -22,15 +22,14 @@
 #include <cstdint>
 
 #if defined(__linux__) || defined(__MACH__)
+#include <unistd.h>
 # ifdef __linux__
-# include <termio.h>
+#  include <termio.h>
 # endif
 # ifdef __MACH__
-# include <termios.h>
-# include <sys/ioctl.h>
+#  include <termios.h>
+#  include <sys/ioctl.h>
 # endif
-# include <unistd.h>
-# include <cstdio>
 #elif defined(_WIN64)
 # include <conio.h>
 # include <windows.h>
@@ -43,66 +42,52 @@
 template<class Address = uint16_t, class Cell = uint8_t>
 class MOS6820 : public MemMappedDevice<Address, Cell> {
 public:	
-	
-	// Offsets from baseAddress for these memory-mapped I/O ports.  These are in order and
-	// cannot change.
-	static constexpr Word KEYBOARD   = 0;
-	static constexpr Word KEYBOARDCR = 1;
-	static constexpr Word DISPLAY    = 2;
-	static constexpr Word DISPLAYCR  = 3;
 
-	MOS6820(Address base) {
-		Map(base);
-	}
-	MOS6820() {}
-
-	void Map(Address base) {
-		baseAddress = base;
-
-		MemMappedDevice<Address, Cell>::addAddress(baseAddress + DISPLAY);
-		MemMappedDevice<Address, Cell>::addAddress(baseAddress + KEYBOARD);
-		MemMappedDevice<Address, Cell>::addAddress(baseAddress + DISPLAYCR);
-		MemMappedDevice<Address, Cell>::addAddress(baseAddress + KEYBOARDCR);
+	MOS6820() {
+		this->_ioPorts = {KEYBOARD, KEYBOARDCR, DISPLAY, DISPLAYCR};
 	}
 
   	Device::BusSignals housekeeping() override {
-        std::vector<Device::Lines> r;
+        std::vector<Device::Lines> signals;
+		
 		auto d = displayHousekeeping();
-        r.push_back(d);
+        signals.push_back(d);
 		auto k = keyboardHousekeeping();
-        r.push_back(k);
-		return r;
+        signals.push_back(k);
+
+		return signals;
 	}
 
 	std::string type() const override { 
-        return "MOS6820"; 
+		return fmt::format("MOS6820");
     }
 
 	Cell Read(Address address) override {
-		auto addr = address - baseAddress;
+		auto port = this->decodeAddress(address);
 
-		switch (addr) {
+		switch (port) {
 		case DISPLAY:
 		case DISPLAYCR:
-			return displayRead(addr);
+			return displayRead(port);
 		case KEYBOARD:
 		case KEYBOARDCR:
-			return keyboardRead(addr);
+			return keyboardRead(port);
 		}
 
 		return 0;
 	}
 
 	void Write(Address address, Cell c) override {
-		uint8_t addr = address - baseAddress;
-		switch (addr) {
+		uint8_t port = this->decodeAddress(address);
+
+		switch (port) {
 		case DISPLAY:
 		case DISPLAYCR:
-			displayWrite(addr, c);
+			displayWrite(port, c);
 			break;
 		case KEYBOARD:
 		case KEYBOARDCR:
-			keyboardWrite(addr, c);
+			keyboardWrite(port, c);
 			break;
 		}
 	}	
@@ -142,22 +127,28 @@ public:
 #elif defined(_WIN64)
 
 	static void setup() {
-		CtrlC_Pressed = false;
+		_CtrlC_Pressed = false;
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 	}
 	static void teardown() {
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, FALSE);
 	}
 
-	bool wasCtrlCPressed() {
-		auto r = CtrlC_Pressed;
-		CtrlC_Pressed = false;
-		return r;
-	}
+#else 
+	
+	static void setup() {}
+	static void teardown() {}
 
 #endif
 
 private:
+	
+	// Offsets from MemMappedDevice::_baseAddress for these memory-mapped I/O ports.  These are in order
+	// and cannot change.
+	static constexpr Word KEYBOARD   = 0;
+	static constexpr Word KEYBOARDCR = 1;
+	static constexpr Word DISPLAY    = 2;
+	static constexpr Word DISPLAYCR  = 3;
 
     // Apple 1 keycodes
 	static constexpr char NEWLINE        = 0x0a;
@@ -166,40 +157,33 @@ private:
 #ifdef _WIN64
 	static constexpr char CTRL_C		 = 0x03;
 	static constexpr char DEL			 = '\b';
-#else
-	static constexpr char DEL			 = 0x7f; // Backspace on unix/linux
-#endif
-
-#ifdef _WIN64   
 	static constexpr char CTRL_BACKSPACE = 0x7f; // Quit emulator
 #else
+	static constexpr char DEL			 = 0x7f; // Backspace on unix/linux
 	static constexpr char CTRL_BACKSPACE = 0x08; 
 #endif
-	static constexpr char CTRL_LBRACKET = 0x1b;  // Clear screen
+	static constexpr char CTRL_LBRACKET  = 0x1b;  // Clear screen
 	static constexpr char CTRL_BACKSLASH = 0x1c; // Reset/Jump to Wozmon
-	static constexpr char CTRL_RBRACKET = 0x1d;  // Enter debugger
+	static constexpr char CTRL_RBRACKET  = 0x1d;  // Enter debugger
 
-	// These are encoded in getch() and returned as signed char.  Should be 
-	// non-printable ASCII characters.
+	// Platform agnostic remapping of control keycodes.  These are encoded in getch() and returned 
+	// as a signed char, and should be non-printable ASCII characters.
 	static constexpr char CLEARSCR_CHAR  = 0x00;
 	static constexpr char RESET_CHAR     = 0x01;
 	static constexpr char DEBUGGER_CHAR  = 0x02; // 0x03 is Control-C
 	static constexpr char EXIT_CHAR      = 0x04;
 
-	// Where this device is mapped in memory. 
-	// TODO: this should go away.
-	Address baseAddress            = 0;
-
 	// Display
-	unsigned char _data = 0;
-	bool _haveData = false;
+	bool _haveDspData = false;
+	unsigned char _dspData = 0;
+	
 	// Keyboard
-	bool kbdCRRead = false;
-	std::queue<Cell> queue;
+	bool _kbdCRRead = false;
+	std::queue<Cell> _charQueue;
 
 #if defined(__linux__) || defined(__MACH__)
     
-     bool getch(char &kbdCh) {
+     bool getch(char &kbdCh) const {
         int byteswaiting;
         char ch;
 
@@ -208,18 +192,42 @@ private:
             return false;
 
         read(STDIN_FILENO, &ch, 1);
-        kbdCh = ch;
+		
+		switch (ch) {
+		case CTRL_BACKSPACE:
+			kbdCh = EXIT_CHAR;
+			break;
+		case CTRL_BACKSLASH:
+			kbdCh = RESET_CHAR;
+			break;
+		case CTRL_RBRACKET:
+			kbdCh = DEBUGGER_CHAR;
+			break;
+		case CTRL_LBRACKET:
+			kbdCh = CLEARSCR_CHAR;
+			break;
+		default:
+	        kbdCh = ch;
+			break;
+		}
         return true;
     }
 
-	 void clearScreen() {
-		 fmt::print("{}", CLS)
+	void clearScreen() const {
+		const std::string CLS = "\033[2J\033[H"; 
+		fmt::print("{}", CLS);
 	 }
 
 #elif defined(_WIN64) 
 
-	static bool CtrlC_Pressed;
+	static bool _CtrlC_Pressed;
 
+	bool wasCtrlCPressed() {
+		auto r = _CtrlC_Pressed;
+		_CtrlC_Pressed = false;
+		return r;
+	}
+	
 	static BOOL WINAPI ConsoleCtrlHandler(DWORD CtrlType) {
 		switch (CtrlType) {
 		case CTRL_C_EVENT:
@@ -235,59 +243,68 @@ private:
 		return false;
 	}
 
-	void clearScreen() {
+	void clearScreen() const {
 		system("cls");
 	}
 
-	bool getch(char& kbdCh) {
+	bool getch(char& kbdCh) const {
 		
 		if (wasCtrlCPressed()) {
-			fmt::print("^C\n");
 			kbdCh = CTRL_C;
 			return true;
 		}
 
-		if (_kbhit()) {
-			auto c = _getch();
-			if (GetAsyncKeyState(VK_CONTROL) < 0) { // Control was held when key was pressed
-				switch (c) {
-				case CTRL_BACKSPACE:
-					kbdCh = EXIT_CHAR;
-					return true;
-				case CTRL_BACKSLASH:
-					kbdCh = RESET_CHAR;
-					return true;
-				case CTRL_LBRACKET:
-					kbdCh = CLEARSCR_CHAR;
-					return true;
-				case CTRL_RBRACKET:
-					kbdCh = DEBUGGER_CHAR;
-					return true;
-				}
-			}
+		if (!_kbhit()) 
+			return false;
 		
-			kbdCh = c;
-			return true;
+		auto c = _getch();
+		if (GetAsyncKeyState(VK_CONTROL) < 0) { // Control was held when key was pressed
+			switch (c) {
+			case CTRL_BACKSPACE:
+				kbdCh = EXIT_CHAR;
+				return true;
+			case CTRL_BACKSLASH:
+				kbdCh = RESET_CHAR;
+				return true;
+			case CTRL_LBRACKET:
+				kbdCh = CLEARSCR_CHAR;
+				return true;
+			case CTRL_RBRACKET:
+				kbdCh = DEBUGGER_CHAR;
+				return true;
+			}
 		}
-
-		return false;
+	
+		kbdCh = c;
+		return true;
     }
+
+#else
+
+	// Clear the Apple 1 display
+	void clearScreen() const {}
+
+	// Check and get a key from the keyboard, returning true and setting kbdCh if a key was ready
+	// for us.  Map Control keys to platform agnostic values (see above)
+	bool getch(char& kbdCh) {
+		return false;
+	}
 
 #endif
 
 	Device::Lines displayHousekeeping() {
-		if (!_haveData) 
+		if (!_haveDspData) 
 			return Device::None;
 
-		auto c = _data & 0x7f;		// clear hi bit
+		auto c = _dspData & 0x7f;	// clear hi bit
 		switch (c) {
 		case CARRAGE_RETURN:	// \r
 			fmt::print("\n");
 			break;
-		case '_':		// Backspace
+		case '_':				// Backspace
 			fmt::print("\b");
 			break;
-		case BELL:		// Bell
+		case BELL:				// Bell
 			fmt::print("\a");
 			break;
 		default:
@@ -295,7 +312,7 @@ private:
 				fmt::print("{:c}", toupper(c));
 		}
 
-		_haveData = false;
+		_haveDspData = false;
 		return Device::None;
 	}
 
@@ -335,22 +352,22 @@ private:
 
 		ch = std::toupper(ch);
 		ch |= 0x80;
-		queue.push(ch);
+		_charQueue.push(ch);
 
         return retval;
 	}
 
-	void displayWrite(uint8_t addr, Cell c) {
-		switch (addr) {
+	void displayWrite(uint8_t port, Cell c) {
+		switch (port) {
 		case DISPLAY:
-			_data = c;
-			_haveData = true;
+			_dspData = c;
+			_haveDspData = true;
 			break;
 		}
 	}
 
-	Cell displayRead(uint8_t addr) {
-		switch (addr) {
+	Cell displayRead(uint8_t port) const {
+		switch (port) {
 		case DISPLAY:
 			return 0x7f;
 		case DISPLAYCR: 
@@ -360,23 +377,23 @@ private:
 		return 0;
 	}
 
-	Cell keyboardRead(uint8_t addr) {
+	Cell keyboardRead(uint8_t port) {
 		Cell ch;
 
-		switch (addr) {
+		switch (port) {
 		case KEYBOARDCR:
 			// Check if characters are pending, return key code if so
-			kbdCRRead = true;
-			if (queue.empty())
+			_kbdCRRead = true;
+			if (_charQueue.empty())
 				return 0;
 
-			return queue.front();
+			return _charQueue.front();
 
 		case KEYBOARD:
-			if (queue.empty())
+			if (_charQueue.empty())
 				return 0;
 
-			ch = queue.front();
+			ch = _charQueue.front();
 
 			// Applesoft Basic Lite does a blind, unchecked read on the keyboard port
 			// looking for a ^C.  If it sees one, it then does a read on the keyboard
@@ -384,9 +401,9 @@ private:
 			// get the same ^C.  This logic forces a keyboard control register read 
 			// before removing the character from the queue, thus preventing an 
 			// infinite loop.
-			if (kbdCRRead) {
-				queue.pop();
-				kbdCRRead = false;
+			if (_kbdCRRead) {
+				_charQueue.pop();
+				_kbdCRRead = false;
 			}
 			return ch;
 
@@ -395,10 +412,10 @@ private:
 		}
 	}
 
-	void keyboardWrite([[maybe_unused]] uint8_t a, [[maybe_unused]] Cell c) { }
+	void keyboardWrite([[maybe_unused]] uint8_t port, [[maybe_unused]] Cell c) { }
 };
 
 #ifdef _WIN64
 template <typename Address, typename Cell>
-bool MOS6820<Address, Cell>::CtrlC_Pressed = false;
+bool MOS6820<Address, Cell>::_CtrlC_Pressed = false;
 #endif

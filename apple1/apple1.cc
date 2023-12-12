@@ -42,44 +42,48 @@ BusClock_t busClock;
 
 // Load addresses and data locations for WozMon (in ROM)
 constexpr Address_t wozmonAddress = 0xff00;
-static const char* WOZMON_FILE =
-BINFILE_PATH "/wozmon.bin";
+static const char* WOZMON_FILE = BINFILE_PATH "/wozmon.bin";
 
 // Load address and data location for Apple Integer Basic (normally     
 // loaded from cassette)
-constexpr Address_t appleBasicAddress = 0xe000;
-static const char* APPLESOFT_BASIC_FILE =
-BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
+constexpr Address_t apple1BasicAddress = 0xe000;
+static const char* APPLESOFT_BASIC_FILE = BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
 
 // bytecode for the sample program from the Apple 1 Manual (normally entered 
 // by hand via WozMon)
 constexpr Address_t apple1SampleAddress = 0x0000;
 std::vector<unsigned char> apple1SampleProg =
-	{ 0xa9, 0x00, 0xaa, 0x20, 0xef,0xff, 0xe8, 0x8a, 0x4c, 0x02, 0x00 };
+	{ 0xa9, 0x00, 		// lda #$00
+	  0xaa,   			// tax
+	  0x20, 0xef, 0xff, // jsr $ffef
+	  0xe8, 			// inx
+	  0x8a, 			// txa
+	  0x4c, 0x02, 0x00 	// jmp $0002
+	};
 
 // Setup memory map
+// 0x0000-0x5fff - RAM
+// 0xe000-0xefff - Apple 1 Basic (also RAM)
+// 0xd010-0xd013 - MOS6820
+// 0xff00-0xffff - WozMon ROM
 void setupMemMap(){
 	mem.Reset();
-	// Map 64k of RAM, making this one hefty Apple 1
-	mem.mapRAM(0x0000, 0xffff);
 
-	// Keyboard and display memory-mapped IO, overwriting existing
-	// addresses.
-	pia->Map(PIA_BASE_ADDRESS);
-	mem.mapDevice(pia);
-	mem.mapROM(0xf000, 0xf0ff);
+	// Map in the 6820/PIA, overwriting existing addresses.
+	mem.mapDevice(pia, PIA_BASE_ADDRESS);
 
 	// Map the Wozmon ROM into memory
-	fmt::print("# Mapping wozmon ROM at {:04x}\n", wozmonAddress);
 	mem.loadRomFromFile(WOZMON_FILE, wozmonAddress);
-	
-	// Load Apple 1 sample program and Apple-1 Basic 
-	fmt::print("# Loading Apple I sample program at {:04x}\n", 
-		apple1SampleAddress);
-	mem.loadData(apple1SampleProg, apple1SampleAddress);
+ 
+	// 8K RAM
+	mem.mapRAM(0x0000, 0x1fff);
 
-	fmt::print("# Loading Apple I Basic at {:04x}\n", appleBasicAddress);
-	mem.loadDataFromFile(APPLESOFT_BASIC_FILE, appleBasicAddress);
+	// Map RAM and load Apple 1 basic
+	mem.mapRAM(0xe000, 0xefff);
+	mem.loadDataFromFile(APPLESOFT_BASIC_FILE, apple1BasicAddress);
+
+	// Load Apple 1 sample program and Apple-1 Basic 
+	mem.loadData(apple1SampleProg, apple1SampleAddress);
 }
 
 //////////
