@@ -25,8 +25,10 @@
 #include <memory.h>
 
 #include "mos6820.h"
-#include "apple1.h"
 #include "clock.h"
+
+using Address = uint16_t;
+using Cell    = uint8_t;
 
 constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
@@ -52,7 +54,7 @@ static const char* APPLESOFT_BASIC_FILE = BINFILE_PATH "/Apple-1_Integer_BASIC.b
 // bytecode for the sample program from the Apple 1 Manual (normally entered 
 // by hand via WozMon)
 constexpr Address_t apple1SampleAddress = 0x0000;
-std::vector<unsigned char> apple1SampleProg =
+std::vector<Cell> apple1SampleProg =
 	{ 0xa9, 0x00, 		// lda #$00
 	  0xaa,   			// tax
 	  0x20, 0xef, 0xff, // jsr $ffef
