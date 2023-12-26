@@ -28,13 +28,13 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 {
 #ifdef RUN_FUNCTIONAL_TEST
 	// Given:
-	constexpr Word exitAddress = 0x3469;
+	constexpr Word haltAddress = 0x3469;
 
 	// When:
 	mem.loadDataFromFile(fileName, 0x0000);
 	cpu.setResetVector(0x0400);
-	cpu.setExitAddress(exitAddress);
-	cpu.toggleLoopDetection(); // Force break on 'jmp *'
+	cpu.setHaltAddress(haltAddress);
+	cpu.loopDetection(true); // Force a halt on 'jmp *'
 	cpu.Reset();
 
 	//Then:
@@ -46,7 +46,7 @@ TEST_F(MOS6502XXXFunctionalTestSuite, TestLoad6502TestSuite)
 	while (!cpu.executeOneInstruction())
 		;
 
-	EXPECT_EQ(cpu.PC, exitAddress);
+	EXPECT_EQ(cpu.PC, haltAddress);
 #endif
 }
 

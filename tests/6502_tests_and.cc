@@ -40,8 +40,6 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
 	Byte ins = Opcodes::INS_AND_IMM;
 
-	auto c = cpu.Cycles; 
-
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 
@@ -54,7 +52,6 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 
 	// Then:
 	EXPECT_EQ(cpu.A, 0x00);
-	EXPECT_GT(cpu.Cycles, c);
 	EXPECT_TRUE(cpu.Flags.Z);
 	EXPECT_FALSE(cpu.Flags.N);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 

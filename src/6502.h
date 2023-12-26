@@ -30,6 +30,7 @@
 
 #include "memory.h"
 
+// Types used by 6502
 using Byte      = uint8_t;
 using SByte     = int8_t;
 using Word      = uint16_t;
@@ -39,9 +40,7 @@ using cMemory   = Memory<Address_t, Byte>;
 
 // Forward declaration with extern "C" linkage for later use as a
 // friend in class CPU. This is for GNU Readline.
-extern "C" char **readlineCompletionCallback(const char* text, int start,
-					     int end);
-
+extern "C" char **readlineCompletionCallback(const char* text, int start, int end);
 
 //
 // The CPU class is broken up into three different sections:
@@ -61,20 +60,61 @@ class CPU {
 // CPU
 ////////////////////	
 public:
-	// Total addressable memory
-	constexpr static Word MAX_MEM          = 0xFFFF;
+	// Last addressable address
+	constexpr static Word MAX_MEM = 0xFFFF;
+
+	// CPU Setup & reset
+	CPU(cMemory &);
+	void Reset();
+	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
+	void setResetVector(Word);
+	void setPendingReset() {
+		if (!_debuggingEnabled)
+			_pendingReset = true;
+	}
+	bool inReset() { return _inReset; }
+
+	void setInterruptVector(Word);
+	void raiseIRQ() { _pendingIRQ = true; }
+	void raiseNMI() { _pendingNMI = true; }
+	
+	// Public only for tests
+	bool pendingIRQ() { return _pendingIRQ; }
+	bool pendingNMI() { return _pendingNMI; }
+
+	void unsetHaltAddress() { _haltAddressSet = false; }
+	void setHaltAddress(Address_t _pc) {
+		_haltAddress = _pc;
+		_haltAddressSet = true;
+	}
+	void loopDetection(bool l) {
+		debug_loopDetection = l;
+	}
+
+	// Execution
+	void execute(bool& stop, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed);
+
+	// Debugger
+	bool executeDebug();
+
+private:
+	
+#ifdef TEST_BUILD
+	//////////
+	// Used by tests
+public:
+#endif
 
 	// CPU initial vectors
 	constexpr static Byte INITIAL_SP       = 0xFF; 
 	constexpr static Word RESET_VECTOR     = 0xFFFC;
-	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
 
+	// TODO: Move to private section, make getter/setter methods for these for the tests
 	Word PC = 0;		 // Program counter
 	Byte SP = 0;		 // Stack pointer
-	Byte A = 0;			 // Accumulator 
-	Byte X = 0;			 // X Register
-	Byte Y = 0;			 // Y Register
-	Cycles_t Cycles = 0; // Cycle counter
+	Byte A  = 0;		 // Accumulator 
+	Byte X  = 0;		 // X Register
+	Byte Y  = 0;		 // Y Register
 	
 	struct ProcessorStatusBits {
 		Byte C:1; 	     // Carry (bit 0)
@@ -90,74 +130,29 @@ public:
 		Byte PS = 0;
 		struct ProcessorStatusBits Flags;
 	};
-
-	// CPU Setup & reset
-	CPU(cMemory &);
-	void Reset();
-	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
-	void setResetVector(Word);
-	void setPendingReset() {
-		if (!debugMode)
-			_pendingReset = true;
-	}
-	bool inReset() { return _inReset; }
-
-	void setupFunction(void (*func)(void)) {
-		_setupFunction = func;
-	}
-
-	void setInterruptVector(Word);
-	void raiseIRQ() { _pendingIRQ = true; }
-	void raiseNMI() { _pendingNMI = true; }
-	bool pendingIRQ() { return _pendingIRQ; }
-	bool pendingNMI() { return _pendingNMI; }
-
-	void unsetExitAddress() { _exitAddressSet = false; }
-	void setExitAddress(Address_t _pc) {
-		_exitAddress = _pc;
-		_exitAddressSet = true;
-	}
-	void toggleLoopDetection() {
-		debug_loopDetection = !debug_loopDetection;
-	}
-
-	// Execution
+	
 	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
-	bool executeOneInstruction(Cycles_t &);
 	bool executeOneInstruction();
-
-	// Debugger
 	void traceOneInstruction(Cycles_t &, Cycles_t &);
-	void setDebug(bool);
-	bool isDebugEnabled() { return debugMode; }
-	void debug();
-	bool debuggerOnException() { return debug_OnException; }
-	void enterDebuggerOnException(bool t) { debug_OnException = t; }
-
-	// Callbacks to run before entering and exiting the debugger
-	typedef void (*debugEntryExitFn_t)(void);
-	void setDebugEntryExitFunc(debugEntryExitFn_t entryfn = nullptr,
-				   debugEntryExitFn_t exitfn = nullptr) {
-
-		debugEntryFunc = entryfn;
-		debugExitFunc = exitfn;
-	}
-
-	// The GNU readline command completion needs access to the
-	// _debugCommands vector.
-	friend char *readlineCommandGenerator(const char*, int);
-	friend char **readlineCompletionCallback(const char*, int, int);
 
 private:
+	Cycles_t Cycles = 0; // Cycle counter
+
+	//////////
+	// Special addresses/vectors
+	
+	// Interrupt/NMI vector
+	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
+	
+	// 6502 stack is one page at 01ff, down to 0100.  This is the stack frame for that page.
+	constexpr static Word STACK_FRAME = 0x0100;
+
 	// Bits for PS byte
 	constexpr static Byte BreakBit    = 1 << 4;
 	constexpr static Byte UnusedBit   = 1 << 5;
 	constexpr static Byte NegativeBit = 1 << 7;
 
-	// 6502 stack is one page at 01ff down to 0100.  This is the
-	// stack frame for that page.
-	constexpr static Word STACK_FRAME = 0x0100;
-
+	
 	// Addressing modes
 	enum class AddressingMode {
 		Immediate,
@@ -193,13 +188,12 @@ private:
 	Word testResetPC = 0;
 	Byte testResetSP = INITIAL_SP;
 	bool _testReset = false;
-	void (*_setupFunction)(void);
-	Address_t _exitAddress = 0;
-	bool _exitAddressSet = false;
+	Address_t _haltAddress = 0;
+	bool _haltAddressSet = false;
 
 	void exitReset();
-	bool isPCAtExitAddress() {
-		return _exitAddressSet && (PC == _exitAddress);
+	bool isPCAtHaltAddress() {
+		return _haltAddressSet && (PC == _haltAddress);
 	}
 
 	// Instruction map
@@ -321,15 +315,13 @@ private:
 	////
 	// Built-in Debugger
 
-	bool debugMode = false;
-	debugEntryExitFn_t debugEntryFunc = nullptr;
-	debugEntryExitFn_t debugExitFunc = nullptr;
+	bool _debuggingEnabled = false;
 	std::string debug_lastCmd = "";
 	bool debug_alwaysShowPS = false;
 	bool debug_loopDetection = false;
 	bool debug_OnException = false;
 
-	void toggleDebug();
+	void initDebugger();
 	bool executeDebuggerCmd(std::string);
 	void dumpStack();
 	void printCPUState();
@@ -388,6 +380,7 @@ private:
 	std::vector<bool> breakpoints;
 	void listBreakpoints();
 	bool isBreakpoint(Word);
+	bool isPCBreakpoint() { return isBreakpoint(PC); }
 	void deleteBreakpoint(Word);
 	void addBreakpoint(Word);
 	void deleteAllBreakpoints() { 
@@ -414,6 +407,11 @@ private:
 	bool lookupAddress(const std::string&, Word&);
 	bool parseCommandFile(const std::string&);
 	std::string getLabelByte(const uint8_t);
+
+	// GNU readline command completion, used by the debugger, needs access to the
+	// _debugCommands vector.
+	friend char *readlineCommandGenerator(const char*, int);
+	friend char **readlineCompletionCallback(const char*, int, int);
 };
 
 // 6502 Opcode definitions

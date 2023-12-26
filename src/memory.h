@@ -159,13 +159,13 @@ class Device {
 public:
 	// These should be in order of precedence 
 	enum Lines {
+		Debug,
 		Exit,
 		Reset,
-		Debug,
 		None
 	};
 
-	using BusSignals = std::vector<Lines>;
+	using BusSignals = std::set<Lines>;
 
 	virtual BusSignals housekeeping() { return {}; }
 	virtual void enable()       { _active = true;  }

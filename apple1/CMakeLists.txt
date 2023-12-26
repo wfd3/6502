@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.0...3.7)
 project( apple1 )
 
 # source for the  executable
-set (APPLE1_SOURCES "apple1.cc" "apple1.h")
+set (APPLE1_SOURCES "apple1.cc")
 source_group("src" FILE ${APPLE1_SOURCES})
 
 add_executable(apple1 ${APPLE1_SOURCES})

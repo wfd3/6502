@@ -224,10 +224,14 @@ void getReadline(std::string& line) {
 	fmt::print(": ");
 	std::getline(std::cin, line);
 }
-
-void captureSignals() {}
-void restoreSignals() {}
 #endif
+
+//////////
+// Called by CPU::CPU() to initialize the debugger
+void CPU::initDebugger() {
+	setupReadline();
+	breakpoints.assign(mem.size(), false);
+}
 
 //////////
 // CPU State information 
@@ -541,17 +545,6 @@ Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
 }
 
 //////////
-// Debug on/off?
-
-void CPU::toggleDebug() {
-	debugMode = !debugMode;
-}
-
-void CPU::setDebug(bool d) {
-	debugMode = d;
-}
-
-//////////
 // Breakpoints
 
 void CPU::listBreakpoints() {
@@ -862,7 +855,7 @@ std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
 		  "Reset the CPU and jump through the reset vector"
 		},
 		{ "continue",  "c",  &CPU::continueCmd, false,
-		  "Exit the debugger and contunue running the CPU.  "
+		  "Exit the debugger and continue running the CPU.  "
 		},
 		{ "loopdetect","ld", &CPU::loopdetectCmd, false,
 		  "Enable or disable loop detection (ie, 'jmp *'"},
@@ -1078,7 +1071,6 @@ bool CPU::resetListPCCmd(std::string &line) {
 	return true;
 }
 
-
 bool CPU::memdumpCmd(std::string &line) {
 	const std::string wordPattern   = R"((\w+))";  				// A word, like a label or identifier
 	const std::string offsetPattern = R"(([+-][0-9a-fA-F]+)?)"; // Optional offset, positive or negative, in hexadecimal
@@ -1269,7 +1261,6 @@ bool CPU::setCmd(std::string &line) {
 
 bool CPU::resetCmd([[maybe_unused]] std::string &line) {
 	fmt::print("Resetting 6502\n");
-	setDebug(false);
 	Reset();    	// Enter reset
 	if (inReset())
 		Reset();    // Exit reset
@@ -1281,12 +1272,12 @@ bool CPU::continueCmd([[maybe_unused]] std::string &line) {
 		fmt::print("CPU Exception hit; can't continue.  Reset CPU to clear.\n");
 		return false;
 	}
-	toggleDebug();
+	_debuggingEnabled = false;
 	return true;
 }
 
 bool CPU::loopdetectCmd([[maybe_unused]] std::string &line) {
-	toggleLoopDetection();
+	debug_loopDetection = !debug_loopDetection;
 	fmt::print("Loop detection ");
 	if (debug_loopDetection)
 		fmt::print("enabled\n");
@@ -1465,8 +1456,7 @@ bool CPU::executeDebuggerCmd(std::string line) {
 		fmt::print(": {}\n", line);
 	}
 
-	// Check if command is numbers, convert them to
-	// integer and execute that many instructions.
+	// Check if command is numbers, convert it to an integer and execute that many instructions.
 	try {
 		uint64_t insCnt = std::stol(line);
 		debug_lastCmd = line;
@@ -1501,31 +1491,25 @@ bool CPU::executeDebuggerCmd(std::string line) {
 	return (this->*f)(line);
 }
 
-void CPU::debug() {
+bool CPU::executeDebug() {
+	if (!_debuggingEnabled) {
+		listPC = PC;
+		_debuggingEnabled = true;
+
+		fmt::print("\nDebugger starting at PC {:#06x}\n", PC);
+		printCPUState();
+		disassemble(PC, 1);
+	}
+
 	std::string line;
-	debugMode = true;
-	listPC = PC;
-
-	if (debugEntryFunc) {
-		debugEntryFunc();
-	}
-	setupReadline();
-
-	fmt::print("\nDebugger starting at PC {:#06x}\n", PC);
-	printCPUState();
-	disassemble(PC, 1);
-
-	while (debugMode) {	
-		getReadline(line);
-		executeDebuggerCmd(line);
-		if (debug_alwaysShowPS) 
-			printCPUState();
-	}
-	fmt::print("Exiting debugger\n");
-
-	if (debugExitFunc) {
-		debugExitFunc();
-	}
+	getReadline(line);
+	executeDebuggerCmd(line);
+	if (debug_alwaysShowPS) 
+		printCPUState();
+	
+	if (_debuggingEnabled == false) 
+		fmt::print("Exiting debugger\n");
+	return _debuggingEnabled;
 }
 
 // This is used for basic disassembler testing

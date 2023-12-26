@@ -64,11 +64,12 @@ std::vector<Cell> apple1SampleProg =
 	};
 
 // Setup memory map
-// 0x0000-0x5fff - RAM
-// 0xe000-0xefff - Apple 1 Basic (also RAM)
-// 0xd010-0xd013 - MOS6820
-// 0xff00-0xffff - WozMon ROM
-void setupMemMap(){
+void setupMemoryMap(){
+	// 0x0000-0x5fff - RAM
+	// 0xe000-0xefff - Apple 1 Basic (also RAM)
+	// 0xd010-0xd013 - MOS6820
+	// 0xff00-0xffff - WozMon ROM
+
 	mem.Reset();
 
 	// Map in the 6820/PIA, overwriting existing addresses.
@@ -88,11 +89,7 @@ void setupMemMap(){
 	mem.loadData(apple1SampleProg, apple1SampleAddress);
 }
 
-//////////
-// Let's pretend to be an Apple1
 int main() {
-	Cycles_t cyclesUsed;
-
 	fmt::print("A Very Simple Apple I\n");
 	fmt::print("  Reset        = Control-\\\n");
 	fmt::print("  Clear screen = Control-[\n");
@@ -100,23 +97,38 @@ int main() {
 	fmt::print("  Quit         = Control-Backspace\n");
 	fmt::print("\n");
 
-	setupMemMap();
-	pia->setup();	
+	setupMemoryMap();
+	pia->changeTerminalState();	
 	busClock.enableTimingEmulation();
-
-	// When the emulator enters debug mode we need to reset the
-	// display so that keyboard entry works in blocking mode.
-	cpu.setDebugEntryExitFunc(&MOS6820<Address, Cell>::teardown, &MOS6820<Address, Cell>::setup);
-	cpu.Reset();	    // Exit the CPU from reset
 
 	// Order of operations:
 	// - Execute one instruction, returning clock cycles that takes, then
 	// - Execute the housekeeping functions on all devices, then
 	// - Handle any control signals asserted by the devices, then 
-	// - Delay however many clock cycles we've used.
-	while (1) {
-		cpu.executeOneInstruction(cyclesUsed);
+	// - Delay however many clock cycles we've used, then
+	// - Handle entering or exiting debug mode.
+
+	Cycles_t cyclesUsed;
+	bool halt = false;
+	bool debug = false;
+
+	cpu.Reset();	    // Exit the CPU from reset
+	while (!halt) {
+		// If we're in debug mode we have to toggle the terminal out of and in to non-blocking mode
+		// so the CPU debugger (implemented in the CPU class) can access the terminal in non-blocking 
+		// mode.
+		if (debug) {
+			pia->setTermBlocking();
+			debug = cpu.executeDebug();
+			pia->setTermNonblocking();
+		} else 
+			cpu.execute(halt, debug, cyclesUsed);
+
+		if (halt) 
+			continue;
+	
 		auto signals = pia->housekeeping();
+
 		for (const auto& signal : signals) {
 			switch(signal) {
 			case Device::None:
@@ -127,17 +139,18 @@ int main() {
 					cpu.Reset();
 				break;
 			case Device::Debug:
-				cpu.setDebug(true);
+				debug = true;
 				break;
 			case Device::Exit:
 				fmt::print("\nExiting emulator\n");
 				std::exit(0);
 			}
 		}
+
 		busClock.delay(cyclesUsed);
 	}
 
-	pia->teardown();	// Set the keyboard blocking
+	pia->setTermNonblocking();	
 
 	return 0;
 }

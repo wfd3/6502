@@ -96,6 +96,7 @@ add_custom_target(run_memory_tests
 
 source_group("src" FILES ${6502_TEST_SOURCES})
 add_executable( 6502_tests ${6502_TEST_SOURCES})
+target_compile_definitions(6502_tests PRIVATE TEST_BUILD=1)
 add_dependencies(6502_tests 6502)
 add_dependencies(6502_tests gtest_main)
 target_link_libraries(6502_tests gtest_main 6502)

@@ -48,12 +48,12 @@ public:
 	}
 
   	Device::BusSignals housekeeping() override {
-        std::vector<Device::Lines> signals;
+       Device::BusSignals signals;
 		
 		auto d = displayHousekeeping();
-        signals.push_back(d);
+        signals.insert(d);
 		auto k = keyboardHousekeeping();
-        signals.push_back(k);
+        signals.insert(k);
 
 		return signals;
 	}
@@ -96,7 +96,7 @@ public:
 
     // Make the terminal non-blocking and allow Control-C, Control-\ to
 	// pass through to the read() call.
-    static void setup()
+    void setTermNonblocking()
     {
         termios term;
         fflush(stdout);
@@ -110,9 +110,11 @@ public:
 		// Ignore ^C and ^-Backslash
 		signal(SIGINT, SIG_IGN);
 		signal(SIGQUIT, SIG_IGN);
+
+		_terminalBlocking = true;
     }
 
-    static void teardown()
+    void setTermBlocking()
     {
         termios term;
         tcgetattr(STDIN_FILENO, &term);
@@ -122,27 +124,43 @@ public:
 		// Restore ^C and ^-Backslash 
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
+
+		_terminalBlocking = false;
 	}
 
 #elif defined(_WIN64)
 
-	static void setup() {
+	void setTermBlocking() {
 		_CtrlC_Pressed = false;
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+		_terminalBlocking = true;
 	}
-	static void teardown() {
+	void setTermNonblocking() {
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, FALSE);
+		_terminalBlocking = false;
 	}
 
 #else 
 	
-	static void setup() {}
-	static void teardown() {}
+	void setTermBlocking() {
+		_terminalBlocking = true;
+	}
+	void setTermNonblocking() {
+		_terminalBlocking = false;
+	}
 
 #endif
 
+	void changeTerminalState() {
+		if (_terminalBlocking) 
+			setTermNonblocking();
+		else 
+			setTermBlocking();		
+	}
+
 private:
-	
+	bool _terminalBlocking = true;
+
 	// Offsets from MemMappedDevice::_baseAddress for these memory-mapped I/O ports.  These are in order
 	// and cannot change.
 	static constexpr Word KEYBOARD   = 0;
@@ -319,8 +337,9 @@ private:
 	Device::Lines keyboardHousekeeping() {
 		char ch;	
         auto retval = Device::None;
-		
-        if (getch(ch) == false) 
+
+        auto charsPending = getch(ch);
+		if (!charsPending)
 			return retval;
 		
 		// Handle control characters or map modern ascii to Apple 1 keycodes

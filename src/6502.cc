@@ -25,7 +25,7 @@ CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
 				       _debugCommands(setupDebugCommands()) {
 	
 	_inReset = true;
-	breakpoints.assign(m.size(), false);
+	initDebugger();
 }
 
 void CPU::setResetVector(Word address) {
@@ -47,7 +47,7 @@ void CPU::exitReset() {
 	}
 
 	_testReset = false;
-	debugMode = false;
+	_debuggingEnabled = false;
 	debug_alwaysShowPS = false;
 
 	_hitException = false;
@@ -123,14 +123,7 @@ bool CPU::IRQ() {
 void CPU::exception(const std::string &message) {
 	std::string msg = "6502 CPU Exception: " + message;
 	_hitException = true;
-	if (debug_OnException) {
-		fmt::print("{}\n", message);
-		fmt::print("Entering debugger\n");
-		debugMode = true;
-		debug();
-	} else {
-		throw std::runtime_error(msg); 
-	}
+	throw std::runtime_error(msg);
 }
 
 //////////
@@ -305,8 +298,7 @@ Word CPU::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 		break;
 
 	default:
-		auto s = fmt::format("Invalid addressing mode");
-		exception(s);
+		exception("Invalid addressing mode");
 		break;
 	}
 	
@@ -361,8 +353,7 @@ void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& ex
 	opcode = readByteAtPC();
 	if (_instructions.count(opcode) == 0) {
 		PC--;
-		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}",
-				     opcode, PC);
+		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}", opcode, PC);
 		exception(s);
 		return;
 	}
@@ -376,7 +367,7 @@ void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& ex
 	if (debug_loopDetection && startPC == PC) {
 		fmt::print("# Loop detected at {:04x}, entering debugger\n",
 			   PC);
-		debugMode = true;
+		_debuggingEnabled = true;
 	}
 
 	// Check for a pending Non-maskable interrupt.  If none then
@@ -385,19 +376,38 @@ void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& ex
 		IRQ();
 }
 
-bool CPU::executeOneInstruction(Cycles_t& cyclesUsed) {
-	if (debugMode || isBreakpoint(PC)) {
-		debug();
-	} else if (isPCAtExitAddress()) {
-		return true;
-	} else {
-		Cycles_t expected;
+void CPU::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed) {
+	atHaltAddress = false;
+	startDebugOnNextInstruction = false;
+	cyclesUsed = 0;
+
+	if (isPCBreakpoint()) {
+		startDebugOnNextInstruction = true;
+		return;
+	} 
+
+	if (isPCAtHaltAddress()) {
+		//fmt::print("At halt address {:04x}\n", PC);
+		atHaltAddress = true;
+		return;
+	}
+
+	Cycles_t expected;
+	try {
 		executeOneInstructionWithCycleCount(cyclesUsed, expected);
 	}
-	return false;
+	catch(std::exception &e) {
+		if (debug_OnException) {
+			fmt::print("{}\n", e.what());
+			startDebugOnNextInstruction = true;
+		}
+	}
 }
 
 bool CPU::executeOneInstruction() {
 	Cycles_t used;
-	return executeOneInstruction(used);
+	bool halt, debug;
+	execute(halt, debug, used);
+
+	return halt;
 }
