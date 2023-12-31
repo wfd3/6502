@@ -80,6 +80,7 @@ void setupMemoryMap(){
  
 	// 8K RAM
 	mem.mapRAM(0x0000, 0x1fff);
+	mem.mapRAM(0x6000, 0x8fff);
 
 	// Map RAM and load Apple 1 basic
 	mem.mapRAM(0xe000, 0xefff);
@@ -98,7 +99,7 @@ int main() {
 	fmt::print("\n");
 
 	setupMemoryMap();
-	pia->changeTerminalState();	
+	pia->setTermNonblocking();	
 	busClock.enableTimingEmulation();
 
 	// Order of operations:

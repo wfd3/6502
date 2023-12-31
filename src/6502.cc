@@ -306,7 +306,7 @@ Word CPU::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 }
 
 Byte CPU::getData(Byte opcode, Cycles_t &expectedCycles) {
-	Byte data;
+	Byte data = 0;
 	Word address;
 
 	auto addressMode = _instructions.at(opcode).addrmode;

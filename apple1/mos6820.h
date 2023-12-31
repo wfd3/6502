@@ -19,7 +19,10 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
 #include <cstdint>
+#include <queue>
+#include <algorithm>
 
 #if defined(__linux__) || defined(__MACH__)
 #include <unistd.h>
@@ -48,15 +51,12 @@ public:
 	}
 
   	Device::BusSignals housekeeping() override {
-       Device::BusSignals signals;
-		
-		auto d = displayHousekeeping();
-        signals.insert(d);
-		auto k = keyboardHousekeeping();
-        signals.insert(k);
+		Device::BusSignals signals;
 
+		signals.insert(displayHousekeeping());
+		signals.insert(keyboardHousekeeping());
 		return signals;
-	}
+}
 
 	std::string type() const override { 
 		return fmt::format("MOS6820");
@@ -110,8 +110,6 @@ public:
 		// Ignore ^C and ^-Backslash
 		signal(SIGINT, SIG_IGN);
 		signal(SIGQUIT, SIG_IGN);
-
-		_terminalBlocking = true;
     }
 
     void setTermBlocking()
@@ -124,42 +122,23 @@ public:
 		// Restore ^C and ^-Backslash 
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
-
-		_terminalBlocking = false;
 	}
 
 #elif defined(_WIN64)
 
-	void setTermBlocking() {
-		_CtrlC_Pressed = false;
-		SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
-		_terminalBlocking = true;
-	}
 	void setTermNonblocking() {
+		SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
+	}
+
+	void setTermBlocking() {
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, FALSE);
-		_terminalBlocking = false;
 	}
 
 #else 
-	
-	void setTermBlocking() {
-		_terminalBlocking = true;
-	}
-	void setTermNonblocking() {
-		_terminalBlocking = false;
-	}
-
+# error "No platform specific terminal functions"
 #endif
 
-	void changeTerminalState() {
-		if (_terminalBlocking) 
-			setTermNonblocking();
-		else 
-			setTermBlocking();		
-	}
-
 private:
-	bool _terminalBlocking = true;
 
 	// Offsets from MemMappedDevice::_baseAddress for these memory-mapped I/O ports.  These are in order
 	// and cannot change.
@@ -239,23 +218,12 @@ private:
 #elif defined(_WIN64) 
 
 	static bool _CtrlC_Pressed;
-
-	bool wasCtrlCPressed() {
-		auto r = _CtrlC_Pressed;
-		_CtrlC_Pressed = false;
-		return r;
-	}
 	
 	static BOOL WINAPI ConsoleCtrlHandler(DWORD CtrlType) {
 		switch (CtrlType) {
 		case CTRL_C_EVENT:
-			CtrlC_Pressed = true;
+			_CtrlC_Pressed = true;
 			return true;
-		case CTRL_BREAK_EVENT:
-		case CTRL_CLOSE_EVENT:
-		case CTRL_LOGOFF_EVENT:
-		case CTRL_SHUTDOWN_EVENT:
-			return false;
 		}
 
 		return false;
@@ -267,7 +235,8 @@ private:
 
 	bool getch(char& kbdCh) const {
 		
-		if (wasCtrlCPressed()) {
+		if (_CtrlC_Pressed) {
+			_CtrlC_Pressed = false;
 			kbdCh = CTRL_C;
 			return true;
 		}

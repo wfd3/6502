@@ -97,13 +97,10 @@ public:
 	// Debugger
 	bool executeDebug();
 
-private:
+public:
 	
-#ifdef TEST_BUILD
 	//////////
 	// Used by tests
-public:
-#endif
 
 	// CPU initial vectors
 	constexpr static Byte INITIAL_SP       = 0xFF; 
