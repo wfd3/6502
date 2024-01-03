@@ -24,6 +24,8 @@
 #include <queue>
 #include <algorithm>
 
+#include "memory.h"
+
 #if defined(__linux__) || defined(__MACH__)
 #include <unistd.h>
 # ifdef __linux__
@@ -36,11 +38,7 @@
 #elif defined(_WIN64)
 # include <conio.h>
 # include <windows.h>
-#else 
-# error "No platform-specific implementation of getch()"
 #endif
-
-#include "memory.h"
 
 template<class Address = uint16_t, class Cell = uint8_t>
 class MOS6820 : public MemMappedDevice<Address, Cell> {
@@ -141,34 +139,37 @@ public:
 private:
 
 	// Offsets from MemMappedDevice::_baseAddress for these memory-mapped I/O ports.  These are in order
-	// and cannot change.
+	// and cannot change as they, when added to _baseAddress, represent hardware addresses of where this
+	// chip is mapped in memory.
 	static constexpr Word KEYBOARD   = 0;
 	static constexpr Word KEYBOARDCR = 1;
 	static constexpr Word DISPLAY    = 2;
 	static constexpr Word DISPLAYCR  = 3;
 
     // Apple 1 keycodes
-	static constexpr char NEWLINE        = 0x0a;
-	static constexpr char CARRAGE_RETURN = 0x0d;
-	static constexpr char BELL			 = 0x0a;
+	static constexpr char NEWLINE         = 0x0a;
+	static constexpr char CARRIAGE_RETURN = 0x0d;
+	static constexpr char BACKSPACE       = '_';
+	static constexpr char BELL			  = 0x0a;
+	static constexpr char CTRL_C		  = 0x03;
 #ifdef _WIN64
-	static constexpr char CTRL_C		 = 0x03;
-	static constexpr char DEL			 = '\b';
-	static constexpr char CTRL_BACKSPACE = 0x7f; // Quit emulator
+	static constexpr char DEL			  = '\b';
+	static constexpr char CTRL_BACKSPACE  = 0x7f; // Quit emulator
 #else
-	static constexpr char DEL			 = 0x7f; // Backspace on unix/linux
-	static constexpr char CTRL_BACKSPACE = 0x08; 
+	static constexpr char DEL			  = 0x7f; // Backspace on unix/linux
+	static constexpr char CTRL_BACKSPACE  = 0x08; 
 #endif
-	static constexpr char CTRL_LBRACKET  = 0x1b;  // Clear screen
-	static constexpr char CTRL_BACKSLASH = 0x1c; // Reset/Jump to Wozmon
-	static constexpr char CTRL_RBRACKET  = 0x1d;  // Enter debugger
+	static constexpr char CTRL_LBRACKET   = 0x1b; // Clear screen
+	static constexpr char CTRL_BACKSLASH  = 0x1c; // Reset/Jump to Wozmon
+	static constexpr char CTRL_RBRACKET   = 0x1d; // Enter debugger
 
 	// Platform agnostic remapping of control keycodes.  These are encoded in getch() and returned 
-	// as a signed char, and should be non-printable ASCII characters.
-	static constexpr char CLEARSCR_CHAR  = 0x00;
-	static constexpr char RESET_CHAR     = 0x01;
-	static constexpr char DEBUGGER_CHAR  = 0x02; // 0x03 is Control-C
-	static constexpr char EXIT_CHAR      = 0x04;
+	// as a Cell.  They must be non-printable ASCII characters on the Apple 1 (ie, extended 
+	// ASCII codes).
+	static constexpr Cell CLEAR_SCREEN  = 0xff;
+	static constexpr Cell RESET         = 0xfe;
+	static constexpr Cell DEBUGGER      = 0xfd;
+	static constexpr Cell EXIT          = 0xfc;
 
 	// Display
 	bool _haveDspData = false;
@@ -180,7 +181,7 @@ private:
 
 #if defined(__linux__) || defined(__MACH__)
     
-     bool getch(char &kbdCh) const {
+     bool getch(Cell &kbdCh) const {
         int byteswaiting;
         char ch;
 
@@ -192,16 +193,16 @@ private:
 		
 		switch (ch) {
 		case CTRL_BACKSPACE:
-			kbdCh = EXIT_CHAR;
+			kbdCh = EXIT;
 			break;
 		case CTRL_BACKSLASH:
-			kbdCh = RESET_CHAR;
+			kbdCh = RESET;
 			break;
 		case CTRL_RBRACKET:
-			kbdCh = DEBUGGER_CHAR;
+			kbdCh = DEBUGGER;
 			break;
 		case CTRL_LBRACKET:
-			kbdCh = CLEARSCR_CHAR;
+			kbdCh = CLEAR_SCREEN;
 			break;
 		default:
 	        kbdCh = ch;
@@ -233,7 +234,7 @@ private:
 		system("cls");
 	}
 
-	bool getch(char& kbdCh) const {
+	bool getch(Cell& kbdCh) const {
 		
 		if (_CtrlC_Pressed) {
 			_CtrlC_Pressed = false;
@@ -248,16 +249,16 @@ private:
 		if (GetAsyncKeyState(VK_CONTROL) < 0) { // Control was held when key was pressed
 			switch (c) {
 			case CTRL_BACKSPACE:
-				kbdCh = EXIT_CHAR;
+				kbdCh = EXIT;
 				return true;
 			case CTRL_BACKSLASH:
-				kbdCh = RESET_CHAR;
+				kbdCh = RESET;
 				return true;
 			case CTRL_LBRACKET:
-				kbdCh = CLEARSCR_CHAR;
+				kbdCh = CLEAR_SCREEN;
 				return true;
 			case CTRL_RBRACKET:
-				kbdCh = DEBUGGER_CHAR;
+				kbdCh = DEBUGGER;
 				return true;
 			}
 		}
@@ -267,16 +268,7 @@ private:
     }
 
 #else
-
-	// Clear the Apple 1 display
-	void clearScreen() const {}
-
-	// Check and get a key from the keyboard, returning true and setting kbdCh if a key was ready
-	// for us.  Map Control keys to platform agnostic values (see above)
-	bool getch(char& kbdCh) {
-		return false;
-	}
-
+# error "No platform specific clearScreen() or getch() functions defined"
 #endif
 
 	Device::Lines displayHousekeeping() {
@@ -285,13 +277,13 @@ private:
 
 		auto c = _dspData & 0x7f;	// clear hi bit
 		switch (c) {
-		case CARRAGE_RETURN:	// \r
+		case CARRIAGE_RETURN:
 			fmt::print("\n");
 			break;
-		case '_':				// Backspace
+		case BACKSPACE:
 			fmt::print("\b");
 			break;
-		case BELL:				// Bell
+		case BELL:
 			fmt::print("\a");
 			break;
 		default:
@@ -304,7 +296,8 @@ private:
 	}
 
 	Device::Lines keyboardHousekeeping() {
-		char ch;	
+		Cell ch;
+		bool clobberQueue = false;
         auto retval = Device::None;
 
         auto charsPending = getch(ch);
@@ -314,32 +307,43 @@ private:
 		// Handle control characters or map modern ascii to Apple 1 keycodes
 		switch (ch) {
 
-		// Control characters; don't queue these.
-		case RESET_CHAR:
+		// Control values; don't queue these.
+		case RESET:
             return Device::Reset;
 
-		case DEBUGGER_CHAR:
+		case DEBUGGER:
 			return Device::Debug;
 
-        case EXIT_CHAR: 
+        case EXIT: 
 			return Device::Exit;
 		
-		case CLEARSCR_CHAR:
+		case CLEAR_SCREEN:
 			clearScreen();
 			return Device::None;
 
+		// Control-C is special, see the Applesoft basic comments below.
+		case CTRL_C:
+			clobberQueue = true;
+			break;
+	
 		// Regular characters; do queue these
 		case NEWLINE:
-			ch = CARRAGE_RETURN;
+			ch = CARRIAGE_RETURN;
 			break;
 		
 		case DEL:
-			ch = '_';
+			ch = BACKSPACE;
 			break;
 		}
 
+		// Apple 1 expects only upper case characters and that the high bit will be set
 		ch = std::toupper(ch);
-		ch |= 0x80;
+		ch |= 0x80;    
+
+		if (clobberQueue) 
+			while (!_charQueue.empty())
+				_charQueue.pop();
+
 		_charQueue.push(ch);
 
         return retval;
@@ -386,9 +390,12 @@ private:
 			// Applesoft Basic Lite does a blind, unchecked read on the keyboard port
 			// looking for a ^C.  If it sees one, it then does a read on the keyboard
 			// control register followed by a read of the keyboard port, expecting to
-			// get the same ^C.  This logic forces a keyboard control register read 
-			// before removing the character from the queue, thus preventing an 
-			// infinite loop.
+			// get the same ^C.  This logic forces a keyboard control register read
+			// before removing the character from the queue, thus preventing an
+			// infinite loop.  This also means that if the user hits ^C but the data element
+			// at the head of _charQueue is something else, the ^C will never be seen and processed.
+			// We fix this by clobbering the _charQueue before queuing the ^C.  We do this in 
+			// keyboardHousekeeping() above.
 			if (_kbdCRRead) {
 				_charQueue.pop();
 				_kbdCRRead = false;
@@ -404,6 +411,5 @@ private:
 };
 
 #ifdef _WIN64
-template <typename Address, typename Cell>
-bool MOS6820<Address, Cell>::_CtrlC_Pressed = false;
+template <typename Address, typename Cell> bool MOS6820<Address, Cell>::_CtrlC_Pressed = false;
 #endif

@@ -66,7 +66,6 @@ public:
 	// CPU Setup & reset
 	CPU(cMemory &);
 	void Reset();
-	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
 	void setResetVector(Word);
 	void setPendingReset() {
 		if (!_debuggingEnabled)
@@ -97,7 +96,11 @@ public:
 	// Debugger
 	bool executeDebug();
 
+#ifdef TEST_BUILD
 public:
+#else 
+private:
+#endif
 	
 	//////////
 	// Used by tests
@@ -127,7 +130,9 @@ public:
 		Byte PS = 0;
 		struct ProcessorStatusBits Flags;
 	};
-	
+#ifdef TEST_BUILD
+	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
+#endif
 	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
 	bool executeOneInstruction();
 	void traceOneInstruction(Cycles_t &, Cycles_t &);
@@ -182,9 +187,11 @@ private:
 	std::atomic_bool _pendingIRQ = false;
 	std::atomic_bool _pendingNMI = false;
 	bool _hitException = false;
+#ifdef TEST_BUILD	
 	Word testResetPC = 0;
 	Byte testResetSP = INITIAL_SP;
 	bool _testReset = false;
+#endif
 	Address_t _haltAddress = 0;
 	bool _haltAddressSet = false;
 

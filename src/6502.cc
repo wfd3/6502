@@ -37,16 +37,18 @@ void CPU::setInterruptVector(Word address) {
 }
 
 void CPU::exitReset() {
+	PC = readWord(RESET_VECTOR);
+	SP = INITIAL_SP;
 
+#ifdef TEST_BUILD
+	// If we're here via TestReset() clobber the PC and SP with test values
 	if (_testReset) {
 		SP = testResetSP;
 		PC = testResetPC;
-	} else { 
-		PC = readWord(RESET_VECTOR);
-		SP = INITIAL_SP;
 	}
-
 	_testReset = false;
+#endif
+
 	_debuggingEnabled = false;
 	debug_alwaysShowPS = false;
 
@@ -62,6 +64,7 @@ void CPU::exitReset() {
 // allows tests to set specific starting Program Counter and
 // Stack Pointer values, and arranges for the next call to execute...() 
 // to exit the CPU from reset.
+#ifdef TEST_BUILD
 void CPU::TestReset(Word initialPC, Byte initialSP)  {
 	_inReset = false;
 	_pendingReset = true;
@@ -69,6 +72,7 @@ void CPU::TestReset(Word initialPC, Byte initialSP)  {
 	testResetPC = initialPC;
 	testResetSP = initialSP;
 }
+#endif
 
 // 'Asserts' the Reset line if not asserted, de-asserts the Reset line
 // if asserted. 

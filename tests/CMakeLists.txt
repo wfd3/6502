@@ -16,6 +16,7 @@ cmake_minimum_required(VERSION 3.0...3.7)
 
 project( 6502_tests )
 
+## Google Test configuration
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -42,7 +43,33 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
   EXCLUDE_FROM_ALL)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/include/gtest)
+##
 
+##########
+# Memory tests
+set (MEMORY_TEST_SOURCES
+  "memory_tests.cc"
+)
+
+source_group("src" FILE ${MEMORY_TEST_SOURCES})
+add_executable(memory_tests ${MEMORY_TEST_SOURCES})
+add_dependencies(memory_tests gtest_main)
+target_link_libraries(memory_tests gtest_main)
+if(MSVC)
+  target_link_libraries(memory_tests fmt::fmt-header-only)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  message(STATUS "Adding ${LIBCXXABI_LIBRARY} to link_libraries for memory_test")
+  target_link_libraries(memory_tests ${LIBCXXABI_LIBRARY})
+else()
+  target_compile_definitions(memory_tests PRIVATE FMT_HEADER_ONLY)
+  target_link_libraries(memory_tests readline)
+endif()
+add_custom_target(run_memory_tests
+  DEPENDS memory_tests
+  COMMAND memory_tests)
+
+##########
+# 6502 tests
 # source for the test executable
 set (6502_TEST_SOURCES
   "6502_tests_adc.cc"
@@ -73,46 +100,25 @@ set (6502_TEST_SOURCES
   "6502_tests_xxx_functional_test_suite.cc"
 )
 
-set (MEMORY_TEST_SOURCES
-  "memory_tests.cc"
-)
-
-source_group("src" FILE ${MEMORY_TEST_SOURCES})
-add_executable(memory_tests ${MEMORY_TEST_SOURCES})
-add_dependencies(memory_tests gtest_main)
-target_link_libraries(memory_tests gtest_main)
-if(MSVC)
-  target_link_libraries(memory_tests fmt::fmt-header-only)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  message(STATUS "Adding ${LIBCXXABI_LIBRARY} to link_libraries for memory_test")
-  target_link_libraries(memory_tests ${LIBCXXABI_LIBRARY})
-else()
-  target_compile_definitions(memory_tests PRIVATE FMT_HEADER_ONLY)
-  target_link_libraries(memory_tests readline)
-endif()
-add_custom_target(run_memory_tests
-  DEPENDS memory_tests
-  COMMAND memory_tests)
-
 source_group("src" FILES ${6502_TEST_SOURCES})
 add_executable( 6502_tests ${6502_TEST_SOURCES})
-add_dependencies(6502_tests 6502)
+add_dependencies(6502_tests 6502-test)
 add_dependencies(6502_tests gtest_main)
-target_link_libraries(6502_tests gtest_main 6502)
+target_link_libraries(6502_tests gtest_main 6502-test)
 if(MSVC)
   target_link_libraries(6502_tests fmt::fmt-header-only)
 else()
   target_compile_definitions(6502_tests PRIVATE FMT_HEADER_ONLY)  
 	target_link_libraries(6502_tests readline)
 endif()
-
+target_compile_definitions(6502_tests PRIVATE TEST_BUILD)
 add_custom_target(run_6502_tests
   DEPENDS 6502_tests
   COMMAND 6502_tests)
 
+# Phony targets 
 add_custom_target(tests
   DEPENDS memory_tests 6502_tests)
-  
 add_custom_target(runtests
   DEPENDS run_memory_tests run_6502_tests)
 

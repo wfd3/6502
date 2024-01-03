@@ -16,7 +16,7 @@ cmake_minimum_required(VERSION 3.7)
 
 project( lib6502 )
 
-set  (SOURCES
+set (SOURCES
   "6502.h"
   "clock.h"
   "memory.h"
@@ -30,3 +30,5 @@ include_directories(AFTER ${fmt_INCLUDE_DIRS})
 add_library( 6502 ${SOURCES} )
 target_compile_definitions(6502 PRIVATE FMT_HEADER_ONLY)
 
+add_library( 6502-test ${SOURCES})
+target_compile_definitions(6502-test PRIVATE FMT_HEADER_ONLY TEST_BUILD)
