@@ -1512,8 +1512,10 @@ bool CPU::executeDebug() {
 	return _debuggingEnabled;
 }
 
+#ifdef TEST_BUILD
 // This is used for basic disassembler testing
 void CPU::traceOneInstruction(Cycles_t& usedCycles, Cycles_t &expectedCycles) {
 	disassemble(PC, 1);
 	executeOneInstructionWithCycleCount(usedCycles, expectedCycles);
 }
+#endif

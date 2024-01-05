@@ -1,3 +1,21 @@
+//
+// Tests for ora instruction
+//
+// Copyright (C) 2023 Walt Drummond
+//
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <gtest/gtest.h>
 #include <6502.h>
 
@@ -21,22 +39,20 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0F;
-	cpu.A = 0x0F;
+	cpu.setA(0x0F);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x0F);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_EQ(cpu.getA(), 0x0F);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
-
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 	Cycles_t UsedCycles, ExpectedCycles;
@@ -44,19 +60,18 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0F;
-	cpu.A = 0xF0;
+	cpu.setA(0xf0);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0xFF);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.N);
+	EXPECT_EQ(cpu.getA(), 0xFF);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 

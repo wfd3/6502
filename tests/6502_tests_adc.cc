@@ -1,3 +1,21 @@
+//
+// Tests for adc and sbc instructions
+//
+// Copyright (C) 2023 Walt Drummond
+//
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <gtest/gtest.h>
 #include <6502.h>
 
@@ -24,17 +42,17 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -44,22 +62,21 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
 	mem[0x0010] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -70,22 +87,21 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
-	cpu.X = 0x10;
+	cpu.setX(0x10);
 	mem[0x0020] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -96,22 +112,21 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
 	mem[0xFFFE] = 0x00;
 	mem[0x0020] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -121,24 +136,23 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
 	mem[0xFFFE] = 0x00;
-	cpu.X = 0x01;
+	cpu.setX(0x01);
 	mem[0x0021] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -149,23 +163,22 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xfe;
 	mem[0xFFFE] = 0x00;
-	cpu.X = 0x0f;
+	cpu.setX(0x0f);
 	mem[0x010d] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -176,24 +189,23 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
 	mem[0xFFFE] = 0x00;
-	cpu.Y = 0x01;
+	cpu.setY(0x01);
 	mem[0x0021] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_EQ(UsedCycles, ExpectedCycles);  
 }
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
@@ -203,23 +215,22 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xfe;
 	mem[0xFFFE] = 0x00;
-	cpu.Y = 0x0f;
+	cpu.setY(0x0f);
 	mem[0x010d] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -229,25 +240,24 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
-	cpu.X = 0x20;
+	cpu.setX(0x20);
 	mem[0x0040] = 0x00;
 	mem[0x0041] = 0x20;
 	mem[0x2000] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -257,25 +267,24 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
-	cpu.Y = 0x20;
+	cpu.setY(0x20);
 	mem[0x0020] = 0x00;
 	mem[0x0021] = 0x20;
 	mem[0x2020] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -285,25 +294,24 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
-	cpu.Y = 0x0f;
+	cpu.setY(0x0f);
 	mem[0x0020] = 0xfe;
 	mem[0x0021] = 0x00;
 	mem[0x010d] = 0x10;
-	cpu.A = 0x10;
+	cpu.setA(0x10);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x20);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x20);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -314,21 +322,20 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
-	cpu.A = 0x10;
-	cpu.Flags.C = 1;
+	cpu.setA(0x10);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x21);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x21);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -339,21 +346,20 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-1);
-	cpu.A = Byte(-2);
-	cpu.Flags.C = 0;
+	cpu.setA(Byte(-2));
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, Byte(-3));
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), Byte(-3));
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -364,21 +370,20 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-1);
-	cpu.A = Byte(-2);
-	cpu.Flags.C = 1;;
+	cpu.setA(Byte(-2));
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, Byte(-2));
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), Byte(-2));
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -389,21 +394,20 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
-	cpu.A = 0x00;
-	cpu.Flags.C = 0;
+	cpu.setA(0);
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0);
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -413,22 +417,21 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xf0;
-	cpu.A = 0x20;
-	cpu.Flags.C = 0;
+	cpu.setA(0x20);
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, Byte(0xf0+0x20));
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), Byte(0xf0+0x20));
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -438,22 +441,21 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-128);
-	cpu.A = Byte(-1);
-	cpu.Flags.C = 0;
+	cpu.setA(Byte(-1));
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 127);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 127);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -464,22 +466,21 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
-	cpu.A = 0x09;
-	cpu.Flags.C = 1;
+	cpu.setA(0x09);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x09 - 0x01);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x09 - 0x01);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -489,22 +490,21 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0;
-	cpu.A = 0x0;
-	cpu.Flags.C = 1;
+	cpu.setA(0x0);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x0);
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x0);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 
 }
@@ -514,22 +514,21 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0;
-	cpu.A = 0x0;
-	cpu.Flags.C = 0;
+	cpu.setA(0);
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, Byte(-1));
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), Byte(-1));
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -541,21 +540,20 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-1);
-	cpu.A = 127;
-	cpu.Flags.C = 1;
+	cpu.setA(127);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 128);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.V);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 128);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagV());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -566,22 +564,21 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x28;
-	cpu.A = 0x32;
-	cpu.Flags.D = 1;
+	cpu.setA(0x32);
+	cpu.setFlagD(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x60);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x60);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -591,23 +588,22 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x28;
-	cpu.A = 0x32;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 1;
+	cpu.setA(0x32);
+	cpu.setFlagD(true);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:n
-	EXPECT_EQ(cpu.A, 0x60 + 1);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x60 + 1);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -618,21 +614,20 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0;
-	cpu.A = 0x0;
-	cpu.Flags.D = 1;
+	cpu.setA(0);
+	cpu.setFlagD(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0);
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -642,23 +637,22 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	// 99 + 99 + 1 = 98, C=1, N=1, V=1
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x99;
-	cpu.A = 0x99;
-	cpu.Flags.D = 1;
+	cpu.setA(0x99);
+	cpu.setFlagD(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x98);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.V);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x98);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagV());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -671,22 +665,21 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x21;
-	cpu.A = 0x51;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 1;
+	cpu.setA(0x51);
+	cpu.setFlagD(true);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x30);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x30);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -696,23 +689,22 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x51;
-	cpu.A = 0x51;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 1;
+	cpu.setA(0x51);
+	cpu.setFlagD(true);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0);
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -722,23 +714,22 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x1;
-	cpu.A = 0x2;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 0;
+	cpu.setA(0x2);
+	cpu.setFlagD(true);
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0);
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -748,23 +739,22 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
-	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x34;
-	cpu.A = 0x21;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 1;
+	cpu.setA(0x21);
+	cpu.setFlagD(true);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x87);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x87);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -775,22 +765,21 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
-	cpu.A = 0x00;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 1;
+	cpu.setA(0);
+	cpu.setFlagD(true);
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x99);
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_FALSE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x99);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -801,21 +790,20 @@ TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	//Given:
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
-
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x99;
-	cpu.A = 0x01;
-	cpu.Flags.D = 1;
-	cpu.Flags.C = 0;
+	cpu.setA(0x01);
+	cpu.setFlagD(true);
+	cpu.setFlagC(false);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_EQ(cpu.A, 0x00);
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.V);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_TRUE(cpu.Flags.C);
+	EXPECT_EQ(cpu.getA(), 0x00);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

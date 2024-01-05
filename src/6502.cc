@@ -136,11 +136,11 @@ bool CPU::isNegative(Byte val) {
 	return (val & NegativeBit);
 }
 
-void CPU::setFlagN(Byte val) {
+void CPU::setFlagNByValue(Byte val) {
 	Flags.N = isNegative(val);
 }
 
-void CPU::setFlagZ(Byte val) {
+void CPU::setFlagZByValue(Byte val) {
 	Flags.Z = (val == 0);
 }
 
@@ -406,12 +406,4 @@ void CPU::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cycles
 			startDebugOnNextInstruction = true;
 		}
 	}
-}
-
-bool CPU::executeOneInstruction() {
-	Cycles_t used;
-	bool halt, debug;
-	execute(halt, debug, used);
-
-	return halt;
 }

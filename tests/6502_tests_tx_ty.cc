@@ -1,3 +1,21 @@
+//
+// Tests for stx, sty, tax,tay, stx, txa, txa and tya instructions
+//
+// Copyright (C) 2023 Walt Drummond
+//
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <gtest/gtest.h>
 #include <6502.h>
 
@@ -25,16 +43,16 @@ TEST_F(MOS6502TXTYTests, TAX) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0x52;
-	cpu.X = 0xAB;
+	cpu.setA(0x52);
+	cpu.setX(0xAB);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.A);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -46,16 +64,16 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0x0;
-	cpu.X = 0xAB;
+	cpu.setA(0);
+	cpu.setX(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.A);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -67,19 +85,18 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0xFF;
-	cpu.X = 0xAB;
+	cpu.setA(0xff);
+	cpu.setX(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.A);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
-
 
 // TXA
 
@@ -91,16 +108,16 @@ TEST_F(MOS6502TXTYTests, TXA) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0x52;
-	cpu.X = 0x0B;
+	cpu.setA(0x52);
+	cpu.setX(0x0b);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.A);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -112,16 +129,16 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.X = 0x0;
-	cpu.A = 0xAB;
+	cpu.setX(0);
+	cpu.setA(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.A);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -133,16 +150,16 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.X = 0xFF;
-	cpu.A = 0xAB;
+	cpu.setX(0xff);
+	cpu.setA(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.A);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -156,16 +173,16 @@ TEST_F(MOS6502TXTYTests, TAY) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0x52;
-	cpu.Y = 0x0B;
+	cpu.setA(0x52);
+	cpu.setY(0x0b);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.Y, cpu.A);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getY(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -177,16 +194,16 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0x0;
-	cpu.Y = 0xAB;
+	cpu.setA(0);
+	cpu.setY(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.Y, cpu.A);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getY(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -198,16 +215,16 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0xFF;
-	cpu.Y = 0xAB;
+	cpu.setA(0xff);
+	cpu.setY(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.Y, cpu.A);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getY(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -221,16 +238,16 @@ TEST_F(MOS6502TXTYTests, TYA) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = 0x52;
-	cpu.Y = 0x0B;
+	cpu.setA(0x52);
+	cpu.setY(0x0b);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.Y, cpu.A);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getY(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -242,16 +259,16 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.Y = 0x0;
-	cpu.A = 0xAB;
+	cpu.setY(0);
+	cpu.setA(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.Y, cpu.A);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getY(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -263,16 +280,16 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.Y = 0xFF;
-	cpu.A = 0xAB;
+	cpu.setY(0xff);
+	cpu.setA(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.Y, cpu.A);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getY(), cpu.getA());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -286,15 +303,15 @@ TEST_F(MOS6502TXTYTests, TSX) {
 	cpu.TestReset(CPU::RESET_VECTOR, 0x12);
 	
 	mem[0xFFFC] = ins;
-	cpu.X = 0x52;
+	cpu.setX(0x52);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.SP);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getSP());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -306,15 +323,15 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR, 0);
 	
 	mem[0xFFFC] = ins;
-	cpu.X = 0xAB;
+	cpu.setX(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.Z);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.SP);
+	EXPECT_TRUE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getSP());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -326,15 +343,15 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR, 0xff);
 	
 	mem[0xFFFC] = ins;
-	cpu.X = 0xAB;
+	cpu.setX(0xab);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.Z);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.SP);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getSP());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -348,15 +365,14 @@ TEST_F(MOS6502TXTYTests, TXS) {
 	cpu.TestReset(CPU::RESET_VECTOR, 0x12);
 	
 	mem[0xFFFC] = ins;
-	cpu.X = 0x52;
+	cpu.setX(0x52);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.X, cpu.SP);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getX(), cpu.getSP());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
-

@@ -60,8 +60,12 @@ class CPU {
 // CPU
 ////////////////////	
 public:
-	// Last addressable address
-	constexpr static Word MAX_MEM = 0xFFFF;
+	// Last addressable byte
+	constexpr static Word MAX_MEM      = 0xFFFF;
+	
+	// CPU initial vectors
+	constexpr static Byte INITIAL_SP   = 0xFF; 
+	constexpr static Word RESET_VECTOR = 0xFFFC;
 
 	// CPU Setup & reset
 	CPU(cMemory &);
@@ -92,24 +96,50 @@ public:
 
 	// Execution
 	void execute(bool& stop, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed);
+	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
 
 	// Debugger
 	bool executeDebug();
 
+
 #ifdef TEST_BUILD
-public:
-#else 
-private:
-#endif
+	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
+	void traceOneInstruction(Cycles_t &, Cycles_t &);
+
+	Word getPC() { return PC; }
+	Byte getSP() { return SP; } 
+	Byte getA()  { return A;  }
+	Byte getX()  { return X;  }
+	Byte getY()  { return Y;  }
+	Byte getPS() { return PS; }
+
+	bool getFlagC() { return Flags.C; }
+	bool getFlagZ() { return Flags.Z; }
+	bool getFlagI() { return Flags.I; }
+	bool getFlagD() { return Flags.D; }
+	bool getFlagB() { return Flags.B; }
+	bool getFlagV() { return Flags.V; }
+	bool getFlagN() { return Flags.N; }
+
+	void setPC(Word _PC) { PC = _PC; }
+	void setSP(Byte _SP) { SP = _SP; }
+	void setA(Byte _A)   { A = _A; }
+	void setX(Byte _X)   { X = _X; }
+	void setY(Byte _Y)   { Y = _Y; }
+	void setPS(Byte _PS) { PS = _PS; }
 	
-	//////////
-	// Used by tests
+	void setFlagC(bool _v) { Flags.C = _v ? 1 : 0; }
+	void setFlagZ(bool _v) { Flags.Z = _v ? 1 : 0; }
+	void setFlagI(bool _v) { Flags.I = _v ? 1 : 0; }
+	void setFlagD(bool _v) { Flags.D = _v ? 1 : 0; }
+	void setFlagB(bool _v) { Flags.B = _v ? 1 : 0; }
+	void setFlagV(bool _v) { Flags.V = _v ? 1 : 0; }
+	void setFlagN(bool _v) { Flags.N = _v ? 1 : 0; }
+#endif
 
-	// CPU initial vectors
-	constexpr static Byte INITIAL_SP       = 0xFF; 
-	constexpr static Word RESET_VECTOR     = 0xFFFC;
+private:
+	
 
-	// TODO: Move to private section, make getter/setter methods for these for the tests
 	Word PC = 0;		 // Program counter
 	Byte SP = 0;		 // Stack pointer
 	Byte A  = 0;		 // Accumulator 
@@ -117,28 +147,21 @@ private:
 	Byte Y  = 0;		 // Y Register
 	
 	struct ProcessorStatusBits {
-		Byte C:1; 	     // Carry (bit 0)
-		Byte Z:1;	     // Zero (bit 1)
-		Byte I:1;	     // Interrupt disable (bit 2)
-		Byte D:1;	     // Decimal mode (bit 3)
-		Byte B:1;	     // Break (bit 4)
+		Byte C:1; 	 // Carry (bit 0)
+		Byte Z:1;	 // Zero (bit 1)
+		Byte I:1;	 // Interrupt disable (bit 2)
+		Byte D:1;	 // Decimal mode (bit 3)
+		Byte B:1;	 // Break (bit 4)
 		Byte _unused:1;	 // Unused (bit 5)
-		Byte V:1;	     // Overflow (bit 6)
-		Byte N:1;	     // Negative (bit 7)
+		Byte V:1;	 // Overflow (bit 6)
+		Byte N:1;	 // Negative (bit 7)
 	};
 	union {
 		Byte PS = 0;
 		struct ProcessorStatusBits Flags;
 	};
-#ifdef TEST_BUILD
-	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
-#endif
-	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
-	bool executeOneInstruction();
-	void traceOneInstruction(Cycles_t &, Cycles_t &);
 
-private:
-	Cycles_t Cycles = 0; // Cycle counter
+	Cycles_t Cycles = 0;     // Cycle counter
 
 	//////////
 	// Special addresses/vectors
@@ -154,7 +177,6 @@ private:
 	constexpr static Byte UnusedBit   = 1 << 5;
 	constexpr static Byte NegativeBit = 1 << 7;
 
-	
 	// Addressing modes
 	enum class AddressingMode {
 		Immediate,
@@ -172,8 +194,8 @@ private:
 		Accumulator
 	};
 	
-    // How the CPU should add cycle counts on branches and when
-    // instructions fetch data across page boundaries.
+    	// How the CPU should add cycle counts on branches and when
+    	// instructions fetch data across page boundaries.
 	enum class InstructionFlags {
 		None,
 		Branch,
@@ -219,8 +241,8 @@ private:
 	void exception(const std::string &);
 
 	// Flags
-	void setFlagZ(Byte);
-	void setFlagN(Byte);
+	void setFlagZByValue(Byte);
+	void setFlagNByValue(Byte);
 	bool isNegative(Byte);
 	bool IRQBlocked();
 

@@ -1,3 +1,21 @@
+//
+// Tests for rotate instructions (ror and rol)
+//
+// Copyright (C) 2023 Walt Drummond
+//
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <gtest/gtest.h>
 #include <6502.h>
 
@@ -24,15 +42,15 @@ TEST_F(MOS6502RORROLTests, RolAccumulator) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = data;
+	cpu.setA(data);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, data << 1);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getA(), data << 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -45,15 +63,15 @@ TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = data;
+	cpu.setA(data); 
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, Byte(data << 1));
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getA(), Byte(data << 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -73,8 +91,8 @@ TEST_F(MOS6502RORROLTests, RolZeroPage) {
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_TRUE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data << 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -89,15 +107,15 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
-	cpu.X = 0x10;
+	cpu.setX(0x10);
 	mem[0x0020] = data;
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_TRUE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data << 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -119,8 +137,8 @@ TEST_F(MOS6502RORROLTests, RolAbsolute) {
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_TRUE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2000], data << 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -136,15 +154,15 @@ TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
 	mem[0xFFFE] = 0x20;
-	cpu.X = 0x05;
+	cpu.setX(0x05);
 	mem[0x2005] = data;
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_TRUE(cpu.Flags.N);
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2005], Byte(data << 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -159,15 +177,15 @@ TEST_F(MOS6502RORROLTests, RorAccumulator) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = data;
+	cpu.setA(data); 
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, data >> 1);
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getA(), data >> 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -180,15 +198,15 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	cpu.A = data;
+	cpu.setA(data); 
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, Byte(data >> 1));
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getA(), Byte(data >> 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -201,16 +219,16 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 	cpu.TestReset(CPU::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
-	cpu.A = data;
-	cpu.Flags.C = 1;
+	cpu.setA(data); 
+	cpu.setFlagC(true);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.Flags.C);
-	EXPECT_TRUE(cpu.Flags.N);
-	EXPECT_EQ(cpu.A, Byte(data >> 1) | (1 << 7));
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getA(), Byte(data >> 1) | (1 << 7));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -230,8 +248,8 @@ TEST_F(MOS6502RORROLTests, RorZeroPage) {
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data >> 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -246,20 +264,19 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
-	cpu.X = 0x10;
+	cpu.setX(0x10);
 	mem[0x0020] = data;
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data >> 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-//HERE
 TEST_F(MOS6502RORROLTests, RorAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
 	Byte ins = Opcodes::INS_ROR_ABS;
@@ -277,8 +294,8 @@ TEST_F(MOS6502RORROLTests, RorAbsolute) {
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2000], data >> 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -294,15 +311,15 @@ TEST_F(MOS6502RORROLTests, RorAbsoluteX) {
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
 	mem[0xFFFE] = 0x20;
-	cpu.X = 0x05;
+	cpu.setX(0x05);
 	mem[0x2005] = data;
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_TRUE(cpu.Flags.C);
-	EXPECT_FALSE(cpu.Flags.N);
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2005], Byte(data >> 1));
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

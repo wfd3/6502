@@ -1,3 +1,21 @@
+//
+// Tests for external interrupts
+//
+// Copyright (C) 2023 Walt Drummond
+//
+// This program is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+// more details.
+//
+// You should have received a copy of the GNU General Public License along with
+// this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <gtest/gtest.h>
 #include <6502.h>
 #include <thread>
@@ -34,8 +52,15 @@ public:
 	virtual void TearDown()	{
 	}
 
+	bool executeOneInstruction() {
+		Cycles_t used;
+		bool halt, debug;
+		cpu.execute(halt, debug, used);
+		return halt;
+	}
+
 	void execute() {
-		while(!cpu.executeOneInstruction())
+		while(!executeOneInstruction())
 			;
 	}
 };
@@ -60,17 +85,17 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterrupt) {
 	cpu.raiseIRQ();
 
 	EXPECT_TRUE(cpu.pendingIRQ());
-	EXPECT_FALSE(cpu.Flags.I);
+	EXPECT_FALSE(cpu.getFlagI());
 
 	// When
-	cpu.executeOneInstruction();
+	executeOneInstruction();
 
 	// Expect
-	EXPECT_EQ(cpu.PC, 0x4000);
-	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getPC(), 0x4000);
+	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
-	EXPECT_TRUE(cpu.Flags.I);
+	EXPECT_TRUE(cpu.getFlagI());
 }
 
 TEST_F(MOS6502InterruptTests, InlineMaskableInterruptDoesNotInterruptWhenIFlagSet) {
@@ -80,21 +105,21 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterruptDoesNotInterruptWhenIFlagSe
 	cpu.TestReset(0x1000);
 	cpu.setHaltAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
-	cpu.Flags.I = 1;
+	cpu.setFlagI(true);
 	cpu.raiseIRQ();
 
 	EXPECT_TRUE(cpu.pendingIRQ());
-	EXPECT_TRUE(cpu.Flags.I);
+	EXPECT_TRUE(cpu.getFlagI());
 
 	// When
-	cpu.executeOneInstruction();
+	executeOneInstruction();
 
 	// Expect
-	EXPECT_EQ(cpu.PC, 0x1001);
-	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getPC(), 0x1001);
+	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
 	EXPECT_TRUE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
-	EXPECT_TRUE(cpu.Flags.I);
+	EXPECT_TRUE(cpu.getFlagI());
 }
 
 TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
@@ -115,11 +140,11 @@ TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
 	runProgram.join();
 
 	// Expect
-	EXPECT_EQ(cpu.PC, 0x4000);
-	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getPC(), 0x4000);
+	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
-	EXPECT_TRUE(cpu.Flags.I);
+	EXPECT_TRUE(cpu.getFlagI());
 }
 
 TEST_F(MOS6502InterruptTests, NonMaskableInterrupt) {
@@ -138,11 +163,11 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterrupt) {
 	runProgram.join();
 
 	// Expect
-	EXPECT_EQ(cpu.PC, 0x4000);
-	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getPC(), 0x4000);
+	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
-	EXPECT_TRUE(cpu.Flags.I);
+	EXPECT_TRUE(cpu.getFlagI());
 }
 
 TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
@@ -152,7 +177,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 	cpu.TestReset(0x1000);
 	cpu.setHaltAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
-	cpu.Flags.I = 1;
+	cpu.setFlagI(true);
 
 	// When
 	std::thread runProgram(&MOS6502InterruptTests_MaskableInterrupt_Test::execute, this);
@@ -162,11 +187,11 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 	runProgram.join();
 
 	// Expect
-	EXPECT_EQ(cpu.PC, 0x4000);
-	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getPC(), 0x4000);
+	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
-	EXPECT_TRUE(cpu.Flags.I);
+	EXPECT_TRUE(cpu.getFlagI());
 }
 
 TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
@@ -194,9 +219,9 @@ TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
 	runProgram.join();
 
 	// Expect
-	EXPECT_EQ(cpu.PC, 0x1005);
-	EXPECT_EQ(cpu.SP, CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getPC(), 0x1005);
+	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
-	EXPECT_FALSE(cpu.Flags.I);
+	EXPECT_FALSE(cpu.getFlagI());
 }

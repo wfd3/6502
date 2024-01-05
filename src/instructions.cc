@@ -57,8 +57,8 @@ void CPU::bcdADC(Byte operand) {
 	
 	A = (Word) (answer & 0xff);
 	
-	setFlagN(A);
-	setFlagZ(A);
+	setFlagNByValue(A);
+	setFlagZByValue(A);
 	Flags.C = (answer >= 0x100);
 	Flags.V = (answer < -128) || (answer > 127);
 }
@@ -83,7 +83,7 @@ void CPU::bcdSBC(Byte subtrahend) {
 
 	A = (Byte) operand & 0xff;
 
-	setFlagZ(A);
+	setFlagZByValue(A);
 	Flags.C = (operand >= 0);
 }
 
@@ -95,8 +95,8 @@ void CPU::doADC(Byte operand) {
 	same_sign = isNegative(A) == isNegative(operand);
 	result = A + operand + Flags.C;
 	A = result & 0xff;
-	setFlagZ(A);
-	setFlagN(A);
+	setFlagZByValue(A);
+	setFlagNByValue(A);
 	Flags.C = result > 0xff;
 	Flags.V = same_sign && (isNegative(A) != isNegative(operand));
 }
@@ -122,8 +122,8 @@ void CPU::ins_and(Byte opcode, Cycles_t &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	A &= data;
-	setFlagZ(A);
-	setFlagN(A);
+	setFlagZByValue(A);
+	setFlagNByValue(A);
 }
 
 // ASL
@@ -141,8 +141,8 @@ void CPU::ins_asl(Byte opcode, Cycles_t &expectedCyclesToUse) {
 
 	Flags.C = isNegative(data);
 	data = data << 1;
-	setFlagN(data);
-	setFlagZ(data);
+	setFlagNByValue(data);
+	setFlagZByValue(data);
 
 	if (accumulator) {
 		A = data;
@@ -184,8 +184,8 @@ void CPU::ins_bit(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Byte data;
 
 	data = getData(opcode, expectedCyclesToUse);
-	setFlagZ(A & data);
-	setFlagN(data);
+	setFlagZByValue(A & data);
+	setFlagNByValue(data);
 	Flags.V = (data & (1 << 6)) != 0;
 }
 
@@ -277,7 +277,7 @@ void CPU::ins_cmp(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Flags.Z = A == data;
 
 	Byte result = A - data;
-	setFlagN(result);
+	setFlagNByValue(result);
 }
 
 // CPX
@@ -288,7 +288,7 @@ void CPU::ins_cpx(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Flags.Z = X == data;
 
 	Byte result = X - data;
-	setFlagN(result);
+	setFlagNByValue(result);
 }
 
 // CPY
@@ -298,7 +298,7 @@ void CPU::ins_cpy(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Flags.Z = Y == data;
 
 	Byte result = Y - data;
-	setFlagN(result);
+	setFlagNByValue(result);
 }
 
 // DEC
@@ -310,8 +310,8 @@ void CPU::ins_dec(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	data = readByte(address);
 	data--;
 	writeByte(address, data);
-	setFlagZ(data);
-	setFlagN(data);
+	setFlagZByValue(data);
+	setFlagNByValue(data);
 	Cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;
@@ -321,8 +321,8 @@ void CPU::ins_dec(Byte opcode, Cycles_t &expectedCyclesToUse) {
 void CPU::ins_dex([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X--;
-	setFlagN(X);
-	setFlagZ(X);
+	setFlagNByValue(X);
+	setFlagZByValue(X);
 	Cycles++;
 }
 
@@ -330,8 +330,8 @@ void CPU::ins_dex([[maybe_unused]] Byte opcode,
 void CPU::ins_dey([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Y--;
-	setFlagN(Y);
-	setFlagZ(Y);
+	setFlagNByValue(Y);
+	setFlagZByValue(Y);
 	Cycles++;
 }
 
@@ -341,8 +341,8 @@ void CPU::ins_eor(Byte opcode, Cycles_t &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	A ^= data;
-	setFlagZ(A);
-	setFlagN(A);
+	setFlagZByValue(A);
+	setFlagNByValue(A);
 }
 
 // INC
@@ -354,8 +354,8 @@ void CPU::ins_inc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	data = readByte(address);
 	data++;
 	writeByte(address, data);
-	setFlagZ(data);
-	setFlagN(data);
+	setFlagZByValue(data);
+	setFlagNByValue(data);
 	Cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
 		Cycles++;
@@ -365,8 +365,8 @@ void CPU::ins_inc(Byte opcode, Cycles_t &expectedCyclesToUse) {
 void CPU::ins_inx([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X++;
-	setFlagZ(X);
-	setFlagN(X);
+	setFlagZByValue(X);
+	setFlagNByValue(X);
 	Cycles++;
 }
 
@@ -374,8 +374,8 @@ void CPU::ins_inx([[maybe_unused]] Byte opcode,
 void CPU::ins_iny([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Y++;
-	setFlagZ(Y);
-	setFlagN(Y);
+	setFlagZByValue(Y);
+	setFlagNByValue(Y);
 	Cycles++;
 }
 
@@ -414,22 +414,22 @@ void CPU::ins_jsr([[maybe_unused]] Byte opcode,
 // LDA
 void CPU::ins_lda(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	A = getData(opcode, expectedCyclesToUse);
-	setFlagZ(A);
-	setFlagN(A);
+	setFlagZByValue(A);
+	setFlagNByValue(A);
 }
 
 // LDX
 void CPU::ins_ldx(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	X = getData(opcode, expectedCyclesToUse);
-	setFlagZ(X);
-	setFlagN(X);
+	setFlagZByValue(X);
+	setFlagNByValue(X);
 }
 
 // LDY
 void CPU::ins_ldy(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	Y = getData(opcode, expectedCyclesToUse);
-	setFlagZ(Y);
-	setFlagN(Y);
+	setFlagZByValue(Y);
+	setFlagNByValue(Y);
 }
 
 // LSR
@@ -447,8 +447,8 @@ void CPU::ins_lsr(Byte opcode, Cycles_t &expectedCyclesToUse) {
 
 	Flags.C = (data & 1);
 	data = data >> 1;
-	setFlagZ(data);
-	setFlagN(data);
+	setFlagZByValue(data);
+	setFlagNByValue(data);
 
 	if (accumulator)
 		A = data;
@@ -474,8 +474,8 @@ void CPU::ins_ora(Byte opcode, Cycles_t &expectedCyclesToUse) {
 
 	data = getData(opcode, expectedCyclesToUse);
 	A |= data;
-	setFlagN(A);
-	setFlagZ(A);
+	setFlagNByValue(A);
+	setFlagZByValue(A);
 }
 
 // PHA
@@ -496,8 +496,8 @@ void CPU::ins_php([[maybe_unused]] Byte opcode,
 void CPU::ins_pla([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	A = pop();
-	setFlagN(A);
-	setFlagZ(A);
+	setFlagNByValue(A);
+	setFlagZByValue(A);
 	Cycles += 2;      
 }
 
@@ -526,8 +526,8 @@ void CPU::ins_rol(Byte opcode, Cycles_t &expectedCyclesToUse) {
 
 	data = (data << 1) | carry;
 
-	setFlagZ(data);
-	setFlagN(data);
+	setFlagZByValue(data);
+	setFlagNByValue(data);
 
 	if (accumulator)
 		A = data;
@@ -556,8 +556,8 @@ void CPU::ins_ror(Byte opcode, Cycles_t &expectedCyclesToUse) {
 	data = data >> 1;
 	if (Flags.C)
 		data |= NegativeBit;
-	setFlagN(data);
-	setFlagZ(data);
+	setFlagNByValue(data);
+	setFlagZByValue(data);
 	Flags.C = (zero == 1);
 
 	if (accumulator)
@@ -643,8 +643,8 @@ void CPU::ins_sty(Byte opcode, Cycles_t &expectedCyclesToUse) {
 void CPU::ins_tax([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X = A;
-	setFlagZ(X);
-	setFlagN(X);
+	setFlagZByValue(X);
+	setFlagNByValue(X);
 	Cycles++;
 }
 
@@ -652,8 +652,8 @@ void CPU::ins_tax([[maybe_unused]] Byte opcode,
 void CPU::ins_tay([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	Y = A;
-	setFlagZ(Y);
-	setFlagN(Y);
+	setFlagZByValue(Y);
+	setFlagNByValue(Y);
 	Cycles++;
 }
 
@@ -661,8 +661,8 @@ void CPU::ins_tay([[maybe_unused]] Byte opcode,
 void CPU::ins_tsx([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	X = SP;
-	setFlagZ(X);
-	setFlagN(X);
+	setFlagZByValue(X);
+	setFlagNByValue(X);
 	Cycles++;
 }
 
@@ -670,8 +670,8 @@ void CPU::ins_tsx([[maybe_unused]] Byte opcode,
 void CPU::ins_txa([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	A = X;
-	setFlagZ(A);
-	setFlagN(A);
+	setFlagZByValue(A);
+	setFlagNByValue(A);
 	Cycles++;
 }
 
@@ -686,7 +686,7 @@ void CPU::ins_txs([[maybe_unused]] Byte opcode,
 void CPU::ins_tya([[maybe_unused]] Byte opcode,
 		  [[maybe_unused]] Cycles_t &expectedCyclesToUse) {
 	A = Y;
-	setFlagZ(A);
-	setFlagN(A);
+	setFlagZByValue(A);
+	setFlagNByValue(A);
 	Cycles++;
 }
