@@ -22,11 +22,11 @@
 class MOS6502CMPTests : public testing::Test {
 public:
 
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -38,7 +38,7 @@ TEST_F(MOS6502CMPTests, CmpImmediate) {
 	Byte ins = Opcodes::INS_CMP_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -59,7 +59,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsCFlagFalse) {
 	Byte ins = Opcodes::INS_CMP_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xFF;
@@ -80,7 +80,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsZFlagTrue) {
 	Byte ins = Opcodes::INS_CMP_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xFF;
@@ -101,7 +101,7 @@ TEST_F(MOS6502CMPTests, CmpImmediateSetsNFlagTrue) {
 	Byte ins = Opcodes::INS_CMP_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -122,7 +122,7 @@ TEST_F(MOS6502CMPTests, CmpZeroPage) {
 	Byte ins = Opcodes::INS_CMP_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -144,7 +144,7 @@ TEST_F(MOS6502CMPTests, CmpZeroPageX) {
 	Byte ins = Opcodes::INS_CMP_ZPX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -167,7 +167,7 @@ TEST_F(MOS6502CMPTests, CmpAbsolute) {
 	Byte ins = Opcodes::INS_CMP_ABS;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -190,7 +190,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteX) {
 	Byte ins = Opcodes::INS_CMP_ABX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -214,7 +214,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteXCrossesPage) {
 	Byte ins = Opcodes::INS_CMP_ABX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -238,7 +238,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteY) {
 	Byte ins = Opcodes::INS_CMP_ABY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -262,7 +262,7 @@ TEST_F(MOS6502CMPTests, CmpAbsoluteYCrossesPage) {
 	Byte ins = Opcodes::INS_CMP_ABY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -286,7 +286,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectX) {
 	Byte ins = Opcodes::INS_CMP_IDX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -311,7 +311,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectY) {
 	Byte ins = Opcodes::INS_CMP_IDY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x02;
@@ -336,7 +336,7 @@ TEST_F(MOS6502CMPTests, CmpIndirectYCrossesPage) {
 	Byte ins = Opcodes::INS_CMP_IDY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x02;
@@ -362,7 +362,7 @@ TEST_F(MOS6502CMPTests, CpxImmediate) {
 	Byte ins = Opcodes::INS_CPX_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -383,7 +383,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsCFlagFalse) {
 	Byte ins = Opcodes::INS_CPX_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xf;
@@ -404,7 +404,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsZFlagTrue) {
 	Byte ins = Opcodes::INS_CPX_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xFF;
@@ -425,7 +425,7 @@ TEST_F(MOS6502CMPTests, CpxImmediateSetsNFlagTrue) {
 	Byte ins = Opcodes::INS_CPX_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x2F;
@@ -446,7 +446,7 @@ TEST_F(MOS6502CMPTests, CpxZeroPage) {
 	Byte ins = Opcodes::INS_CPX_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -468,7 +468,7 @@ TEST_F(MOS6502CMPTests, CpxAbsolute) {
 	Byte ins = Opcodes::INS_CPX_ABS;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -492,7 +492,7 @@ TEST_F(MOS6502CMPTests, CpyImmediate) {
 	Byte ins = Opcodes::INS_CPY_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -513,7 +513,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsCFlagFalse) {
 	Byte ins = Opcodes::INS_CPY_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xf;
@@ -534,7 +534,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsZFlagTrue) {
 	Byte ins = Opcodes::INS_CPY_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xFF;
@@ -555,7 +555,7 @@ TEST_F(MOS6502CMPTests, CpyImmediateSetsNFlagTrue) {
 	Byte ins = Opcodes::INS_CPY_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x3F;
@@ -576,7 +576,7 @@ TEST_F(MOS6502CMPTests, CpyZeroPage) {
 	Byte ins = Opcodes::INS_CPY_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -598,7 +598,7 @@ TEST_F(MOS6502CMPTests, CpyAbsolute) {
 	Byte ins = Opcodes::INS_CPY_ABS;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);	
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;

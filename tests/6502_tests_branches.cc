@@ -22,11 +22,11 @@
 class MOS6502BranchTests : public testing::Test {
 public:
 
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -54,9 +54,9 @@ void MOS6502BranchTests::BranchesWhenFlagSet(Word saddr, Byte rel, Byte ins) {
 
 // BCC
 TEST_F(MOS6502BranchTests, BCCBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagC(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BCC_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BCC_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BCCBranchesWhenVSetForward) {
@@ -72,16 +72,16 @@ TEST_F(MOS6502BranchTests, BCCBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BCCDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagC(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BCC_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BCC_REL);
 }
 
 // BCS
 TEST_F(MOS6502BranchTests, BCSBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagC(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BCS_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BCS_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BCSBranchesWhenVSetForward) {
@@ -97,16 +97,16 @@ TEST_F(MOS6502BranchTests, BCSBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BCSDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagC(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BCS_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BCS_REL);
 }
 
 // BEQ
 TEST_F(MOS6502BranchTests, BEQBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagZ(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BEQ_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BEQ_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BEQBranchesWhenVSetForward) {
@@ -122,16 +122,16 @@ TEST_F(MOS6502BranchTests, BEQBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BEQDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagZ(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BEQ_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BEQ_REL);
 }
 
 // BMI
 TEST_F(MOS6502BranchTests, BMIBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagN(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BMI_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BMI_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BMIBranchesWhenVSetForward) {
@@ -147,16 +147,16 @@ TEST_F(MOS6502BranchTests, BMIBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BMIDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagN(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BMI_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BMI_REL);
 }
 
 // BNE
 TEST_F(MOS6502BranchTests, BNEBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagZ(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BNE_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BNE_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BNEBranchesWhenVSetForward) {
@@ -172,16 +172,16 @@ TEST_F(MOS6502BranchTests, BNEBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BNEDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagZ(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BNE_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BNE_REL);
 }
 
 // BPL
 TEST_F(MOS6502BranchTests, BPLBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagN(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BPL_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BPL_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BPLBranchesWhenVSetForward) {
@@ -197,16 +197,16 @@ TEST_F(MOS6502BranchTests, BPLBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BPLDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagN(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BPL_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BPL_REL);
 }
 
 // BVC
 TEST_F(MOS6502BranchTests, BVCBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagV(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BVC_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BVC_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BVCBranchesWhenVSetForward) {
@@ -222,16 +222,16 @@ TEST_F(MOS6502BranchTests, BVCBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BVCDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagV(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BVC_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BVC_REL);
 }
 
 // BVS
 TEST_F(MOS6502BranchTests, BVSBranchesWhenVSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagV(true);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0xF, Opcodes::INS_BVS_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, Opcodes::INS_BVS_REL);
 }
 	
 TEST_F(MOS6502BranchTests, BVSBranchesWhenVSetForward) {
@@ -247,7 +247,7 @@ TEST_F(MOS6502BranchTests, BVSBranchesWhenVSetAcrossPage) {
 }
 
 TEST_F(MOS6502BranchTests, BVSDoesNotBranchesWhenVIsNotSet) {
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	cpu.setFlagV(false);
-	BranchesWhenFlagSet(CPU::RESET_VECTOR, 0x0, Opcodes::INS_BVS_REL);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0x0, Opcodes::INS_BVS_REL);
 }

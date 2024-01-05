@@ -22,11 +22,11 @@
 class MOS6502RTITests : public testing::Test {
 public:
 
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -38,7 +38,7 @@ TEST_F(MOS6502RTITests, RtiImplied) {
 	Byte ins = Opcodes::INS_RTI_IMP;
 
 	//Given:
-	cpu.TestReset(0x2000, CPU::INITIAL_SP - 3);
+	cpu.TestReset(0x2000, MOS6502::INITIAL_SP - 3);
 	mem[0x2000] = ins;
 	mem[0x01FF] = 0xAA;
 	mem[0x01FE] = 0xFF;
@@ -52,7 +52,7 @@ TEST_F(MOS6502RTITests, RtiImplied) {
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0xAAFF);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagB());
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 

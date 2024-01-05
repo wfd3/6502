@@ -21,12 +21,12 @@
 
 class MOS6502ADCTests : public testing::Test {
 public:
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 
 	virtual void TearDown()	{
@@ -38,7 +38,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -61,7 +61,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -85,7 +85,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ZPX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -110,7 +110,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ABS;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -135,7 +135,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ABX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -161,7 +161,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ABX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xfe;
@@ -187,7 +187,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ABY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -213,7 +213,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_ABY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xfe;
@@ -239,7 +239,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_IDX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -266,7 +266,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_IDY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -293,7 +293,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 	Byte ins = Opcodes::INS_ADC_IDY;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -320,7 +320,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x10;
@@ -344,7 +344,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-1);
@@ -368,7 +368,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-1);
@@ -392,7 +392,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -416,7 +416,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0xf0;
@@ -440,7 +440,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-128);
@@ -465,7 +465,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -489,7 +489,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0;
@@ -513,7 +513,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0;
@@ -538,7 +538,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = Byte(-1);
@@ -563,7 +563,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x28;
@@ -587,7 +587,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x28;
@@ -612,7 +612,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x0;
@@ -636,7 +636,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	// 99 + 99 + 1 = 98, C=1, N=1, V=1
 	mem[0xFFFC] = ins;
@@ -663,7 +663,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x21;
@@ -688,7 +688,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x51;
@@ -713,7 +713,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x1;
@@ -738,7 +738,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x34;
@@ -763,7 +763,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 	Byte ins = Opcodes::INS_SBC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x01;
@@ -788,7 +788,7 @@ TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	Byte ins = Opcodes::INS_ADC_IMM;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x99;

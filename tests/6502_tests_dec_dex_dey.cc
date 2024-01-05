@@ -21,11 +21,11 @@
 
 class MOS6502DECTests : public testing::Test {
 public:
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 
 	virtual void TearDown()	{
@@ -38,7 +38,7 @@ TEST_F(MOS6502DECTests, DecZeroPage) {
 	Byte ins = Opcodes::INS_DEC_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -60,7 +60,7 @@ TEST_F(MOS6502DECTests, DecZeroPageX) {
 	Byte ins = Opcodes::INS_DEC_ZPX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -83,7 +83,7 @@ TEST_F(MOS6502DECTests, DecAbsolute) {
 	Byte ins = Opcodes::INS_DEC_ABS;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -106,7 +106,7 @@ TEST_F(MOS6502DECTests, DecAbsoluteX) {
 	Byte ins = Opcodes::INS_DEC_ABX;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x00;
@@ -130,7 +130,7 @@ TEST_F(MOS6502DECTests, DecZeroPageSetsZeroFlag) {
 	Byte ins = Opcodes::INS_DEC_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -151,7 +151,7 @@ TEST_F(MOS6502DECTests, DecZeroPageSetsNegativeFlag) {
 	Byte ins = Opcodes::INS_DEC_ZP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	mem[0xFFFD] = 0x20;
@@ -173,7 +173,7 @@ TEST_F(MOS6502DECTests, DexImmediate) {
 	Byte ins = Opcodes::INS_DEX_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.setX(10);
@@ -194,7 +194,7 @@ TEST_F(MOS6502DECTests, DexImmediateSetsZeroFlag) {
 	Byte ins = Opcodes::INS_DEX_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.setX(1);
@@ -214,7 +214,7 @@ TEST_F(MOS6502DECTests, DexImmediateSetsNegativeFlag) {
 	Byte ins = Opcodes::INS_DEX_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.setX(0);
@@ -235,7 +235,7 @@ TEST_F(MOS6502DECTests, DeyImmediate) {
 	Byte ins = Opcodes::INS_DEY_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.setY(10);
@@ -256,7 +256,7 @@ TEST_F(MOS6502DECTests, DeyImmediateSetsZeroFlag) {
 	Byte ins = Opcodes::INS_DEY_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.setY(1);
@@ -276,7 +276,7 @@ TEST_F(MOS6502DECTests, DeyImmediateSetsNegativeFlag) {
 	Byte ins = Opcodes::INS_DEY_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	cpu.setY(0);

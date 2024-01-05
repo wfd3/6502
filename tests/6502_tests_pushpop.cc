@@ -22,11 +22,11 @@
 class MOS6502PushPopTests : public testing::Test {
 public:
 
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -38,7 +38,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 	Byte ins = Opcodes::INS_PHA_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
 	cpu.setA(0x52);
@@ -48,7 +48,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 
 	// Then:
 	EXPECT_EQ(mem[0X01FF], 0x52);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 1);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -57,7 +57,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	Byte ins = Opcodes::INS_PLA_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
+	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
 	
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -68,7 +68,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x52);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
@@ -79,7 +79,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 	Byte ins = Opcodes::INS_PHP_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR);
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -90,7 +90,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 
 	// Then:
 	EXPECT_EQ(mem[0x01FF], 0b01110101);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 1);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
@@ -99,7 +99,7 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 	Byte ins = Opcodes::INS_PLP_IMP;
 
 	//Given:
-	cpu.TestReset(CPU::RESET_VECTOR, CPU::INITIAL_SP - 1);
+	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0b01010101;;
@@ -110,6 +110,6 @@ TEST_F(MOS6502PushPopTests, PlpImmediate) {
 
 	// Then:
 	EXPECT_EQ(cpu.getPS(), 0b01000101);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

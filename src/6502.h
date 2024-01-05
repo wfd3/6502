@@ -54,7 +54,7 @@ extern "C" char **readlineCompletionCallback(const char* text, int start, int en
 // https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
 // http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
 
-class CPU {
+class MOS6502 {
 
 ////////////////////
 // CPU
@@ -68,7 +68,7 @@ public:
 	constexpr static Word RESET_VECTOR = 0xFFFC;
 
 	// CPU Setup & reset
-	CPU(cMemory &);
+	MOS6502(cMemory &);
 	void Reset();
 	void setResetVector(Word);
 	void setPendingReset() {
@@ -223,7 +223,7 @@ private:
 	}
 
 	// Instruction map
-	typedef void (CPU::*opfn_t)(Byte, Cycles_t &);
+	typedef void (MOS6502::*opfn_t)(Byte, Cycles_t &);
 	struct instruction {
 		const char *name;
 	    AddressingMode addrmode;
@@ -234,7 +234,7 @@ private:
 	};
 	const std::map<Byte, instruction> _instructions;
 
-	CPU::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
+	MOS6502::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
 	static std::map<Byte, instruction> setupInstructionMap();
 
 	// CPU functions
@@ -358,13 +358,13 @@ private:
 	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
-	typedef bool (CPU::*debugFn_t)(std::string &);
+	typedef bool (MOS6502::*debugFn_t)(std::string &);
 
 	// Debugger commands
 	struct debugCommand {
 		const char *command;
 		const char *shortcut;
-		const CPU::debugFn_t func;
+		const MOS6502::debugFn_t func;
 		const bool doFileCompletion;
 		const std::string helpMsg;
 	};

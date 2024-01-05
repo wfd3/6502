@@ -123,7 +123,7 @@ bool isHexNumber(const std::string& str) {
     return true;
 }
 
-bool CPU::lookupAddress(const std::string& line, Word& address) {
+bool MOS6502::lookupAddress(const std::string& line, Word& address) {
 	if (line.empty()) 
 		return false;
 
@@ -166,7 +166,7 @@ void getReadline(std::string &line) {
 char* readlineCommandGenerator(const char* text, int state) {
     static size_t listIndex = 0;
     static size_t length;
-    auto commands = CPU::setupDebugCommands();
+    auto commands = MOS6502::setupDebugCommands();
    
     if (!state) {
 	    listIndex = 0;
@@ -187,7 +187,7 @@ char* readlineCommandGenerator(const char* text, int state) {
 extern "C" char **readlineCompletionCallback(const char* text,
 					     [[maybe_unused]] int start,
 					     [[maybe_unused]] int end) {
-	auto commands = CPU::setupDebugCommands();
+	auto commands = MOS6502::setupDebugCommands();
 
 	rl_attempted_completion_over = 1;
 
@@ -227,8 +227,8 @@ void getReadline(std::string& line) {
 #endif
 
 //////////
-// Called by CPU::CPU() to initialize the debugger
-void CPU::initDebugger() {
+// Called by MOS6502::CPU() to initialize the debugger
+void MOS6502::initDebugger() {
 	setupReadline();
 	breakpoints.assign(mem.size(), false);
 }
@@ -236,7 +236,7 @@ void CPU::initDebugger() {
 //////////
 // CPU State information 
 
-void CPU::printCPUState() {
+void MOS6502::printCPUState() {
 	auto yesno = [](bool b) -> std::string {
 		return b ? "Yes" : "No";
 	};
@@ -259,7 +259,7 @@ void CPU::printCPUState() {
 	fmt::print("\n");
 }
 
-void CPU::dumpStack() {
+void MOS6502::dumpStack() {
 	Byte p = INITIAL_SP;
 	Word a;
 
@@ -277,7 +277,7 @@ void CPU::dumpStack() {
 //////////
 // Disassembler
 
-void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly, 
+void MOS6502::decodeArgs(bool atPC, Byte ins, std::string& disassembly, 
 					 std::string& opcodes, std::string& address, 
 					 std::string& computedAddr) {
 
@@ -484,7 +484,7 @@ void CPU::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 	}
 }
 
-Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
+Address_t MOS6502::disassembleAt(Address_t dPC, std::string& disassembly) {
 	Address_t savePC = PC;
 	Cycles_t saveCycles = Cycles;
 	std::string ins, bkpoint, args, opcodes, marker, address, computedAddress;
@@ -528,7 +528,7 @@ Address_t CPU::disassembleAt(Address_t dPC, std::string& disassembly) {
 	return dPC;
 }
 
-Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
+Address_t MOS6502::disassemble(Address_t dPC, uint64_t cnt) {
 	std::string disassembly;
 
 	if (dPC > MAX_MEM) {
@@ -547,7 +547,7 @@ Address_t CPU::disassemble(Address_t dPC, uint64_t cnt) {
 //////////
 // Breakpoints
 
-void CPU::listBreakpoints() {
+void MOS6502::listBreakpoints() {
 	fmt::print("Active breakpoints:\n");
 	for (Word i = 0; i < breakpoints.size(); i++) {
 		if (breakpoints[i]) {
@@ -560,13 +560,13 @@ void CPU::listBreakpoints() {
 	}
 }
 
-bool CPU::isBreakpoint(Word _pc) {
+bool MOS6502::isBreakpoint(Word _pc) {
 	if (_pc > MAX_MEM) 
 		return false;
 	return breakpoints[_pc];
 }
 
-void CPU::deleteBreakpoint(Word bp) {
+void MOS6502::deleteBreakpoint(Word bp) {
 	if (bp > MAX_MEM) 
 		return;
 	breakpoints[bp] = false;
@@ -578,7 +578,7 @@ void CPU::deleteBreakpoint(Word bp) {
 	fmt::print("\n");
 }
 
-void CPU::addBreakpoint(Word bp) {
+void MOS6502::addBreakpoint(Word bp) {
 	if (bp > MAX_MEM) {
 		fmt::print("Error: Breakpoint address outside of available "
 			   "address range\n");
@@ -600,7 +600,7 @@ void CPU::addBreakpoint(Word bp) {
 //////////
 // Backtrace
 
-void CPU::showBacktrace() {
+void MOS6502::showBacktrace() {
 	std::vector<std::string>::iterator i = backtrace.begin();
 	unsigned int cnt = 0;
 
@@ -610,20 +610,20 @@ void CPU::showBacktrace() {
 
 }
 
-void CPU::addBacktrace(Word backtracePC) {
+void MOS6502::addBacktrace(Word backtracePC) {
 	std::string ins;
 	disassembleAt(backtracePC, ins);
 	backtrace.push_back(ins);
 }
 
-void CPU::addBacktraceInterrupt(Word backtracePC) {
+void MOS6502::addBacktraceInterrupt(Word backtracePC) {
 	std::string ins;
 	disassembleAt(backtracePC, ins);
 	ins += " [IRQ/NMI]";
 	backtrace.push_back(ins);
 }
 
-void CPU::removeBacktrace() {
+void MOS6502::removeBacktrace() {
 	if (!backtrace.empty())
 		backtrace.pop_back();
 }
@@ -631,7 +631,7 @@ void CPU::removeBacktrace() {
 //////////
 // Labels
 
-void CPU::showLabels() {
+void MOS6502::showLabels() {
 	if (addrToLabel.empty()) {
 		fmt::print("No labels\n");
 		return;
@@ -643,12 +643,12 @@ void CPU::showLabels() {
 	}
 }
 
-void CPU::addLabel(const Word address, const std::string label) {
+void MOS6502::addLabel(const Word address, const std::string label) {
 	addrToLabel[address] = label;
 	labelToAddr[label]   = address;
 }
 
-void CPU::removeLabel(const Word address) {
+void MOS6502::removeLabel(const Word address) {
 	auto it = addrToLabel.find(address);
 	if (it == addrToLabel.end())
 		return;
@@ -658,7 +658,7 @@ void CPU::removeLabel(const Word address) {
 	labelToAddr.erase(label);
 }
 
-std::string CPU::addressLabel(const Word address) {
+std::string MOS6502::addressLabel(const Word address) {
 	std::string label;
 	
 	auto it = addrToLabel.find(address);
@@ -671,7 +671,7 @@ std::string CPU::addressLabel(const Word address) {
 std::unordered_map<Word, std::string> addrToLabel;
 std::list<Word> recentAddresses;  // Cache for recent addresses
 const size_t cacheSize = 10;      // Adjust the cache size as needed
-std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth) {
+std::string MOS6502::addressLabelSearch(const Word address, const int8_t searchWidth) {
 	std::string label;
 
     label = addressLabel(address);
@@ -709,7 +709,7 @@ std::string CPU::addressLabelSearch(const Word address, const int8_t searchWidth
     return label;
 }
 
-bool CPU::labelAddress(const std::string& label, Word& address) {
+bool MOS6502::labelAddress(const std::string& label, Word& address) {
 	auto it = labelToAddr.find(label);
 	if (it == labelToAddr.end()) 
 		return false;
@@ -720,7 +720,7 @@ bool CPU::labelAddress(const std::string& label, Word& address) {
 //////////
 // Load and save hex files
 
-bool CPU::loadHexFile(const std::string& filename) {
+bool MOS6502::loadHexFile(const std::string& filename) {
 	std::ifstream inFile(filename);
 	if (!inFile) {
 		fmt::print("Error opening file: {}", filename);
@@ -744,7 +744,7 @@ bool CPU::loadHexFile(const std::string& filename) {
 	return true;
 }
 
-bool CPU::saveToHexFile(const std::string& filename, const std::vector<std::pair<Word, Word>>& addressRanges) {
+bool MOS6502::saveToHexFile(const std::string& filename, const std::vector<std::pair<Word, Word>>& addressRanges) {
 	std::ofstream outFile(filename);
 	if (!outFile) {
 		fmt::print("Error opening file: {}", filename);
@@ -775,7 +775,7 @@ bool CPU::saveToHexFile(const std::string& filename, const std::vector<std::pair
 	return true;
 }
 
-bool CPU::saveToHexFile(const std::string& filename, Word startAddress, Word endAddress) {
+bool MOS6502::saveToHexFile(const std::string& filename, Word startAddress, Word endAddress) {
 	std::vector<std::pair<Word, Word>> range = {{startAddress, endAddress}};
 	return saveToHexFile(filename, range);
 }
@@ -783,7 +783,7 @@ bool CPU::saveToHexFile(const std::string& filename, Word startAddress, Word end
 //////////
 // command file
 
-bool CPU::parseCommandFile(const std::string& filename) {
+bool MOS6502::parseCommandFile(const std::string& filename) {
     std::ifstream file(filename);
     if(!file.is_open()) {
         fmt::print("Failed to open file '{}'", filename);
@@ -805,89 +805,89 @@ bool CPU::parseCommandFile(const std::string& filename) {
 
 //////////
 // Debugger
-std::vector<CPU::debugCommand> CPU::setupDebugCommands() {
+std::vector<MOS6502::debugCommand> MOS6502::setupDebugCommands() {
 	return {
-		{ "help",      "h",  &CPU::helpCmd, false,
+		{ "help",      "h",  &MOS6502::helpCmd, false,
 		  "This help message" 
 		},
-		{ "list",      "l",  &CPU::listCmd, false,
+		{ "list",      "l",  &MOS6502::listCmd, false,
 		  "List next 10 instructions.  'list xxxx' lists from address "
 		  "xxxx. 'list' without an address either lists from current "
 		  "program counter or continues the last listing."
 		},
-		{ "load",      "L",  &CPU::loadCmd, true,
+		{ "load",      "L",  &MOS6502::loadCmd, true,
 		  "'load <file> <address>' loads the file named 'file' at "
 		  "memory address 'address', overwriting any data.  This "
 		  "command will fail if it attempts to load data on non-RAM "
 		  "memory."
 		},
-		{ "script",      "",  &CPU::loadScriptCmd, true,
+		{ "script",      "",  &MOS6502::loadScriptCmd, true,
 		  "'load a command/script from file <file>"
 		},
-		{ "loadhex",      "",  &CPU::loadhexCmd, true,
+		{ "loadhex",      "",  &MOS6502::loadhexCmd, true,
 		  "'load a kex file <file>"
 		},
-		{ "stack",     "S",  &CPU::stackCmd, false,
+		{ "stack",     "S",  &MOS6502::stackCmd, false,
 		  "Show current stack elements"
 		},
-		{ "break",     "b",  &CPU::breakpointCmd, false,
+		{ "break",     "b",  &MOS6502::breakpointCmd, false,
 		  "Add, remove or show current breakpoints.  'break  "
 		  "xxxx' adds a breakpoint at address xxxx, 'break "
 		  "-xxxx' removes the breakpoint at address xxxx, and "
 		  "'break' alone will list active breakpoints"
 		},
-		{ "save",      "",   &CPU::savememCmd, false, 
+		{ "save",      "",   &MOS6502::savememCmd, false, 
 		  "Save memory in Wozmon format" 
 		},
-		{ "state",     "p",  &CPU::cpustateCmd, false,
+		{ "state",     "p",  &MOS6502::cpustateCmd, false,
 		  "Show current CPU state"},
-		{ "autostate", "a",  &CPU::autostateCmd, false,
+		{ "autostate", "a",  &MOS6502::autostateCmd, false,
 		  "Display CPU state after every debugger command"
 		},
-		{ "listpc",   "P",  &CPU::resetListPCCmd, false,
+		{ "listpc",   "P",  &MOS6502::resetListPCCmd, false,
 		  "Reset where the 'list' command starts to disassemble"
 		},
-		{ "mem",       "m",  &CPU::memdumpCmd, false,
+		{ "mem",       "m",  &MOS6502::memdumpCmd, false,
 		  "Examine or change memory"},
-		{ "set",       "s",  &CPU::setCmd, false,
+		{ "set",       "s",  &MOS6502::setCmd, false,
 		  "set a register or CPU flag, (ex. 'set A=ff')"},
-		{ "reset",     "" ,  &CPU::resetCmd, false,
+		{ "reset",     "" ,  &MOS6502::resetCmd, false,
 		  "Reset the CPU and jump through the reset vector"
 		},
-		{ "continue",  "c",  &CPU::continueCmd, false,
+		{ "continue",  "c",  &MOS6502::continueCmd, false,
 		  "Exit the debugger and continue running the CPU.  "
 		},
-		{ "loopdetect","ld", &CPU::loopdetectCmd, false,
+		{ "loopdetect","ld", &MOS6502::loopdetectCmd, false,
 		  "Enable or disable loop detection (ie, 'jmp *'"},
-		{ "backtrace", "t",  &CPU::backtraceCmd, false,
+		{ "backtrace", "t",  &MOS6502::backtraceCmd, false,
 		  "Show the current subroutine and break backtrace"
 		},
-		{ "where",     "w",  &CPU::whereCmd, false,
+		{ "where",     "w",  &MOS6502::whereCmd, false,
 		  "Display the instruction at the Program Counter"
 		},
-		{ "watch",     "W",  &CPU::watchCmd, false,
+		{ "watch",     "W",  &MOS6502::watchCmd, false,
 		  "Add, remove or show current memory watchpoints. "
 		  "'watch xxxx' adds a watchpoint at memory address "
 		  "xxxx, 'watch -xxxx' removes the watchpoint at "
 		  "memory address xxxx, and 'watch' alone will list "
 		  "active watchpoints"
 		},
-		{ "label",     "",   &CPU::labelCmd, false, 
+		{ "label",     "",   &MOS6502::labelCmd, false, 
 		  "Add, remove or show current address label map"
 		},
-		{ "map",       "M",  &CPU::memmapCmd, false,
+		{ "map",       "M",  &MOS6502::memmapCmd, false,
 		  "Display the current memory map"
 		},
-		{ "find",      "f",  &CPU::findCmd, false, 
+		{ "find",      "f",  &MOS6502::findCmd, false, 
 		  "Find a string sequence in memory, with optional filter"
 		},
-		{ "quit",      "q",   &CPU::quitCmd, false, 
+		{ "quit",      "q",   &MOS6502::quitCmd, false, 
 		  "Quit the emulator"
 		}
 	};
 }
 
-bool CPU::helpCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::helpCmd([[maybe_unused]] std::string &line) {
 	for (const auto& cmd : _debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
 			   // Add ': '
@@ -896,7 +896,7 @@ bool CPU::helpCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool CPU::listCmd(std::string &line) {
+bool MOS6502::listCmd(std::string &line) {
 
 	if (!lookupAddress(line, listPC) && !line.empty()) {
 		return false;
@@ -905,14 +905,14 @@ bool CPU::listCmd(std::string &line) {
 	return true;
 }
 
-bool CPU::loadCmd(std::string &line) {
+bool MOS6502::loadCmd(std::string &line) {
 	std::string fname;
 	Address_t address;
 
 	std::istringstream iss(line);
 	iss >> fname >> std::hex >> address;
 
-	if (address > CPU::MAX_MEM) {
+	if (address > MOS6502::MAX_MEM) {
 		fmt::print("Invalid address: {:04x}\n", address);
 		return false;
 	}
@@ -932,7 +932,7 @@ bool CPU::loadCmd(std::string &line) {
 	return false;
 }
 
-bool CPU::loadScriptCmd(std::string &line) {
+bool MOS6502::loadScriptCmd(std::string &line) {
 	std::string fname;
 
 	std::istringstream iss(line);
@@ -946,14 +946,14 @@ bool CPU::loadScriptCmd(std::string &line) {
 	return r;
 }
 
-bool CPU::loadhexCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::loadhexCmd([[maybe_unused]] std::string &line) {
 	line = stripLeadingSpaces(line);
 	line = stripTrailingSpaces(line);
 
 	return loadHexFile(line);
 }
 
-bool CPU::savememCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::savememCmd([[maybe_unused]] std::string &line) {
 	std::vector<std::pair<Word, Word>> ranges;
 	std::string addressRanges, filename;
 	
@@ -1001,12 +1001,12 @@ bool CPU::savememCmd([[maybe_unused]] std::string &line) {
 	return saveToHexFile(filename, ranges);
 }
 
-bool CPU::stackCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::stackCmd([[maybe_unused]] std::string &line) {
 	dumpStack();
 	return true;
 }
 
-bool CPU::breakpointCmd(std::string &line) {
+bool MOS6502::breakpointCmd(std::string &line) {
 	Word addr;
 	bool remove = false;
 
@@ -1036,12 +1036,12 @@ bool CPU::breakpointCmd(std::string &line) {
 	return true;
 }
 
-bool CPU::cpustateCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::cpustateCmd([[maybe_unused]] std::string &line) {
 	printCPUState();
 	return true;
 }
 
-bool CPU::autostateCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::autostateCmd([[maybe_unused]] std::string &line) {
 	debug_alwaysShowPS = !debug_alwaysShowPS;
 	fmt::print("Processor status auto-display ");
 	if (debug_alwaysShowPS)
@@ -1051,7 +1051,7 @@ bool CPU::autostateCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool CPU::resetListPCCmd(std::string &line) {
+bool MOS6502::resetListPCCmd(std::string &line) {
 	Word i;
 
 	try {
@@ -1071,7 +1071,7 @@ bool CPU::resetListPCCmd(std::string &line) {
 	return true;
 }
 
-bool CPU::memdumpCmd(std::string &line) {
+bool MOS6502::memdumpCmd(std::string &line) {
 	const std::string wordPattern   = R"((\w+))";  				// A word, like a label or identifier
 	const std::string offsetPattern = R"(([+-][0-9a-fA-F]+)?)"; // Optional offset, positive or negative, in hexadecimal
 	const std::string valuePattern  = R"(([0-9a-fA-F]+))";  	// A value, in hexadecimal
@@ -1156,12 +1156,12 @@ bool CPU::memdumpCmd(std::string &line) {
 	return false;
 }
 
-bool CPU::memmapCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::memmapCmd([[maybe_unused]] std::string &line) {
 	mem.printMap();
 	return true;
 }
 
-bool CPU::setCmd(std::string &line) {
+bool MOS6502::setCmd(std::string &line) {
 	std::string v;
 	std::string reg;					
 	uint64_t value;
@@ -1259,7 +1259,7 @@ bool CPU::setCmd(std::string &line) {
 	return true;
 }
 
-bool CPU::resetCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::resetCmd([[maybe_unused]] std::string &line) {
 	fmt::print("Resetting 6502\n");
 	Reset();    	// Enter reset
 	if (inReset())
@@ -1267,7 +1267,7 @@ bool CPU::resetCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 		
-bool CPU::continueCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::continueCmd([[maybe_unused]] std::string &line) {
 	if (_hitException) {
 		fmt::print("CPU Exception hit; can't continue.  Reset CPU to clear.\n");
 		return false;
@@ -1276,7 +1276,7 @@ bool CPU::continueCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool CPU::loopdetectCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::loopdetectCmd([[maybe_unused]] std::string &line) {
 	debug_loopDetection = !debug_loopDetection;
 	fmt::print("Loop detection ");
 	if (debug_loopDetection)
@@ -1286,17 +1286,17 @@ bool CPU::loopdetectCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool CPU::backtraceCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::backtraceCmd([[maybe_unused]] std::string &line) {
 	showBacktrace();
 	return true;
 }
 
-bool CPU::whereCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::whereCmd([[maybe_unused]] std::string &line) {
 	disassemble(PC, 1);
 	return true;
 }
 
-bool CPU::watchCmd(std::string &line) {
+bool MOS6502::watchCmd(std::string &line) {
 	Word addr;
 	bool remove = false;
 
@@ -1335,7 +1335,7 @@ bool CPU::watchCmd(std::string &line) {
 	return true;
 }
 
-bool CPU::labelCmd(std::string &line) {
+bool MOS6502::labelCmd(std::string &line) {
 	Word addr;
 	bool remove = false;
 
@@ -1385,13 +1385,13 @@ bool CPU::labelCmd(std::string &line) {
 	return true;
 }
 
-bool CPU::quitCmd([[maybe_unused]] std::string& line) {
+bool MOS6502::quitCmd([[maybe_unused]] std::string& line) {
 	fmt::print("Exiting emulator\n");
 	exit(0);
 	return true;
 }
 
-bool CPU::findCmd(std::string& line) {
+bool MOS6502::findCmd(std::string& line) {
 	line = stripLeadingSpaces(line);
 	auto sequence = split(line, " ");
 	if (sequence.empty()) {
@@ -1430,7 +1430,7 @@ bool CPU::findCmd(std::string& line) {
 	return true;
 }
 
-bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
+bool MOS6502::matchCommand(const std::string &input, debugFn_t &func) {
 
 	for (const auto &cmd : _debugCommands) {
 		if (std::strcmp(cmd.command, input.c_str()) == 0 ||
@@ -1442,7 +1442,7 @@ bool CPU::matchCommand(const std::string &input, debugFn_t &func) {
 	return false;
 }
 
-bool CPU::executeDebuggerCmd(std::string line) {
+bool MOS6502::executeDebuggerCmd(std::string line) {
 	debugFn_t f;
 
 	line = stripTrailingSpaces(line);
@@ -1491,7 +1491,7 @@ bool CPU::executeDebuggerCmd(std::string line) {
 	return (this->*f)(line);
 }
 
-bool CPU::executeDebug() {
+bool MOS6502::executeDebug() {
 	if (!_debuggingEnabled) {
 		listPC = PC;
 		_debuggingEnabled = true;
@@ -1514,7 +1514,7 @@ bool CPU::executeDebug() {
 
 #ifdef TEST_BUILD
 // This is used for basic disassembler testing
-void CPU::traceOneInstruction(Cycles_t& usedCycles, Cycles_t &expectedCycles) {
+void MOS6502::traceOneInstruction(Cycles_t& usedCycles, Cycles_t &expectedCycles) {
 	disassemble(PC, 1);
 	executeOneInstructionWithCycleCount(usedCycles, expectedCycles);
 }

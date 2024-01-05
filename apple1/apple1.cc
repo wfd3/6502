@@ -33,8 +33,8 @@ using Cell    = uint8_t;
 constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
 // Create the memory, CPU, PIA and bus clock
-Memory<Address, Cell> mem(CPU::MAX_MEM);
-CPU cpu(mem);
+Memory<Address, Cell> mem(MOS6502::MAX_MEM);
+MOS6502 cpu(mem);
 auto pia = std::make_shared<MOS6820<Address, Cell>>();
 BusClock_t busClock;
 

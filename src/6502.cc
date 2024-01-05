@@ -20,7 +20,7 @@
 
 //////////
 // CPU Setup and reset
-CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
+MOS6502::MOS6502(Memory<Address_t, Byte>& m) : mem(m),
 				       _instructions(setupInstructionMap()),
 				       _debugCommands(setupDebugCommands()) {
 	
@@ -28,15 +28,15 @@ CPU::CPU(Memory<Address_t, Byte>& m) : mem(m),
 	initDebugger();
 }
 
-void CPU::setResetVector(Word address) {
+void MOS6502::setResetVector(Word address) {
 	writeWord(RESET_VECTOR, address);
 }
 
-void CPU::setInterruptVector(Word address) {
+void MOS6502::setInterruptVector(Word address) {
 	writeWord(INTERRUPT_VECTOR, address);
 }
 
-void CPU::exitReset() {
+void MOS6502::exitReset() {
 	PC = readWord(RESET_VECTOR);
 	SP = INITIAL_SP;
 
@@ -65,7 +65,7 @@ void CPU::exitReset() {
 // Stack Pointer values, and arranges for the next call to execute...() 
 // to exit the CPU from reset.
 #ifdef TEST_BUILD
-void CPU::TestReset(Word initialPC, Byte initialSP)  {
+void MOS6502::TestReset(Word initialPC, Byte initialSP)  {
 	_inReset = false;
 	_pendingReset = true;
 	_testReset = true;
@@ -76,7 +76,7 @@ void CPU::TestReset(Word initialPC, Byte initialSP)  {
 
 // 'Asserts' the Reset line if not asserted, de-asserts the Reset line
 // if asserted. 
-void CPU::Reset() {
+void MOS6502::Reset() {
 	if (!_inReset) {		// Not in Reset, assert the Reset line
 		_inReset = true;
 	} else {				// In Reset, de-assert Reset
@@ -88,7 +88,7 @@ void CPU::Reset() {
 //////////
 // Interrupts
 
-void CPU::interrupt() {
+void MOS6502::interrupt() {
 
 	pushWord(PC);
 	pushPS();
@@ -98,7 +98,7 @@ void CPU::interrupt() {
 	Cycles++;
 }
 
-bool CPU::NMI() {
+bool MOS6502::NMI() {
 	if (_pendingNMI) {
 		addBacktraceInterrupt(PC);
 		_IRQCount++;
@@ -110,7 +110,7 @@ bool CPU::NMI() {
 	return false;
 }
 
-bool CPU::IRQ() {
+bool MOS6502::IRQ() {
 	if (_pendingIRQ && !IRQBlocked()) {
 		addBacktraceInterrupt(PC);
 		_NMICount++;
@@ -124,7 +124,7 @@ bool CPU::IRQ() {
 
 //////////
 // CPU Exception
-void CPU::exception(const std::string &message) {
+void MOS6502::exception(const std::string &message) {
 	std::string msg = "6502 CPU Exception: " + message;
 	_hitException = true;
 	throw std::runtime_error(msg);
@@ -132,51 +132,51 @@ void CPU::exception(const std::string &message) {
 
 //////////
 // Flags
-bool CPU::isNegative(Byte val) {
+bool MOS6502::isNegative(Byte val) {
 	return (val & NegativeBit);
 }
 
-void CPU::setFlagNByValue(Byte val) {
+void MOS6502::setFlagNByValue(Byte val) {
 	Flags.N = isNegative(val);
 }
 
-void CPU::setFlagZByValue(Byte val) {
+void MOS6502::setFlagZByValue(Byte val) {
 	Flags.Z = (val == 0);
 }
 
-bool CPU::IRQBlocked() {
+bool MOS6502::IRQBlocked() {
 	return Flags.I == 1;
 }
 
 //////////
 // Memory access
-Byte CPU::readByte(Word address) {
+Byte MOS6502::readByte(Word address) {
 	Byte data = mem.Read(address);
 	Cycles++;
 	return data;
 }
 
-void CPU::writeByte(Word address, Byte value) {
+void MOS6502::writeByte(Word address, Byte value) {
 	mem.Write(address, value);
 	Cycles++;
 }
 
-Word CPU::readWord(Word address) {
+Word MOS6502::readWord(Word address) {
 	Word w = readByte(address) | (readByte(address + 1) << 8);
 	return w;
 }
 
-void CPU::writeWord(Word address, Word word) {
+void MOS6502::writeWord(Word address, Word word) {
 	writeByte(address, word & 0xff);
 	writeByte(address + 1, (Byte) (word >> 8));
 }
 
-Word CPU::readWordAtPC() {
+Word MOS6502::readWordAtPC() {
 	Word w = readByteAtPC() | (readByteAtPC() << 8);
 	return w;
 }
 
-Byte CPU::readByteAtPC() {
+Byte MOS6502::readByteAtPC() {
 	Byte opcode = readByte(PC);
 	PC++;
 	return opcode;
@@ -184,37 +184,37 @@ Byte CPU::readByteAtPC() {
 
 //////////
 // Stack operations
-void CPU::push(Byte value) {
+void MOS6502::push(Byte value) {
 	Word SPAddress = STACK_FRAME + SP;
 	writeByte(SPAddress, value);
 	SP--;
 }
 
-Byte CPU::pop() {
+Byte MOS6502::pop() {
 	Word SPAddress;
 	SP++;
 	SPAddress = STACK_FRAME + SP;
 	return readByte(SPAddress);
 }
 
-void CPU::pushWord(Word value) {
+void MOS6502::pushWord(Word value) {
 	push((Byte) (value >> 8)); // value high
 	push((Byte) value & 0xff); // value low
 }
 
-Word CPU::popWord() {
+Word MOS6502::popWord() {
 	// Low byte then high byte
 	Word w = pop() | (pop() << 8);
 	return w;
 }
 
-void CPU::pushPS() {
+void MOS6502::pushPS() {
 	// PHP silently sets the Unused flag (bit 5) and the Break
 	// flag (bit 4)
 	push(PS | UnusedBit | BreakBit);
 }
 
-void CPU::popPS() {
+void MOS6502::popPS() {
 	PS = pop();
 	Flags.B = false;
 	Flags._unused = false;
@@ -222,7 +222,7 @@ void CPU::popPS() {
 
 //////////
 // Address decoding
-Word CPU::getAddress(Byte opcode, Cycles_t &expectedCycles) {
+Word MOS6502::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 	Word address;
 	SByte rel;
 
@@ -309,7 +309,7 @@ Word CPU::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 	return address;
 }
 
-Byte CPU::getData(Byte opcode, Cycles_t &expectedCycles) {
+Byte MOS6502::getData(Byte opcode, Cycles_t &expectedCycles) {
 	Byte data = 0;
 	Word address;
 
@@ -339,7 +339,7 @@ Byte CPU::getData(Byte opcode, Cycles_t &expectedCycles) {
 
 //////////
 // Instruction execution
-void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse) {
+void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse) {
 	Byte opcode;
 	Word startPC;
 	opfn_t op;
@@ -380,7 +380,7 @@ void CPU::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& ex
 		IRQ();
 }
 
-void CPU::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed) {
+void MOS6502::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed) {
 	atHaltAddress = false;
 	startDebugOnNextInstruction = false;
 	cyclesUsed = 0;

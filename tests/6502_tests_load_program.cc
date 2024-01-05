@@ -45,11 +45,11 @@ static const char *testProgramFile = BINFILE_PATH "/sampleprg.bin";
 
 class MOS6502LoadProgramTests : public testing::Test {
 public:	
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 
 	virtual void TearDown() {

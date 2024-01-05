@@ -42,11 +42,11 @@ void usleep(__int64 usec)
 class MOS6502InterruptTests : public testing::Test {
 public:
 
-	Memory<Address_t, Byte> mem{CPU::MAX_MEM};
-	CPU cpu{mem};
+	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	MOS6502 cpu{mem};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, CPU::MAX_MEM);
+		mem.mapRAM(0, MOS6502::MAX_MEM);
 	}
 	
 	virtual void TearDown()	{
@@ -92,7 +92,7 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterrupt) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -116,7 +116,7 @@ TEST_F(MOS6502InterruptTests, InlineMaskableInterruptDoesNotInterruptWhenIFlagSe
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x1001);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_TRUE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -141,7 +141,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterrupt) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -164,7 +164,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterrupt) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -188,7 +188,7 @@ TEST_F(MOS6502InterruptTests, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -220,7 +220,7 @@ TEST_F(MOS6502InterruptTests, MaskableInterruptFollowedByRTSWorks) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x1005);
-	EXPECT_EQ(cpu.getSP(), CPU::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_FALSE(cpu.getFlagI());
