@@ -62,5 +62,4 @@ set(BINDIR "${CMAKE_BINARY_DIR}/bin")
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(apple1)
-
-
+add_subdirectory(tools)
