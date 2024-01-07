@@ -28,33 +28,23 @@
 #include "clock.h"
 
 using Address = uint16_t;
-using Cell    = uint8_t;
+using Byte    = uint8_t;
 
-constexpr Address PIA_BASE_ADDRESS = 0xd010;
+/////////
+// Define which and where the ROM and other 'built-in' programs will be loaded. 
 
-// Create the memory, CPU, PIA and bus clock
-Memory<Address, Cell> mem(MOS6502::MAX_MEM);
-MOS6502 cpu(mem);
-auto pia = std::make_shared<MOS6820<Address, Cell>>();
-BusClock_t busClock;
-
-//////////
-// This section defines which and where the ROM and other 'built-in' programs 
-// will be loaded. 
-
-// Load addresses and data locations for WozMon (in ROM)
+// WozMon (in ROM)
 constexpr Address_t wozmonAddress = 0xff00;
 static const char* WOZMON_FILE = BINFILE_PATH "/wozmon.bin";
 
-// Load address and data location for Apple Integer Basic (normally     
-// loaded from cassette)
+// Apple Integer Basic (normally loaded from cassette)
 constexpr Address_t apple1BasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE = BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
 
 // bytecode for the sample program from the Apple 1 Manual (normally entered 
 // by hand via WozMon)
 constexpr Address_t apple1SampleAddress = 0x0000;
-std::vector<Cell> apple1SampleProg =
+std::vector<Byte> apple1SampleProg =
 	{ 0xa9, 0x00, 		// lda #$00
 	  0xaa,   			// tax
 	  0x20, 0xef, 0xff, // jsr $ffef
@@ -63,7 +53,15 @@ std::vector<Cell> apple1SampleProg =
 	  0x4c, 0x02, 0x00 	// jmp $0002
 	};
 
-// Setup memory map
+constexpr int clockSpeedMHz = 1;
+constexpr Address PIA_BASE_ADDRESS = 0xd010;
+
+// Create the memory, CPU, PIA and bus clock
+Memory<Address, Byte> mem(MOS6502::MAX_MEM);
+MOS6502 cpu(mem);
+auto pia = std::make_shared<MOS6820<Address, Byte>>();
+BusClock_t busClock(clockSpeedMHz);
+
 void setupMemoryMap(){
 	// 0x0000-0x5fff - RAM
 	// 0xe000-0xefff - Apple 1 Basic (also RAM)
