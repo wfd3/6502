@@ -19,19 +19,21 @@
 
 #include <cstdint>
 #include <chrono>
+#include <iostream>
 
-#ifdef _WIN64
-#include <windows.h>
-#endif
+using namespace std::chrono_literals;
+using freq_t = uint16_t;
 
 class BusClock_t {
 public:
-	BusClock_t() : _emulateTiming(false),
-		_cycleDelay(std::chrono::nanoseconds(nsInMHz)) { } 
+	BusClock_t(freq_t MHz) : _emulateTiming(true) {
+		
+		_MHz = _boundMHz(MHz);
 
-	int64_t delayTimeNs() {
-		return _cycleDelay.count();
-	}
+		_nsPerCycle = _nsInCycleAt1MHz / _MHz;
+		if (_nsPerCycle < _resolutionFloor) 
+			_nsPerCycle = _resolutionFloor;
+	 } 
 
 	void enableTimingEmulation() {
 		_emulateTiming = true;
@@ -41,78 +43,32 @@ public:
 		_emulateTiming = false;
 	}
 
-	void toggleTimingEmulation() {
-		_emulateTiming = !_emulateTiming;
+	void delay(uint64_t cycles = 1) {
+		if (_emulateTiming) {
+
+			auto start = std::chrono::high_resolution_clock::now();
+			auto end = start + (_nsPerCycle * cycles);
+
+			while (std::chrono::high_resolution_clock::now() < end) 
+				;
+		}
 	}
 
-	bool timingEmulation() {
-		return _emulateTiming;
-	}
-
-	void delay(uint64_t cycles) {
-		if (!_emulateTiming)
-			return;
-
-		#if defined(_WIN64)
-		windowsDelay(cycles);		
-		#elif defined(__linux__)
-		linuxDelay(cycles);
-		#else 
-		fallbackDelay(cycles);
-		#endif
-	}
+	freq_t getFrequencyMHz() { return _MHz; }
 
 private:
-	static constexpr int nsInMHz = 1000;
 	bool _emulateTiming;
-	std::chrono::nanoseconds _cycleDelay;
+	freq_t _MHz;
+	static constexpr std::chrono::nanoseconds _nsInCycleAt1MHz = 1000ns;
+	static constexpr std::chrono::nanoseconds _resolutionFloor = 250ns;
+	std::chrono::duration<uint64_t, std::nano> _nsPerCycle;
 
-#ifdef _WIN64
-	void windowsDelay(uint64_t cycles) {
-		// Use the Windows high-performance counter to busy-wait a
-		//certain number of nanoseconds.
-		LARGE_INTEGER frequency;
-		QueryPerformanceFrequency(&frequency);
+	freq_t _boundMHz(freq_t MHz) {
+		if (MHz < 1)
+			MHz = 1;
+		else if (MHz >= 1000) 
+			MHz = 1000;
 
-		LARGE_INTEGER start;
-		QueryPerformanceCounter(&start);
-		LONGLONG target_counts = _cycleDelay.count() * 
-			frequency.QuadPart / 1000000000LL;
-		target_counts *= cycles;
-
-		LARGE_INTEGER current;
-		do {
-			QueryPerformanceCounter(&current);
-		} while (current.QuadPart - start.QuadPart < target_counts);
+		return MHz;
 	}
-#endif
-
-#ifdef __linux__
-	void linuxDelay(uint64_t cycles) {
-		// Use Linux clock_gettime() to busy-wait a certain number of 
-		// nanoseconds.
-		struct timespec start, current;
-		clock_gettime(CLOCK_MONOTONIC, &start);
-
-		int64_t target_ns = start.tv_nsec + (_cycleDelay.count() * cycles);
-		int64_t target_s = start.tv_sec + target_ns / 1000000000LL;
-		target_ns = target_ns % 1000000000LL;
-
-		do {
-			clock_gettime(CLOCK_MONOTONIC, &current);
-		} while (current.tv_sec < target_s || 
-				(current.tv_sec == target_s && current.tv_nsec < target_ns));
-
-	}
-#endif
-
-	void fallbackDelay(uint64_t cycles) {
-		// The minimum sleep_for() resolution (and clock_nanosleep())
-		// seems to be about 1000 nanoseconds, or 1 microsecond.  That's
-		// unfortunate as it means we're only ever going to be able to
-		// emulate a 1 MHz 6502 using this method.  But it works as a 
-		// fallback method.  
-		std::this_thread::sleep_for(_cycleDelay * cycles);
-	}
-
 };
