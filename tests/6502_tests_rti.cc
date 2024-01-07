@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502RTITests, RtiImplied) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_RTI_IMP;
+	Byte ins = Opcodes::RTI_IMP;
 
 	//Given:
 	cpu.TestReset(0x2000, MOS6502::INITIAL_SP - 3);

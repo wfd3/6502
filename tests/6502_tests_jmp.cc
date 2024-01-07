@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502JMPTests, JmpAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_JMP_ABS;
+	Byte ins = Opcodes::JMP_ABS;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -54,7 +54,7 @@ TEST_F(MOS6502JMPTests, JmpAbsolute) {
 
 TEST_F(MOS6502JMPTests, JmpIndirect) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_JMP_IND;
+	Byte ins = Opcodes::JMP_IND;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -75,7 +75,7 @@ TEST_F(MOS6502JMPTests, JmpIndirect) {
 
 TEST_F(MOS6502JMPTests, JmpIndirectBug) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_JMP_IND;
+	Byte ins = Opcodes::JMP_IND;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

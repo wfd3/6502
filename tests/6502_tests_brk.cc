@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502BRKTests, BRKImplied) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_BRK_IMP;
+	Byte ins = Opcodes::BRK_IMP;
 	Word pushed_PC = MOS6502::RESET_VECTOR + 2;
 	constexpr Word STACK_FRAME = 0x0100 | MOS6502::INITIAL_SP;
 

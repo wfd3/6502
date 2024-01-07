@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ORA_IMM;
+	Byte ins = Opcodes::ORA_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -56,7 +56,7 @@ TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 
 TEST_F(MOS6502ORATests, OraImmediateWhenNegativeFlagShouldBeSet) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ORA_IMM;
+	Byte ins = Opcodes::ORA_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

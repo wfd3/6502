@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502NOPTests, Nop) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_NOP_IMP;
+	Byte ins = Opcodes::NOP_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

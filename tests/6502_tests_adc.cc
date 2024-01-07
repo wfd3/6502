@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -58,7 +58,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ZP;
+	Byte ins = Opcodes::ADC_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -82,7 +82,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ZPX;
+	Byte ins = Opcodes::ADC_ZPX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -107,7 +107,7 @@ TEST_F(MOS6502ADCTests, ADCZeroPageXAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ABS;
+	Byte ins = Opcodes::ADC_ABS;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -132,7 +132,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ABX;
+	Byte ins = Opcodes::ADC_ABX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -158,7 +158,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ABX;
+	Byte ins = Opcodes::ADC_ABX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -184,7 +184,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ABY;
+	Byte ins = Opcodes::ADC_ABY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -210,7 +210,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_ABY;
+	Byte ins = Opcodes::ADC_ABY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -236,7 +236,7 @@ TEST_F(MOS6502ADCTests, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IDX;
+	Byte ins = Opcodes::ADC_IDX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -263,7 +263,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectXAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IDY;
+	Byte ins = Opcodes::ADC_IDY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -290,7 +290,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IDY;
+	Byte ins = Opcodes::ADC_IDY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -317,7 +317,7 @@ TEST_F(MOS6502ADCTests, ADCIndirectYCrossPageAddsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -341,7 +341,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarry) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -365,7 +365,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -389,7 +389,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsNegativeNumbersWithCarry) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -413,7 +413,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZero) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -437,7 +437,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithCarryOverflow) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -462,7 +462,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsWithOverflow) {
 // SBC tests
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -486,7 +486,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveNumbers) {
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -510,7 +510,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroNumbers) {
 }
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -535,7 +535,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsZeroWitCarryNumbers) {
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -560,7 +560,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 // BCD ADC tests
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -584,7 +584,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -609,7 +609,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -633,7 +633,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsZeroBCDNumbers) {
 
 TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -660,7 +660,7 @@ TEST_F(MOS6502ADCTests, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -685,7 +685,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbers) {
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -710,7 +710,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNotSet) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -735,7 +735,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCa
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarrySet) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -760,7 +760,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWh
 
 TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SBC_IMM;
+	Byte ins = Opcodes::SBC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -785,7 +785,7 @@ TEST_F(MOS6502ADCTests, SBCImmediateSubtractsSimple) {
 
 TEST_F(MOS6502ADCTests, ADCBCDOnePlus99EqualsZero) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ADC_IMM;
+	Byte ins = Opcodes::ADC_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

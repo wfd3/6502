@@ -69,6 +69,26 @@ add_custom_target(run_memory_tests
   COMMAND memory_tests)
 
 ##########
+# Clock tests
+set (CLOCK_TEST_SOURCES
+"clock_tests.cc"
+)
+
+source_group("src" FILE ${CLOCK_TEST_SOURCES})
+add_executable(clock_tests ${CLOCK_TEST_SOURCES})
+add_dependencies(clock_tests gtest_main)
+target_link_libraries(clock_tests gtest_main)
+if(MSVC)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+message(STATUS "Adding ${LIBCXXABI_LIBRARY} to link_libraries for clock_test")
+target_link_libraries(clock_tests ${LIBCXXABI_LIBRARY})
+else()
+endif()
+add_custom_target(run_clock_tests
+  DEPENDS clock_tests
+  COMMAND clock_tests)
+
+##########
 # 6502 tests
 # source for the test executable
 set (6502_TEST_SOURCES
@@ -118,14 +138,17 @@ add_custom_target(run_6502_tests
 
 # Phony targets 
 add_custom_target(tests
-  DEPENDS memory_tests 6502_tests)
+  DEPENDS memory_tests clock_tests 6502_tests)
 add_custom_target(runtests
-  DEPENDS run_memory_tests run_6502_tests)
+  DEPENDS run_memory_tests run_clock_tests run_6502_tests)
 
 # Copy the test binarys to {builddir}/bin
 add_custom_command(TARGET memory_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:memory_tests>" "${BINDIR}")
+add_custom_command(TARGET clock_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:clock_tests>" "${BINDIR}")
 add_custom_command(TARGET 6502_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:6502_tests>" "${BINDIR}")

@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502ANDTests, AndImmediate) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_IMM;
+	Byte ins = Opcodes::AND_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -56,7 +56,7 @@ TEST_F(MOS6502ANDTests, AndImmediate) {
 
 TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_IMM;
+	Byte ins = Opcodes::AND_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -77,7 +77,7 @@ TEST_F(MOS6502ANDTests, AndImmediateSetsZeroFlag) {
 
 TEST_F(MOS6502ANDTests, AndZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ZP;
+	Byte ins = Opcodes::AND_ZP;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -99,7 +99,7 @@ TEST_F(MOS6502ANDTests, AndZeroPage) {
 
 TEST_F(MOS6502ANDTests, AndZeroPageX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ZPX;
+	Byte ins = Opcodes::AND_ZPX;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -122,7 +122,7 @@ TEST_F(MOS6502ANDTests, AndZeroPageX) {
 
 TEST_F(MOS6502ANDTests, AndAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ABS;
+	Byte ins = Opcodes::AND_ABS;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -145,7 +145,7 @@ TEST_F(MOS6502ANDTests, AndAbsolute) {
 
 TEST_F(MOS6502ANDTests, AndAbsoluteX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ABX;
+	Byte ins = Opcodes::AND_ABX;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -169,7 +169,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteX) {
 
 TEST_F(MOS6502ANDTests, AndAbsoluteXCrossesPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ABX;
+	Byte ins = Opcodes::AND_ABX;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -193,7 +193,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteXCrossesPage) {
 
 TEST_F(MOS6502ANDTests, AndAbsoluteY) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ABY;
+	Byte ins = Opcodes::AND_ABY;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -217,7 +217,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteY) {
 
 TEST_F(MOS6502ANDTests, AndAbsoluteYCrossesPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_ABY;
+	Byte ins = Opcodes::AND_ABY;
 	
 	// Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -241,7 +241,7 @@ TEST_F(MOS6502ANDTests, AndAbsoluteYCrossesPage) {
 
 TEST_F(MOS6502ANDTests, AndIndirectX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_IDX;
+	Byte ins = Opcodes::AND_IDX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -266,7 +266,7 @@ TEST_F(MOS6502ANDTests, AndIndirectX) {
 
 TEST_F(MOS6502ANDTests, AndIndirectY) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_AND_IDY;
+	Byte ins = Opcodes::AND_IDY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

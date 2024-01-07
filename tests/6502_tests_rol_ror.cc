@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502RORROLTests, RolAccumulator) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROL_ACC;
+	Byte ins = Opcodes::ROL_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -56,7 +56,7 @@ TEST_F(MOS6502RORROLTests, RolAccumulator) {
 
 TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROL_ACC;
+	Byte ins = Opcodes::ROL_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
@@ -77,7 +77,7 @@ TEST_F(MOS6502RORROLTests, RolAccumulatorSetsCarryFlag) {
 
 TEST_F(MOS6502RORROLTests, RolZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROL_ZP;
+	Byte ins = Opcodes::ROL_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -99,7 +99,7 @@ TEST_F(MOS6502RORROLTests, RolZeroPage) {
 
 TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROL_ZPX;
+	Byte ins = Opcodes::ROL_ZPX;
 	Byte data = 0b01010101;
 	
 	//Given:
@@ -122,7 +122,7 @@ TEST_F(MOS6502RORROLTests, RolZeroPageX) {
 
 TEST_F(MOS6502RORROLTests, RolAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROL_ABS;
+	Byte ins = Opcodes::ROL_ABS;
 	Byte data = 0b01010101;
 	
 	//Given:
@@ -145,7 +145,7 @@ TEST_F(MOS6502RORROLTests, RolAbsolute) {
 
 TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROL_ABX;
+	Byte ins = Opcodes::ROL_ABX;
 	Byte data = 0b01010101;
 	
 	//Given:
@@ -170,7 +170,7 @@ TEST_F(MOS6502RORROLTests, RolAbsoluteX) {
 // ROR
 TEST_F(MOS6502RORROLTests, RorAccumulator) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ACC;
+	Byte ins = Opcodes::ROR_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -191,7 +191,7 @@ TEST_F(MOS6502RORROLTests, RorAccumulator) {
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ACC;
+	Byte ins = Opcodes::ROR_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
@@ -212,7 +212,7 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorSetsCarryFlag) {
 
 TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ACC;
+	Byte ins = Opcodes::ROR_ACC;
 	Byte data = 0b10000000;
 
 	//Given:
@@ -234,7 +234,7 @@ TEST_F(MOS6502RORROLTests, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 
 TEST_F(MOS6502RORROLTests, RorZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ZP;
+	Byte ins = Opcodes::ROR_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -256,7 +256,7 @@ TEST_F(MOS6502RORROLTests, RorZeroPage) {
 
 TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ZPX;
+	Byte ins = Opcodes::ROR_ZPX;
 	Byte data = 0b01010101;
 	
 	//Given:
@@ -279,7 +279,7 @@ TEST_F(MOS6502RORROLTests, RorZeroPageX) {
 
 TEST_F(MOS6502RORROLTests, RorAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ABS;
+	Byte ins = Opcodes::ROR_ABS;
 	Byte data = 0b01010101;
 	
 	//Given:
@@ -302,7 +302,7 @@ TEST_F(MOS6502RORROLTests, RorAbsolute) {
 
 TEST_F(MOS6502RORROLTests, RorAbsoluteX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ROR_ABX;
+	Byte ins = Opcodes::ROR_ABX;
 	Byte data = 0b01010101;
 	
 	//Given:

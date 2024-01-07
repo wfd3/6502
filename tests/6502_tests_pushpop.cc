@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502PushPopTests, PhaImmediate) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_PHA_IMP;
+	Byte ins = Opcodes::PHA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -54,7 +54,7 @@ TEST_F(MOS6502PushPopTests, PhaImmediate) {
 
 TEST_F(MOS6502PushPopTests, PlaImmediate) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_PLA_IMP;
+	Byte ins = Opcodes::PLA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
@@ -76,7 +76,7 @@ TEST_F(MOS6502PushPopTests, PlaImmediate) {
 
 TEST_F(MOS6502PushPopTests, PhpImmediate) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_PHP_IMP;
+	Byte ins = Opcodes::PHP_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -96,7 +96,7 @@ TEST_F(MOS6502PushPopTests, PhpImmediate) {
 
 TEST_F(MOS6502PushPopTests, PlpImmediate) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_PLP_IMP;
+	Byte ins = Opcodes::PLP_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);

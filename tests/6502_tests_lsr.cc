@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502LSRTests, LsrAccumulator) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_LSR_ACC;
+	Byte ins = Opcodes::LSR_ACC;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -55,7 +55,7 @@ TEST_F(MOS6502LSRTests, LsrAccumulator) {
 
 TEST_F(MOS6502LSRTests, LsrZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_LSR_ZP;
+	Byte ins = Opcodes::LSR_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -76,7 +76,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPage) {
 
 TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_LSR_ZPX;
+	Byte ins = Opcodes::LSR_ZPX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -98,7 +98,7 @@ TEST_F(MOS6502LSRTests, LsrZeroPageX) {
 
 TEST_F(MOS6502LSRTests, LsrAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_LSR_ABS;
+	Byte ins = Opcodes::LSR_ABS;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -120,7 +120,7 @@ TEST_F(MOS6502LSRTests, LsrAbsolute) {
 
 TEST_F(MOS6502LSRTests, LsrAbsoluteX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_LSR_ABX;
+	Byte ins = Opcodes::LSR_ABX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_CLC_IMP;
+	Byte ins = Opcodes::CLC_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 
@@ -52,7 +52,7 @@ TEST_F(MOS6502FlagTests, CLCClearsCarryFlag) {
 
 TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SEC_IMP;
+	Byte ins = Opcodes::SEC_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 
@@ -69,7 +69,7 @@ TEST_F(MOS6502FlagTests, SECSetsCarryFlag) {
 
 TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_CLD_IMP;
+	Byte ins = Opcodes::CLD_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 
@@ -86,7 +86,7 @@ TEST_F(MOS6502FlagTests, CLDClearsDecimalFlag) {
 
 TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SED_IMP;
+	Byte ins = Opcodes::SED_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 
@@ -103,7 +103,7 @@ TEST_F(MOS6502FlagTests, SEDSetsDecimalFlag) {
 
 TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_CLI_IMP;
+	Byte ins = Opcodes::CLI_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 
@@ -120,7 +120,7 @@ TEST_F(MOS6502FlagTests, CLIClearsInterruptFlag) {
 
 TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_SEI_IMP;
+	Byte ins = Opcodes::SEI_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
@@ -137,7 +137,7 @@ TEST_F(MOS6502FlagTests, SEISetsInterruptFlag) {
 
 TEST_F(MOS6502FlagTests, CLVClearsOverflowFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_CLV_IMP;
+	Byte ins = Opcodes::CLV_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 

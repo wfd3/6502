@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502JSRTests, JsrAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_JSR_ABS;
+	Byte ins = Opcodes::JSR_ABS;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

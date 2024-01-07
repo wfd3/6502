@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502RTSTests, RtsImplied) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_RTS_IMP;
+	Byte ins = Opcodes::RTS_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 2);

@@ -34,7 +34,7 @@ public:
 
 TEST_F(MOS6502BITTests, BitAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_BIT_ABS;
+	Byte ins = Opcodes::BIT_ABS;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -57,7 +57,7 @@ TEST_F(MOS6502BITTests, BitAbsolute) {
 
 TEST_F(MOS6502BITTests, BitZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_BIT_ZP;
+	Byte ins = Opcodes::BIT_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -79,7 +79,7 @@ TEST_F(MOS6502BITTests, BitZeroPage) {
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_BIT_ZP;
+	Byte ins = Opcodes::BIT_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -101,7 +101,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsZeroFlag) {
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_BIT_ZP;
+	Byte ins = Opcodes::BIT_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -123,7 +123,7 @@ TEST_F(MOS6502BITTests, BitZeroPageSetsOverflowFlag) {
 
 TEST_F(MOS6502BITTests, BitZeroPageSetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_BIT_ZP;
+	Byte ins = Opcodes::BIT_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

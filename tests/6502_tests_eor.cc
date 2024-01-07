@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502EORTests, EorImmediate) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_IMM;
+	Byte ins = Opcodes::EOR_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -56,7 +56,7 @@ TEST_F(MOS6502EORTests, EorImmediate) {
 
 TEST_F(MOS6502EORTests, EorZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_ZP;
+	Byte ins = Opcodes::EOR_ZP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -78,7 +78,7 @@ TEST_F(MOS6502EORTests, EorZeroPage) {
 
 TEST_F(MOS6502EORTests, EorZeroPageX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_ZPX;
+	Byte ins = Opcodes::EOR_ZPX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -101,7 +101,7 @@ TEST_F(MOS6502EORTests, EorZeroPageX) {
 
 TEST_F(MOS6502EORTests, EorAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_ABS;
+	Byte ins = Opcodes::EOR_ABS;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -124,7 +124,7 @@ TEST_F(MOS6502EORTests, EorAbsolute) {
 
 TEST_F(MOS6502EORTests, EorAbsoluteX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_ABX;
+	Byte ins = Opcodes::EOR_ABX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -148,7 +148,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteX) {
 
 TEST_F(MOS6502EORTests, EorAbsoluteY) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_ABY;
+	Byte ins = Opcodes::EOR_ABY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -172,7 +172,7 @@ TEST_F(MOS6502EORTests, EorAbsoluteY) {
 
 TEST_F(MOS6502EORTests, EorIndirectX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_IDX;
+	Byte ins = Opcodes::EOR_IDX;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -197,7 +197,7 @@ TEST_F(MOS6502EORTests, EorIndirectX) {
 
 TEST_F(MOS6502EORTests, EorIndirectY) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_IDY;
+	Byte ins = Opcodes::EOR_IDY;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -223,7 +223,7 @@ TEST_F(MOS6502EORTests, EorIndirectY) {
 
 TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_IMM;
+	Byte ins = Opcodes::EOR_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -244,7 +244,7 @@ TEST_F(MOS6502EORTests, EorImmediateWhenZeroFlagShouldBeSet) {
 
 TEST_F(MOS6502EORTests, EorImmediateWhenNegativeFlagShouldBeSet) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_EOR_IMM;
+	Byte ins = Opcodes::EOR_IMM;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);

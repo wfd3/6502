@@ -35,7 +35,7 @@ public:
 
 TEST_F(MOS6502ASLTests, AslAccumulator) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ACC;
+	Byte ins = Opcodes::ASL_ACC;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -57,7 +57,7 @@ TEST_F(MOS6502ASLTests, AslAccumulator) {
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ACC;
+	Byte ins = Opcodes::ASL_ACC;
 	Byte data = 0b10000001;
 
 	//Given:
@@ -79,7 +79,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsCarryFlag) {
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ACC;
+	Byte ins = Opcodes::ASL_ACC;
 	Byte data = 0b01000001;
 
 	//Given:
@@ -101,7 +101,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsNegativeFlag) {
 
 TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ACC;
+	Byte ins = Opcodes::ASL_ACC;
 	Byte data = 0b00000000;
 
 	//Given:
@@ -123,7 +123,7 @@ TEST_F(MOS6502ASLTests, AslAccumulatorSetsZeroFlag) {
 
 TEST_F(MOS6502ASLTests, AslZeroPage) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ZP;
+	Byte ins = Opcodes::ASL_ZP;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -146,7 +146,7 @@ TEST_F(MOS6502ASLTests, AslZeroPage) {
 
 TEST_F(MOS6502ASLTests, AslZeroPageX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ZPX;
+	Byte ins = Opcodes::ASL_ZPX;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -170,7 +170,7 @@ TEST_F(MOS6502ASLTests, AslZeroPageX) {
 
 TEST_F(MOS6502ASLTests, AslAbsolute) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ABX;
+	Byte ins = Opcodes::ASL_ABX;
 	Byte data = 0b01010101;
 
 	//Given:
@@ -194,7 +194,7 @@ TEST_F(MOS6502ASLTests, AslAbsolute) {
 
 TEST_F(MOS6502ASLTests, AslAbsoluteX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_ASL_ABX;
+	Byte ins = Opcodes::ASL_ABX;
 	Byte data = 0b01010101;
 
 	//Given:

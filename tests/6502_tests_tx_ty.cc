@@ -37,7 +37,7 @@ public:
 
 TEST_F(MOS6502TXTYTests, TAX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TAX_IMP;
+	Byte ins = Opcodes::TAX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -58,7 +58,7 @@ TEST_F(MOS6502TXTYTests, TAX) {
 
 TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TAX_IMP;
+	Byte ins = Opcodes::TAX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -79,7 +79,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsZeroFlag) {
 
 TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TAX_IMP;
+	Byte ins = Opcodes::TAX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -102,7 +102,7 @@ TEST_F(MOS6502TXTYTests, TAXSetsNegativeFlag) {
 
 TEST_F(MOS6502TXTYTests, TXA) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TXA_IMP;
+	Byte ins = Opcodes::TXA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -123,7 +123,7 @@ TEST_F(MOS6502TXTYTests, TXA) {
 
 TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TXA_IMP;
+	Byte ins = Opcodes::TXA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -144,7 +144,7 @@ TEST_F(MOS6502TXTYTests, TXASetsZeroFlag) {
 
 TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TXA_IMP;
+	Byte ins = Opcodes::TXA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -167,7 +167,7 @@ TEST_F(MOS6502TXTYTests, TXASetsNegativeFlag) {
 
 TEST_F(MOS6502TXTYTests, TAY) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TAY_IMP;
+	Byte ins = Opcodes::TAY_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -188,7 +188,7 @@ TEST_F(MOS6502TXTYTests, TAY) {
 
 TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TAY_IMP;
+	Byte ins = Opcodes::TAY_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -209,7 +209,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsZeroFlag) {
 
 TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TAY_IMP;
+	Byte ins = Opcodes::TAY_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -232,7 +232,7 @@ TEST_F(MOS6502TXTYTests, TAYSetsNegativeFlag) {
 
 TEST_F(MOS6502TXTYTests, TYA) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TYA_IMP;
+	Byte ins = Opcodes::TYA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -253,7 +253,7 @@ TEST_F(MOS6502TXTYTests, TYA) {
 
 TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TYA_IMP;
+	Byte ins = Opcodes::TYA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -274,7 +274,7 @@ TEST_F(MOS6502TXTYTests, TYASetsZeroFlag) {
 
 TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TYA_IMP;
+	Byte ins = Opcodes::TYA_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -297,7 +297,7 @@ TEST_F(MOS6502TXTYTests, TYASetsNegativeFlag) {
 
 TEST_F(MOS6502TXTYTests, TSX) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TSX_IMP;
+	Byte ins = Opcodes::TSX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, 0x12);
@@ -317,7 +317,7 @@ TEST_F(MOS6502TXTYTests, TSX) {
 
 TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TSX_IMP;
+	Byte ins = Opcodes::TSX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, 0);
@@ -337,7 +337,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsZeroFlag) {
 
 TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TSX_IMP;
+	Byte ins = Opcodes::TSX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, 0xff);
@@ -359,7 +359,7 @@ TEST_F(MOS6502TXTYTests, TSXSetsNegativeFlag) {
 
 TEST_F(MOS6502TXTYTests, TXS) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = Opcodes::INS_TXS_IMP;
+	Byte ins = Opcodes::TXS_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR, 0x12);

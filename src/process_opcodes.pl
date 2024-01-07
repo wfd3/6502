@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/bin/perl
 # Process 6502 opcode descriptions into various C++ code snippets.
 #
 # Copyright (C) 2023 Walt Drummond
@@ -20,7 +20,19 @@ $DEBUG = 0;
 use feature qw/switch/;;
 no warnings 'experimental::smartmatch';
 
-#%i = {};
+$AddressingMode{"IDX"} = "AddressingMode::IndirectX";
+$AddressingMode{"ZPX"} = "AddressingMode::ZeroPageX";
+$AddressingMode{"ZPY"} = "AddressingMode::ZeroPageY";
+$AddressingMode{"ZP"}  = "AddressingMode::ZeroPage";
+$AddressingMode{"IMM"} = "AddressingMode::Immediate";
+$AddressingMode{"IDY"} = "AddressingMode::IndirectY";
+$AddressingMode{"ABY"} = "AddressingMode::AbsoluteY";
+$AddressingMode{"ABX"} = "AddressingMode::AbsoluteX";
+$AddressingMode{"ABS"} = "AddressingMode::Absolute";
+$AddressingMode{"IMP"} = "AddressingMode::Implied";
+$AddressingMode{"ACC"} = "AddressingMode::Accumulator";
+$AddressingMode{"REL"} = "AddressingMode::Relative";
+$AddressingMode{"IND"} = "AddressingMode::Indirect";
 
 $opcodes_stored = 0;
 while (<>) {
@@ -29,12 +41,11 @@ while (<>) {
     next if (/^#/ || /^$/);
     
     if (/^!/) { # New instruction
-	$ins = substr($_, 1);
-	printf("-- Found instruction: $ins\n") if ($DEBUG);
-	next;
+		$ins = substr($_, 1);
+		printf("-- Found instruction: $ins\n") if ($DEBUG);
+		next;
     } else {	# Addressing modes for previous instruction
-	($amode, $opcode, $bytes, $cycles, $cycle_flags)
-	    = split(/ /);
+	($amode, $opcode, $bytes, $cycles, $cycle_flags) = split(/ /);
 	given ($amode) {
 	    when(/\(Indirect\,X\)/) { $amode = "IDX"; } # (Indirect,X)
 	    when(/ZeroPage\,X/)     { $amode = "ZPX"; } # ZeroPage,X
@@ -49,19 +60,17 @@ while (<>) {
 	    when(/Accumulator/)     { $amode = "ACC"; } # Accumulator
 	    when(/Relative/)        { $amode = "REL"; } # Relative
 	    when(/Indirect/)        { $amode = "IND"; } # Indirect
-	    default                 {
-		die("Unknown amode $amode on instruction $ins\n");
-	    }
+	    default                 { die("Unknown amode $amode on instruction $ins\n"); }
 	}
 
 	$opcode = substr($opcode, 1); # Strip $
 	$op = hex($opcode);
 	
 	if (exists($i{$op})) {
-	    printf("Opcode 0x%x already in hash\n", $op);
-	    printf("Inserting: ins %s, opcode 0x%x, amode %s\n",
+	    printf("Opcode 0x%02x already in hash\n", $op);
+	    printf("Inserting: ins %s, opcode 0x%02x, amode %s\n",
 		   $ins, $op, $amode);
-	    printf("Found    : ins %s, opcode 0x%x, amode %s\n",
+	    printf("Found    : ins %s, opcode 0x%02x, amode %s\n",
 		   $i{$op}{"ins"}, $op, $i{$op}{"amode"});
 	    die("exiting");
 	}	
@@ -71,46 +80,74 @@ while (<>) {
 	$i{$op}{"amode"} = $amode;
 	$i{$op}{"bytes"} = $bytes;
 	$i{$op}{"cycles"} = $cycles;
-	$cycle_flags = "NONE" if ($cycle_flags eq "");
+	$cycle_flags = "InstructionFlags::NONE" if ($cycle_flags eq "");
+	$cycle_flags = "InstructionFlags:CyclePage" if ($cycle_flags eq "CYCLE_CROSS_PAGE");
+	$cycle_flags = "InstructionFlags:Branch" if ($cycle_flags eq "CYCLE_BRANCH");
+	
 	$i{$op}{"cycle_flags"} = $cycle_flags;
 	printf("  -- opcode 0x%x amode $amode cycles $cycles flags $cycle_flags\n", $op) if ($DEBUG);
     }
 }
 
-# INS_XXX_MMM definitions
-printf("// --------------------------------------------------------------\n");
-foreach my $opcode (sort keys(%i)) {
-    $ins   = $i{$opcode}{"ins"};
-    $amode = $i{$opcode}{"amode"};
-    $fn    = "ins_" . lc($ins) . "()";         # ins_xxx() 
-    $const = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM 
-    printf("constexpr Byte %s = 0x%x;\n", $const, $opcode);
-}	
+# Numerically sort the opcodes
+@sorted_ops = sort { $a <=> $b } keys %i;
 
-# Prototypes
+# XXX_MMM definitions
 printf("// --------------------------------------------------------------\n");
-foreach my $opcode (sort keys(%i)) {
+printf("class Opcodes {\n");
+printf("public:\n");
+foreach my $opcode (@sorted_ops) {
     $ins   = $i{$opcode}{"ins"};
     $amode = $i{$opcode}{"amode"};
-    $fn    = "ins_" . lc($ins) . "()";         # ins_xxx() 
-    $const = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM 
-    printf("void %s([[maybe__unused]] Byte addrmode,\n\t[[maybe_unused]] Byte &expectedCyclesToUse) {}\n", $fn);
+    $const = uc($ins) . "_" . $amode;   # XXX_MMM 
+    printf("\tconstexpr Byte %-7s = 0x%02x;\n", $const, $opcode);
+}	
+printf("};\n");
+
+# Function shells
+printf("// --------------------------------------------------------------\n");
+foreach my $opcode (@sorted_ops) {
+    $ins   = $i{$opcode}{"ins"};
+    $amode = $i{$opcode}{"amode"};
+    $fn    = "ins_" . lc($ins) . "()"; # ins_xxx() 
+    $const = uc($ins) . "_" . $amode;  # XXX_MMM 
+    printf("void %s([[maybe__unused]] Byte addrmode,\n\t[[maybe_unused]] Cycles_t& expectedCyclesToUse) {}\n", $fn);
 }
 
-# i[INS_XXX] = makeIns(...);
+# Function prototypes
 printf("// --------------------------------------------------------------\n");
-foreach my $opcode (sort keys(%i)) {
+foreach my $opcode (@sorted_ops) {
+    $ins   = $i{$opcode}{"ins"};
+    $amode = $i{$opcode}{"amode"};
+    $fn    = "ins_" . lc($ins) . "()"; # ins_xxx() 
+    $const = uc($ins) . "_" . $amode;  # XXX_MMM 
+    printf("void %s(Byte, Cycles_t&);\n", $fn);
+}
+
+# i[XXX] = makeIns(...);
+printf("// --------------------------------------------------------------\n");
+printf("std::map<Byte, MOS6502::instruction> MOS6502::setupInstructionMap() {\n");
+printf("\treturn  {\n");
+printf("\t\t// The table below is formatted as follows:\n");
+printf("\t\t// { Opcode,\n");
+printf("\t\t//   {\"name\", AddressingMode, ByteLength, CyclesUsed, Flags, Function pointer for instruction}}\n");
+
+foreach my $opcode (@sorted_ops) {
     $ins    = lc($i{$opcode}{"ins"});
     $amode  = $i{$opcode}{"amode"};
-    $fn     = "&Opcodes::INS_" . lc($ins);		# ins_xxx -- note no '()' 
-    $const  = "INS_" . uc($ins) . "_" . $amode; # INS_XXX_MMM
+	$addrm  = $AddressingMode{$amode};
+    $fn     = "&MOS6502::" . lc($ins) . "_" . lc($amode);		# ins_xxx -- note no '()' 
+    $const  = uc($ins) . "_" . $amode; # XXX_MMM
     $cycles = $i{$opcode}{"cycles"};
     $bytes  = $i{$opcode}{"bytes"};
     $flags  = $i{$opcode}{"cycle_flags"};
     
-			  
-    printf("\tinstructions[%s] = \n\t\tmakeIns(\"%s\", ADDR_MODE_%s, %d, %d, %s,\n\t\t\t %s);\n\n",
-	   $const, $ins, $amode, $bytes, $cycles, $flags, $fn);
+	printf("\t\t{ Opcodes::%s,\n", $const);
+	printf("\t\t  { \"%s\", %s, %d, %d, %s, %s }},\n",
+		$ins, $addrm, $bytes, $cyces, $flags, $fn);
 }
+printf("\t};\n");
+printf("}\n");
+
 
 
