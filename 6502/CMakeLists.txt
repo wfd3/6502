@@ -18,8 +18,6 @@ project( lib6502 )
 
 set (SOURCES
   "6502.h"
-  "clock.h"
-  "memory.h"
   "6502.cc"
   "debug.cc"
   "opcode_map.cc"
