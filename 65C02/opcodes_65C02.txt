@@ -1,0 +1,152 @@
+# 65C02 Opcode descriptions
+#
+# Copyright (C) 2023 Walt Drummond
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#$<CPU> 
+#!<Ins>
+#<amode> <opcode> <bytes> <cycles> <cycle flags>
+
+$65C02
+
+## Addressing modes
+# ZeroPageIndirect - eg. LDA ($55)
+# AbsoluteIndexedIndirect - eg JMP ($2000,X)
+#
+# Notes:
+# In 'Programming the 6502, 65C02 and 65816', the DirectPage addressing mode is just Zero Page addressing on the 
+# 6502 and 65C02.
+#
+# New flags:
+# 65C02_CYCLE_DECIMAL_MODE - add a cycle if cpu is 65C02 and is in Flags.D == 1
+# 65C02_JMP_FIX            - fix the 6502 JMP ($xxFF) bug
+# 65C02_SUBTRACT_CYCLE     - subtract a cycle if no page boundary was crossed
+
+##
+# New instructions available on 65C02
+!TSB
+AbsoluteIndexedIndirect $0c 3 6
+ZeroPageIndirect $04 3 5
+
+!TRB
+AbsoluteIndexedIndirect $1C 3 6
+ZeroPageIndirect $14 3 5
+
+!STZ
+AbsoluteIndexedIndirect $9C 3 4
+ZeroPageIndirect $64 2 3
+Absolute,X $9E 3 5
+ZeroPage,X $74 2 4
+
+!PLX
+Immediate $FA 1 4
+
+!PLY
+Immediate $7A 1 4
+
+!PHX
+Immediate $DA 1 3
+
+!PHY
+Immediate $5A 1 3
+
+!BRA
+Relative $80 2 3 CYCLE_CROSS_PAGE
+
+##
+# 6502 instructions with new addressing modes on 65C02
+
+!STA
+ZeroPageIndirect $92 2 5 
+
+!SBC
+ZeroPageIndirect $F2 2 5 65C02_CYCLE_DECIMAL_MODE
+
+!ORA
+ZeroPageIndirect $12 2 5 
+
+!LDA
+ZeroPageIndirect $B2 2 5 
+
+!JMP
+Absolute,X $7C 3 6 65C02_JMP_FIX
+
+!INC
+Accumulator $1A 1 2
+
+!EOR
+ZeroPageIndirect $52 2 5 
+
+!DEC
+Accumulator $3A 1 2
+
+!CMP
+ZeroPageIndirect $D2 2 5 
+
+!BIT
+Immediate $89 2 2
+Absolute,X $3C 3 4
+ZeroPage,X $34 2 4
+
+!AND
+ZeroPageIndirect $32 2 5
+
+!ADC
+ZeroPageIndirect $72 2 5 65C02_CYCLE_DECIMAL_MODE
+
+
+##
+# 6502 instructions with different flags on 65C02
+
+!ADC
+Immediate $69 2 2 65C02_CYCLE_DECIMAL_MODE
+ZeroPage $65 2 3 65C02_CYCLE_DECIMAL_MODE
+ZeroPage,X $75 2 4 65C02_CYCLE_DECIMAL_MODE
+Absolute $6D 3 4 65C02_CYCLE_DECIMAL_MODE
+Absolute,X $7D 3 4 65C02_CYCLE_DECIMAL_MODE
+Absolute,Y $79 3 4 65C02_CYCLE_DECIMAL_MODE
+(Indirect,X) $61 2 6 65C02_CYCLE_DECIMAL_MODE
+(Indirect),Y $71 2 5 65C02_CYCLE_DECIMAL_MODE
+
+!ASL
+Absolute,X $1E 3 7 65C02_SUBTRACT_CYCLE
+
+!DEC
+Absolute,X $DE 3 7 65C02_SUBTRACT_CYCLE
+
+!INC
+Absolute,X $FE 3 7 65C02_SUBTRACT_CYCLE
+
+!JMP
+Absolute $4C 3 3 65C02_JMP_FIX
+Indirect $6C 3 5 CYCLE_65C02_ADD_ONE_CYCLE 65C02_JMP_FIX
+
+!LSR
+Absolute,X $5E 3 7 65C02_SUBTRACT_CYCLE
+
+!ROL
+Absolute,X $3E 3 7 65C02_SUBTRACT_CYCLE
+
+!ROR
+Absolute,X $7E 3 7 65C02_SUBTRACT_CYCLE
+
+!SBC
+Immediate $E9 2 2 65C02_CYCLE_DECIMAL_MODE
+ZeroPage $E5 2 3 65C02_CYCLE_DECIMAL_MODE
+ZeroPage,X $F5 2 4 65C02_CYCLE_DECIMAL_MODE
+Absolute $ED 3 4 65C02_CYCLE_DECIMAL_MODE
+Absolute,X $FD 3 4 65C02_CYCLE_DECIMAL_MODE
+Absolute,Y $F9 3 4 65C02_CYCLE_DECIMAL_MODE
+(Indirect,X) $E1 2 6 65C02_CYCLE_DECIMAL_MODE
+(Indirect),Y $F1 2 5 65C02_CYCLE_DECIMAL_MODE

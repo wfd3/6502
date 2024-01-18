@@ -1,0 +1,4 @@
+/home/walt/src/6502/tests/65C02/CMakeFiles/65C02_tests.dir
+/home/walt/src/6502/tests/65C02/CMakeFiles/run_65C02_tests.dir
+/home/walt/src/6502/tests/65C02/CMakeFiles/edit_cache.dir
+/home/walt/src/6502/tests/65C02/CMakeFiles/rebuild_cache.dir
