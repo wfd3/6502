@@ -14,9 +14,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# 
+#$<CPU> 
 #!<Ins>
 #<amode> <opcode> <bytes> <cycles> <cycle flags>
+
+# instructions for 6502 CPU.
+$6502
+
 !ADC
 Immediate $69 2 2
 ZeroPage $65 2 3

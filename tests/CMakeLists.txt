@@ -14,7 +14,7 @@
 
 cmake_minimum_required(VERSION 3.0...3.7)
 
-project( 6502_tests )
+project( tests )
 
 ## Google Test configuration
 # Download and unpack googletest at configure time
@@ -44,6 +44,11 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/googletest-src/googletest/include/gtest)
 ##
+
+##########
+## 6502 and 65C02 processor tests
+add_subdirectory(6502)
+add_subdirectory(65C02)
 
 ##########
 # Memory tests
@@ -88,57 +93,9 @@ add_custom_target(run_clock_tests
   DEPENDS clock_tests
   COMMAND clock_tests)
 
-##########
-# 6502 tests
-# source for the test executable
-set (6502_TEST_SOURCES
-  "6502_tests_adc.cc"
-  "6502_tests_and.cc"
-  "6502_tests_asl.cc"
-  "6502_tests_bit.cc"
-  "6502_tests_branches.cc"
-  "6502_tests_brk.cc"
-  "6502_tests_cmp.cc"
-  "6502_tests_dec_dex_dey.cc"
-  "6502_tests_eor.cc"
-  "6502_tests_flags.cc"
-  "6502_tests_inc_inx_iny.cc"
-  "6502_tests_interrupt.cc"
-  "6502_tests_invalid_instruction.cc"
-  "6502_tests_jmp.cc"
-  "6502_tests_jsr.cc"
-  "6502_tests_lda_ldy_ldx.cc"
-  "6502_tests_load_program.cc"
-  "6502_tests_lsr.cc"
-  "6502_tests_nop.cc"
-  "6502_tests_ora.cc"
-  "6502_tests_pushpop.cc"
-  "6502_tests_rol_ror.cc"
-  "6502_tests_rti.cc"
-  "6502_tests_rts.cc"
-  "6502_tests_tx_ty.cc"
-  "6502_tests_xxx_functional_test_suite.cc"
-)
-
-source_group("src" FILES ${6502_TEST_SOURCES})
-add_executable( 6502_tests ${6502_TEST_SOURCES})
-add_dependencies(6502_tests 6502-test)
-add_dependencies(6502_tests gtest_main)
-target_link_libraries(6502_tests gtest_main 6502-test)
-if(MSVC)
-  target_link_libraries(6502_tests fmt::fmt-header-only)
-else()
-  target_compile_definitions(6502_tests PRIVATE FMT_HEADER_ONLY)  
-	target_link_libraries(6502_tests readline)
-endif()
-target_compile_definitions(6502_tests PRIVATE TEST_BUILD)
-add_custom_target(run_6502_tests
-  DEPENDS 6502_tests
-  COMMAND 6502_tests)
-
 # Phony targets 
 add_custom_target(tests
-  DEPENDS memory_tests clock_tests 6502_tests)
+  DEPENDS memory_tests clock_tests 6502_tests 65C02_tests)
 add_custom_target(runtests
   DEPENDS run_memory_tests run_clock_tests run_6502_tests)
 
@@ -149,6 +106,4 @@ add_custom_command(TARGET memory_tests POST_BUILD
 add_custom_command(TARGET clock_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:clock_tests>" "${BINDIR}")
-add_custom_command(TARGET 6502_tests POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:6502_tests>" "${BINDIR}")
+

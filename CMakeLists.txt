@@ -55,11 +55,13 @@ else()
 endif()
 
 add_definitions(-DBINFILE_PATH=\"${CMAKE_SOURCE_DIR}/binfiles\")
-include_directories(${CMAKE_SOURCE_DIR}/clock ${CMAKE_SOURCE_DIR}/memory ${CMAKE_SOURCE_DIR}/6502)
+include_directories(${CMAKE_SOURCE_DIR}/clock ${CMAKE_SOURCE_DIR}/memory ${CMAKE_SOURCE_DIR}/6502 
+  ${CMAKE_SOURCE_DIR}/65C02 ${CMAKE_SOURCE_DIR}/tests/src)
 
 set(BINDIR "${CMAKE_BINARY_DIR}/bin")
 
 add_subdirectory(6502)
+add_subdirectory(65C02)
 add_subdirectory(tests)
 add_subdirectory(apple1)
 add_subdirectory(tools)

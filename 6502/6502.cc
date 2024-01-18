@@ -228,7 +228,7 @@ Word MOS6502::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 
 	// Add a cycle if a page boundary is crossed
 	auto updateCycles = [&](Byte reg) {
-		if (( _instructions.at(opcode).flags == InstructionFlags::PageBoundary) &&
+		if (( _instructions.at(opcode).flags & InstructionFlags::PageBoundary) &&
 		    ((address + reg) >> 8) != (address >> 8)) {
 			expectedCycles++;
 			Cycles++;
@@ -365,7 +365,7 @@ void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t
 	expectedCyclesToUse = _instructions.at(opcode).cycles;
 	op = _instructions.at(opcode).opfn;
 
-	(this->*op)(opcode, expectedCyclesToUse);
+	op(opcode, expectedCyclesToUse);
 	usedCycles = Cycles;
 
 	if (debug_loopDetection && startPC == PC) {
