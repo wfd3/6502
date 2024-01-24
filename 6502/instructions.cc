@@ -84,6 +84,7 @@ void MOS6502::bcdSBC(Byte subtrahend) {
 	A = (Byte) operand & 0xff;
 
 	setFlagZByValue(A);
+	setFlagNByValue(A);
 	Flags.C = (operand >= 0);
 }
 

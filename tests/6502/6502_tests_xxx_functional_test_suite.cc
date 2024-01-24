@@ -24,8 +24,8 @@
 // If the test completes, it passed.  If it drops into the debugger with a
 // Loop Detected notice, it's failed.  
 // 
-// To disable this tests comment out the next line
-#define RUN_FUNCTIONAL_TEST
+// To disable this test comment out the next line
+#define RUN_6502_FUNCTIONAL_TEST
 
 class MOS6502XXXFunctionalTestSuite : public testing::Test {
 public:	

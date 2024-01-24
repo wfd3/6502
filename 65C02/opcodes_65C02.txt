@@ -35,73 +35,93 @@ $65C02
 
 ##
 # New instructions available on 65C02
+# tests complete
 !TSB
 AbsoluteIndexedIndirect $0c 3 6
 ZeroPageIndirect $04 3 5
 
+# tests complete
 !TRB
 AbsoluteIndexedIndirect $1C 3 6
 ZeroPageIndirect $14 3 5
 
+#tests complete
 !STZ
-AbsoluteIndexedIndirect $9C 3 4
+Absolute $9C 3 4
 ZeroPageIndirect $64 2 3
 Absolute,X $9E 3 5
 ZeroPage,X $74 2 4
 
+#tests complete
 !PLX
 Immediate $FA 1 4
 
+#tests complete
 !PLY
 Immediate $7A 1 4
 
+#tests complete
 !PHX
 Immediate $DA 1 3
 
+#tests complete
 !PHY
 Immediate $5A 1 3
 
+# tests complete
 !BRA
 Relative $80 2 3 CYCLE_CROSS_PAGE
 
 ##
 # 6502 instructions with new addressing modes on 65C02
 
+# test complete
 !STA
 ZeroPageIndirect $92 2 5 
 
 !SBC
 ZeroPageIndirect $F2 2 5 65C02_CYCLE_DECIMAL_MODE
 
+# test complete
 !ORA
 ZeroPageIndirect $12 2 5 
 
+#test complete
 !LDA
 ZeroPageIndirect $B2 2 5 
 
+# test complete
 !JMP
 Absolute,X $7C 3 6 65C02_JMP_FIX
 
+#test complete
 !INC
 Accumulator $1A 1 2
 
+#test complete
 !EOR
 ZeroPageIndirect $52 2 5 
 
+#test complete
 !DEC
 Accumulator $3A 1 2
 
+
+#tests done
 !CMP
 ZeroPageIndirect $D2 2 5 
 
+#tests done
 !BIT
 Immediate $89 2 2
 Absolute,X $3C 3 4
 ZeroPage,X $34 2 4
 
+#test done
 !AND
 ZeroPageIndirect $32 2 5
 
+#test done
 !ADC
 ZeroPageIndirect $72 2 5 65C02_CYCLE_DECIMAL_MODE
 

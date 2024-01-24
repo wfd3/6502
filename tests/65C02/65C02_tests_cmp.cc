@@ -35,3 +35,27 @@ public:
 
 #define testClass MOS65C02CMPTests
 #include "brk_tests.cc"
+
+TEST_F(testClass, CmpZeroPageIndirect) {
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.CMP_ZPI;
+
+	//Given:
+	cpu.TestReset(MOS6502::RESET_VECTOR);	
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x00;
+	mem[0x0000] = 0x10;
+	mem[0x0001] = 0x10;
+	mem[0x1010] = 0x0f;
+	cpu.setA(0x20);
+
+	//When:
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+
+	// Then:
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}

@@ -1,5 +1,5 @@
 //
-// Tests for bit instruction
+// Tests for phx, plx, phy. ply
 //
 // Copyright (C) 2023 Walt Drummond
 //
@@ -19,133 +19,98 @@
 #include <gtest/gtest.h>
 #include <65C02.h>
 
-class MOS65C02BITTests : public testing::Test {
+class MOS65C02pushpopTests : public testing::Test {
 public:
+
 	Memory<Address_t, Byte> mem{MOS65C02::MAX_MEM};
 	MOS65C02 cpu{mem};
 
 	virtual void SetUp() {
 		mem.mapRAM(0, MOS65C02::MAX_MEM);
 	}
-
+	
 	virtual void TearDown()	{
 	}
 };
 
-#define testClass MOS65C02BITTests
-#include "bit_tests.cc"
-
-TEST_F(testClass, BitImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = cpu.Opcodes.BIT_IMM;
+TEST_F(MOS65C02pushpopTests, PHYImplied) {
+    Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.PHY_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	mem[0xFFFD] = 0x0f;
-	cpu.setA(0xff);
+	cpu.setY(0x52);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
+	EXPECT_EQ(mem[0x01ff], 0x52);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
+TEST_F(MOS65C02pushpopTests, PLYImplied) {
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.PLY_IMP;
+
+	//Given:
+	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
+	
+	mem[0xFFFC] = ins;
+	mem[0x01FF] = 0x52;
+	cpu.setY(0xff);
+
+	//When:
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+
+	// Then:
+	EXPECT_EQ(cpu.getY(), 0x52);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagZ());
-	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(testClass, BitImmediateLeavesNFlagAlone) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = cpu.Opcodes.BIT_IMM;
+TEST_F(MOS65C02pushpopTests, PHXImplied) {
+    Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.PHX_IMP;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
 	
 	mem[0xFFFC] = ins;
-	mem[0xFFFD] = 0x0f;
-	cpu.setA(0xff);
-	cpu.setFlagN(true);
+	cpu.setX(0x52);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
-	EXPECT_FALSE(cpu.getFlagZ());
-	EXPECT_FALSE(cpu.getFlagV());
-	EXPECT_TRUE(cpu.getFlagN());
+	EXPECT_EQ(mem[0x01ff], 0x52);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-TEST_F(testClass, BitImmediateLeavesVFlagAlone) {
+TEST_F(MOS65C02pushpopTests, PLXImplied) {
 	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = cpu.Opcodes.BIT_IMM;
+	Byte ins = cpu.Opcodes.PLX_IMP;
 
 	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR);
+	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
 	
 	mem[0xFFFC] = ins;
-	mem[0xFFFD] = 0x0f;
-	cpu.setA(0xff);
-	cpu.setFlagV(true);
+	mem[0x01FF] = 0x52;
+	cpu.setX(0xff);
 
 	//When:
 	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
 
 	// Then:
+	EXPECT_EQ(cpu.getX(), 0x52);
+	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagZ());
-	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
-
-TEST_F(testClass, BitAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = cpu.Opcodes.BIT_ABX;
-
-	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR);
-	
-	mem[0xFFFC] = ins;
-	mem[0xFFFD] = 0x00;
-	mem[0xFFFE] = 0x20;
-	cpu.setX(0x10);
-	mem[0x2010] = 0x0F;
-	cpu.setA(0xff);
-
-	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
-
-	// Then:
-	EXPECT_FALSE(cpu.getFlagZ());
-	EXPECT_FALSE(cpu.getFlagV());
-	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
-}
-
-TEST_F(testClass, BitZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
-	Byte ins = cpu.Opcodes.BIT_ZPX;
-
-	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR);
-	
-	mem[0xFFFC] = ins;
-	mem[0xFFFD] = 0x01;
-	cpu.setX(0x2);
-	mem[0x03] = 0x0f;
-	cpu.setA(0xff);
-
-	//When:
-
-	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
-
-	// Then:
-	EXPECT_FALSE(cpu.getFlagZ());
-	EXPECT_FALSE(cpu.getFlagV());
-	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
-}
-

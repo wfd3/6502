@@ -740,7 +740,7 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarr
 	EXPECT_EQ(cpu.getA(), 0x87);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagV());
-	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -765,7 +765,7 @@ TEST_F(testClass, SBCImmediateSubtractsSimple) {
 	EXPECT_EQ(cpu.getA(), 0x99);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagV());
-	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
@@ -792,5 +792,32 @@ TEST_F(testClass, ADCBCDOnePlus99EqualsZero) {
 	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}
+
+TEST_F(testClass, SBCBCD80MinusZeroWithNoCarry) {
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.SBC_IMM;
+
+	//Given:
+	Word a = 0x1000;
+	cpu.TestReset(a);
+	
+	mem[a+0] = ins;
+	mem[a+1] = 0x0;
+
+	cpu.setA(0x80);
+	cpu.setFlagD(true);
+	cpu.setFlagC(false);
+
+	//When:
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	// Then:
+	EXPECT_EQ(cpu.getA(), 0x79);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_TRUE(cpu.getFlagD());
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }

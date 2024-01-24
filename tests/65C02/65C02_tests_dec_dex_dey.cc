@@ -34,3 +34,25 @@ public:
 
 #define testClass MOS65C02DECTests
 #include "decrement_tests.cc"
+
+// DEC Accumulator
+TEST_F(testClass, DexAccumulator) {
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.DEC_ACC;
+
+	//Given:
+	cpu.TestReset(MOS6502::RESET_VECTOR);
+	
+	mem[0xFFFC] = ins;
+	cpu.setA(10);
+	
+	//When:
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+
+	// Then:
+	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(cpu.getA(), 9);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}

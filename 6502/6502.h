@@ -91,6 +91,9 @@ public:
 		_haltAddress = _pc;
 		_haltAddressSet = true;
 	}
+	bool isPCAtHaltAddress() {
+		return _haltAddressSet && (PC == _haltAddress);
+	}
 	void loopDetection(bool l) {
 		debug_loopDetection = l;
 	}
@@ -98,6 +101,7 @@ public:
 	// Execution
 	void execute(bool& stop, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed);
 	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
+	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &, bool&);
 
 	// Debugger
 	bool executeDebug();
@@ -377,10 +381,7 @@ protected:
 	bool _haltAddressSet = false;
 
 	void exitReset();
-	bool isPCAtHaltAddress() {
-		return _haltAddressSet && (PC == _haltAddress);
-	}
-
+	
 	// Instruction map
 	//typedef void (MOS6502::*opfn_t)(Byte, Cycles_t &);
 	using opfn_t = std::function<void(Byte, Cycles_t&)>;
@@ -515,7 +516,7 @@ protected:
 	void parseMemCommand(std::string);
 	
 	// Disassembler
-	void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
+	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
 	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 

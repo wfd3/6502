@@ -111,3 +111,27 @@ TEST_F(testClass, TestLoadAProgramAndTrace)
 	}
 }
 
+#ifdef TEST_LOOP_DETECTION
+
+std::vector<Byte> testLoopDetectionProgram = {
+	0x4c, 0x00, 0x40  // JMP #4000
+};
+
+TEST_F(testClass, TestLoopDetection)
+{
+	Cycles_t UsedCycles, ExpectedCycles;
+	bool loopDetected = false;
+
+	mem.loadData(testLoopDetectionProgram, startAddress);
+	cpu.TestReset(startAddress);
+	cpu.loopDetection(true);
+
+	Word cycles = 1000;
+	while (--cycles && !loopDetected) {
+		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles, loopDetected);
+		EXPECT_EQ(UsedCycles, ExpectedCycles);
+		EXPECT_EQ(cpu.getPC(), startAddress);
+	}
+	EXPECT_TRUE(loopDetected);
+}
+#endif

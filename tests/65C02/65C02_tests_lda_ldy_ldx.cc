@@ -70,3 +70,23 @@ public:
 
 #define testClass MOS65C02LDTests
 #include "lda_ldx_ldy_tests.cc"
+
+TEST_F(testClass, STAZeroPageIndirect) {
+	cpu.TestReset(MOS6502::RESET_VECTOR);
+	
+	mem[0xFFFD] = 0x20;
+	mem[0x20] = 0x10;
+	mem[0x21] = 0x10;
+	cpu.setA(0x52);
+	TestST(cpu.Opcodes.STA_ZPI, 0x1010, Registers::A);
+}
+
+TEST_F(testClass, LDAZeroPageIndirect) {
+	cpu.TestReset(MOS6502::RESET_VECTOR);
+	
+	mem[0xFFFD] = 0x20;
+	mem[0x0020] = 0x10;
+	mem[0x0021] = 0x10;
+	mem[0x1010] = 0x0f;
+	TestLD(cpu.Opcodes.LDA_ZPI, Registers::A);
+}

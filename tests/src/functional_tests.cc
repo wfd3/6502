@@ -20,13 +20,13 @@
 # error "Macro 'testClass' not defined"
 #endif
 
-#ifdef RUN_FUNCTIONAL_TEST
+#ifdef RUN_6502_FUNCTIONAL_TEST
 static const char *fileName6502 = BINFILE_PATH "/6502_functional_test.bin";
 #endif
 
 TEST_F(testClass, TestLoad6502TestSuite)
 {
-#ifdef RUN_FUNCTIONAL_TEST
+#ifdef RUN_6502_FUNCTIONAL_TEST
 	// Given:
 	constexpr Word haltAddress = 0x3469;
 
@@ -38,7 +38,8 @@ TEST_F(testClass, TestLoad6502TestSuite)
 	cpu.Reset();
 
 	//Then:
-	std::cout << "# This test takes 20 to 30 seconds..." << std::endl;
+	std::cout << "# 6502 functional tests, can take 20 to 30 seconds..." << std::endl;
+	std::cout << "#  Test will drop into debugger in case of failure" << std::endl;
 
 	// Uncomment to start in debugger
 	//cpu.SetDebug(true);

@@ -33,8 +33,11 @@ public:
 	}
 };
 
+#define testClass MOS65C02JMPTests
+#include "jmp_tests.cc"
+
 // Test that the 65C02 JMP instruction works as expected on 65C02
-TEST_F(MOS65C02JMPTests, JmpIndirectBugIsFixedOn65C02) {
+TEST_F(testClass, JmpIndirectBugIsFixedOn65C02) {
 	Cycles_t UsedCycles, ExpectedCycles;
 	Byte ins = cpu.Opcodes.JMP_IND;
 
@@ -58,5 +61,24 @@ TEST_F(MOS65C02JMPTests, JmpIndirectBugIsFixedOn65C02) {
 	EXPECT_EQ(UsedCycles, ExpectedCycles); 
 }
 
-#define testClass MOS65C02JMPTests
-#include "jmp_tests.cc"
+TEST_F(testClass, JmpAbsoluteIndexedIndirect) {
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.JMP_AII;
+
+	//Given:
+	cpu.TestReset(MOS6502::RESET_VECTOR);
+
+	mem[0xFFFC] = ins;
+	mem[0xFFFD] = 0x10;
+	mem[0xFFFE] = 0x10;
+	cpu.setX(0x5);
+	mem[0x1015] = 0x21;
+	mem[0x1016] = 0x43;
+
+	//When:
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+
+	// Then:
+	EXPECT_EQ(cpu.getPC(), 0x4321);
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}

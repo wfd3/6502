@@ -32,6 +32,7 @@ public:
 	}
 };
 
+#define TEST_LOOP_DETECTION
 
 #define testClass MOS6502LoadProgramTests
 #include "load_program_tests.cc"

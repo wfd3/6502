@@ -284,7 +284,7 @@ void MOS6502::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 	auto mode = _instructions.at(ins).addrmode;
 	Byte byteval;
 	Word wordval;
-	SByte rel;
+	Byte rel;
 	std::string out, addr, label;
 
 	switch (mode) {
@@ -354,8 +354,8 @@ void MOS6502::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 		break;
 
 	case AddressingMode::Relative:
-		rel = SByte(readByteAtPC());
-		wordval = PC + rel;
+		rel = readByteAtPC();
+		wordval = PC + SByte(rel);
 		addr = fmt::format("${:04x}", wordval);
 		label = addressLabel(wordval);
 
@@ -363,10 +363,10 @@ void MOS6502::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			disassembly = label;
 			address = addr;
 		} else { 
-			disassembly = addr;
-			address = "";
+			disassembly = fmt::format("#${:02x}", rel);
+			address = addr;
 		} 
-		opcodes += fmt::format("{:02x} ", byteval);
+		opcodes += fmt::format("{:02x} ", rel);
 		break;
 
 	case AddressingMode::Absolute:  // $xxxx
@@ -381,8 +381,7 @@ void MOS6502::decodeArgs(bool atPC, Byte ins, std::string& disassembly,
 			disassembly = addr;
 			address = "";
 		}
-		opcodes += fmt::format("{:02x} {:02x}", 
-							  wordval & 0xff, (wordval >> 8) & 0xff);
+		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
 	case AddressingMode::AbsoluteX:  // $xxxx,X
@@ -516,7 +515,7 @@ Address_t MOS6502::disassembleAt(Address_t dPC, std::string& disassembly) {
 	if (!label.empty()) 
 		 addr += fmt::format(" ({})", label);
 		
-	disassembly = fmt::format("{:1.1}{:1.1}| {:20.20} | {:9.9}| {}     ", 
+	disassembly = fmt::format("{:1.1}{:1.1}| {:20.20} | {:9.9}| {:<7}", 
 				              marker, bkpoint, addr, opcodes, ins);
 
 	if (!bytes) 
@@ -1444,7 +1443,7 @@ bool MOS6502::matchCommand(const std::string &input, debugFn_t &func) {
 
 bool MOS6502::executeDebuggerCmd(std::string line) {
 	debugFn_t f;
-
+	
 	line = stripTrailingSpaces(line);
 	line = stripLeadingSpaces(line);
 
@@ -1459,10 +1458,11 @@ bool MOS6502::executeDebuggerCmd(std::string line) {
 	// Check if command is numbers, convert it to an integer and execute that many instructions.
 	try {
 		uint64_t insCnt = std::stol(line);
+		bool loop;
 		debug_lastCmd = line;
 		while (insCnt--) {
 			Cycles_t cyclesUsed, cyclesExpected;
-			executeOneInstructionWithCycleCount(cyclesUsed, cyclesExpected);
+			executeOneInstructionWithCycleCount(cyclesUsed, cyclesExpected, loop);
 			if (debug_alwaysShowPS) 
 				printCPUState();
 			disassemble(PC, 1);
@@ -1504,9 +1504,10 @@ bool MOS6502::executeDebug() {
 	std::string line;
 	getReadline(line);
 	executeDebuggerCmd(line);
+	#if 0
 	if (debug_alwaysShowPS) 
 		printCPUState();
-	
+	#endif
 	if (_debuggingEnabled == false) 
 		fmt::print("Exiting debugger\n");
 	return _debuggingEnabled;

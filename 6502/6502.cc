@@ -62,15 +62,16 @@ void MOS6502::exitReset() {
 
 // This is only intended for testing, not for emulation.  It
 // allows tests to set specific starting Program Counter and
-// Stack Pointer values, and arranges for the next call to execute...() 
-// to exit the CPU from reset.
+// Stack Pointer values, exits reset so that the next call to execute...() 
+// executes code.
 #ifdef TEST_BUILD
 void MOS6502::TestReset(Word initialPC, Byte initialSP)  {
-	_inReset = false;
+	_inReset = true;
 	_pendingReset = true;
 	_testReset = true;
 	testResetPC = initialPC;
 	testResetSP = initialSP;
+	Reset();
 }
 #endif
 
@@ -81,7 +82,7 @@ void MOS6502::Reset() {
 		_inReset = true;
 	} else {				// In Reset, de-assert Reset
 		_inReset = false;
-		_pendingReset = true;
+		exitReset();
 	}
 }
 
@@ -339,10 +340,10 @@ Byte MOS6502::getData(Byte opcode, Cycles_t &expectedCycles) {
 
 //////////
 // Instruction execution
-void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse) {
+void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse, bool& loopDetected) {
 	Byte opcode;
 	Word startPC;
-	opfn_t op;
+	struct instruction ins;
 
 	if (_inReset)
 		return;
@@ -355,23 +356,27 @@ void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t
 	Cycles = 0;
 
 	opcode = readByteAtPC();
-	if (_instructions.count(opcode) == 0) {
+	try {
+		ins = _instructions.at(opcode);
+	} 
+	catch (...) {
 		PC--;
 		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}", opcode, PC);
 		exception(s);
 		return;
 	}
 
-	expectedCyclesToUse = _instructions.at(opcode).cycles;
-	op = _instructions.at(opcode).opfn;
-
-	op(opcode, expectedCyclesToUse);
+	expectedCyclesToUse = ins.cycles;
+	ins.opfn(opcode, expectedCyclesToUse);
 	usedCycles = Cycles;
 
-	if (debug_loopDetection && startPC == PC) {
-		fmt::print("# Loop detected at {:04x}, entering debugger\n",
-			   PC);
-		_debuggingEnabled = true;
+	if ( startPC == PC) {
+		if (loopDetected) 
+			throw std::runtime_error("Recursive loop detected");
+			
+		if (debug_loopDetection) 
+			fmt::print("# Loop detected at {:04x}\n", PC);
+		loopDetected = true;
 	}
 
 	// Check for a pending Non-maskable interrupt.  If none then
@@ -380,25 +385,31 @@ void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t
 		IRQ();
 }
 
+void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse) {
+	bool loopDetected;
+	executeOneInstructionWithCycleCount(usedCycles, expectedCyclesToUse, loopDetected);
+}
+
 void MOS6502::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed) {
 	atHaltAddress = false;
 	startDebugOnNextInstruction = false;
 	cyclesUsed = 0;
+	bool loopDetected = false;
 
-	if (isPCBreakpoint()) {
+	if (isPCBreakpoint()) { // && Flags.D == 1 && mem[0x0012] == 0 && mem[0x000d] == 0x99) {
 		startDebugOnNextInstruction = true;
 		return;
 	} 
 
 	if (isPCAtHaltAddress()) {
-		//fmt::print("At halt address {:04x}\n", PC);
+		fmt::print("At halt address {:04x}\n", PC);
 		atHaltAddress = true;
 		return;
 	}
 
 	Cycles_t expected;
 	try {
-		executeOneInstructionWithCycleCount(cyclesUsed, expected);
+		executeOneInstructionWithCycleCount(cyclesUsed, expected, loopDetected);
 	}
 	catch(std::exception &e) {
 		if (debug_OnException) {
@@ -406,4 +417,6 @@ void MOS6502::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cy
 			startDebugOnNextInstruction = true;
 		}
 	}
+
+	startDebugOnNextInstruction |= loopDetected;
 }

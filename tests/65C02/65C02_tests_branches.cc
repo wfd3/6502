@@ -37,3 +37,10 @@ public:
 
 #define testClass MOS65C02BranchTests
 #include "branches_tests.cc"
+
+// BRA
+TEST_F(testClass, BRABranches) {
+	cpu.TestReset(MOS6502::RESET_VECTOR);
+	BranchesWhenFlagSet(MOS6502::RESET_VECTOR, 0xF, cpu.Opcodes.BRA_REL);
+}
+	

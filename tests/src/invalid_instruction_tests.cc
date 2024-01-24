@@ -25,7 +25,7 @@ TEST_F(testClass, InvalidOpcodeThrowsException) {
     bool caughtRuntimeException = false;
     bool caughtOtherException = false;
     Cycles_t UsedCycles, ExpectedCycles;
-    Byte ins = 0xff;  
+    Byte ins = 0x33;  // TODO: Really need a way to pick an unused address programmatically. 
 
     //Given:
     cpu.TestReset(MOS6502::RESET_VECTOR);

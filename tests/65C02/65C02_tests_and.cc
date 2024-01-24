@@ -35,3 +35,28 @@ public:
 
 #define testClass MOS65C02ADCTests
 #include "and_tests.cc"
+
+
+TEST_F(testClass, AndZeroPageIndirect) {
+	Cycles_t UsedCycles, ExpectedCycles;
+	Byte ins = cpu.Opcodes.AND_ZPI;
+	
+	// Given:
+	cpu.TestReset(MOS6502::RESET_VECTOR);
+	
+	mem[0xFFFC] = ins;
+	mem[0xfffd] = 0x50;
+	mem[0x50] = 0x10;
+	mem[0x51] = 0x10;
+	mem[0x1010] = 0x0F;
+	cpu.setA(0xff); 
+
+	// When: 
+	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+
+	// Then
+	EXPECT_EQ(cpu.getA(), 0x0f);
+	EXPECT_FALSE(cpu.getFlagZ());
+	EXPECT_FALSE(cpu.getFlagN());
+	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+}

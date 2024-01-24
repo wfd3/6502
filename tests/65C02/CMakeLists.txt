@@ -19,7 +19,9 @@ project( 65C02_tests )
 ##########
 # 65C02 tests
 # source for the test executable
-set (65C02_TEST_SOURCES
+
+# 6502 instructions
+set (6502_TEST_SOURCES
 "65C02_tests_adc.cc"
 "65C02_tests_and.cc"
 "65C02_tests_asl.cc"
@@ -46,10 +48,25 @@ set (65C02_TEST_SOURCES
 "65C02_tests_rts.cc"
 "65C02_tests_tx_ty.cc"
 "65C02_tests_xxx_functional_test_suite.cc"
- )
+)
 
-source_group("src" FILES ${65C02_TEST_SOURCES})
-add_executable( 65C02_tests ${65C02_TEST_SOURCES})
+# 65C02 instructions
+set (65C02_TEST_SOURCES
+"65C02_tests_stz.cc"
+"65C02_tests_phy_ply_phx_plx.cc"
+"65C02_tests_trb.cc"
+"65C02_tests_tsb.cc"
+)
+
+# Additional Rockwell 65C02 instructions
+set (R65C02_TEST_SOURCES 
+"R65C02_tests_rmb.cc"
+"R65C02_tests_bbr_bbs.cc"
+)
+
+source_group("src" FILES ${65C02_TEST_SOURCES} ${R65C02_TEST_SOURCES} ${6502_TEST_SOURCES})
+add_executable( 65C02_tests ${65C02_TEST_SOURCES} ${R65C02_TEST_SOURCES} ${6502_TEST_SOURCES})
+
 add_dependencies(65C02_tests 65C02-test 6502-test)
 add_dependencies(65C02_tests gtest_main)
 target_link_libraries(65C02_tests gtest_main 65C02-test 6502-test)
