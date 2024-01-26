@@ -21,7 +21,7 @@
 #include <queue>
 #include <fmt/core.h>
 
-#include <6502.h>
+#include <65C02.h>
 #include <memory.h>
 
 #include "mos6820.h"
@@ -41,8 +41,8 @@ static const char* WOZMON_FILE = BINFILE_PATH "/wozmon.bin";
 constexpr Address_t apple1BasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE = BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
 
-// bytecode for the sample program from the Apple 1 Manual (normally entered 
-// by hand via WozMon)
+// bytecode for a modified version of the sample program from the Apple 1 Manual (normally entered 
+// by hand via WozMon).  This ones uses the 65C02 'BRA' instruction rather than JMP.
 constexpr Address_t apple1SampleAddress = 0x0000;
 std::vector<Byte> apple1SampleProg =
 	{ 0xa9, 0x00, 		// lda #$00
@@ -50,7 +50,7 @@ std::vector<Byte> apple1SampleProg =
 	  0x20, 0xef, 0xff, // jsr $ffef
 	  0xe8, 			// inx
 	  0x8a, 			// txa
-	  0x4c, 0x02, 0x00 	// jmp $0002
+	  0x80, 0xf8		// bra 0xf8 ($0002)
 	};
 
 constexpr int clockSpeedMHz = 1;
@@ -58,7 +58,7 @@ constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
 // Create the memory, CPU, PIA and bus clock
 Memory<Address, Byte> mem(MOS6502::MAX_MEM);
-MOS6502 cpu(mem);
+MOS65C02 cpu(mem);
 auto pia = std::make_shared<MOS6820<Address, Byte>>();
 BusClock_t busClock(clockSpeedMHz);
 
@@ -89,7 +89,7 @@ void setupMemoryMap(){
 }
 
 int main() {
-	fmt::print("A Very Simple Apple I (6502)\n");
+	fmt::print("A Very Simple Apple I (65C02)\n");
 	fmt::print("  Reset        = Control-\\\n");
 	fmt::print("  Clear screen = Control-[\n");
 	fmt::print("  Debugger     = Control-]\n");

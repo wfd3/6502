@@ -25,7 +25,6 @@
 #include <vector>
 #include <chrono>
 #include <thread>
-#include <atomic>
 #include <cstdint>
 #include <functional>
 
@@ -305,7 +304,9 @@ public:
 	OpcodeConstants Opcodes;
 
 protected:
-	
+	Cycles_t Cycles = 0;              // Cycle counter
+	Cycles_t _expectedCyclesToUse = 0; 
+
 	Word PC = 0;		 // Program counter
 	Byte SP = 0;		 // Stack pointer
 	Byte A  = 0;		 // Accumulator 
@@ -327,9 +328,6 @@ protected:
 		struct ProcessorStatusBits Flags;
 	};
 
-	Cycles_t Cycles = 0;              // Cycle counter
-	Cycles_t _expectedCyclesToUse = 0; 
-
 	//////////
 	// Special addresses/vectors
 	
@@ -338,11 +336,6 @@ protected:
 	
 	// 6502 stack is one page at 01ff, down to 0100.  This is the stack frame for that page.
 	constexpr static Word STACK_FRAME = 0x0100;
-
-	// Bits for PS byte
-	constexpr static Byte BreakBit    = 1 << 4;
-	constexpr static Byte UnusedBit   = 1 << 5;
-	constexpr static Byte NegativeBit = 1 << 7;
 
 	// Addressing modes
 	enum AddressingMode {
@@ -358,8 +351,7 @@ protected:
 		IndirectX,
 		IndirectY,
 		Implied,
-		Accumulator,
-		LastMode    // Not an addressing mode but indicator for derived classes
+		Accumulator
 	};
 	
     // How the CPU should add cycle counts on branches and when
@@ -373,23 +365,8 @@ protected:
 	
 	// Setup & reset
 	cMemory& mem;
-	std::atomic_bool _inReset = false;      // CPU is held in reset
-	std::atomic_bool _pendingReset = false;
-	std::atomic_bool _pendingIRQ = false;
-	std::atomic_bool _pendingNMI = false;
-	bool _hitException = false;
-#ifdef TEST_BUILD	
-	Word testResetPC = 0;
-	Byte testResetSP = INITIAL_SP;
-	bool _testReset = false;
-#endif
-	Address_t _haltAddress = 0;
-	bool _haltAddressSet = false;
-
-	void exitReset();
 	
 	// Instruction map
-	//typedef void (MOS6502::*opfn_t)(Byte, Cycles_t &);
 	using opfn_t = std::function<void(Byte, Cycles_t&)>;
 	struct instruction {
 		const char *name;
@@ -402,13 +379,11 @@ protected:
 	using _instructionMap_t = std::map<Byte, instruction>;
 	_instructionMap_t _instructions;
 
-	MOS6502::instruction makeIns(const char *, Byte, Byte, Byte, Byte, opfn_t);
 	std::map<Byte, instruction> setupInstructionMap();
 
 	// CPU functions
 	void exception(const std::string &);
-	void executeOneInstruction();
-
+	
 	// Flags
 	void setFlagZByValue(Byte);
 	void setFlagNByValue(Byte);
@@ -435,14 +410,11 @@ protected:
 	virtual Word getAddress(Byte, Cycles_t &);
 	virtual Byte getData(Byte, Cycles_t &);
 
-	// Interrupts
-	void interrupt();
-	bool NMI();
-	bool IRQ();
-	uint64_t _IRQCount = 0;
-	uint64_t _NMICount = 0;
-	uint64_t _BRKCount = 0;
-
+	// Debugger
+	std::string addressLabel(const Word);
+	std::string addressLabelSearch(const Word, const int8_t searchWidth = 3);
+	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
+	
 	// Instruction implementations
 	void ins_adc(Byte, Cycles_t &);
 	void ins_and(Byte, Cycles_t &);
@@ -501,15 +473,40 @@ protected:
 	void ins_txs(Byte, Cycles_t &);
 	void ins_tya(Byte, Cycles_t &);
 
+private:
+	// Interrupts
+	void interrupt();
+	bool NMI();
+	bool IRQ();
+	uint64_t _IRQCount = 0;
+	uint64_t _NMICount = 0;
+	uint64_t _BRKCount = 0;
+
+	// Bits for PS byte
+	constexpr static Byte BreakBit    = 1 << 4;
+	constexpr static Byte UnusedBit   = 1 << 5;
+	constexpr static Byte NegativeBit = 1 << 7;
+
+	bool _inReset      = false;      // CPU is held in reset
+	bool _pendingReset = false;
+	bool _pendingIRQ   = false;
+	bool _pendingNMI   = false;
+	bool _hitException = false;
+
+	Address_t _haltAddress = 0;
+	bool _haltAddressSet = false;
+
+	void executeOneInstruction();
+	void exitReset();
+	
 	// Helper functions for instruction implementations
 	void doBranch(bool, Word, Cycles_t &);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
-
+	
 	////
 	// Built-in Debugger
-
 	void executeDebug();
 
 	bool _debugMode = false;
@@ -526,7 +523,6 @@ protected:
 	void parseMemCommand(std::string);
 	
 	// Disassembler
-	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
 	Address_t disassemble(Address_t, uint64_t);
 	Address_t disassembleAt(Address_t dPC, std::string &);
 
@@ -598,8 +594,6 @@ protected:
 	std::unordered_map<std::string, Word> labelToAddr;
 	void showLabels();
 	void addLabel(Word, const std::string);
-	std::string addressLabel(const Word);
-	std::string addressLabelSearch(const Word, const int8_t searchWidth = 3);
 	bool labelAddress(const std::string&, Word&);
 	void removeLabel(const Word);
 	bool lookupAddress(const std::string&, Word&);
@@ -610,4 +604,11 @@ protected:
 	// _debugCommands vector.
 	friend char *readlineCommandGenerator(const char*, int);
 	friend char **readlineCompletionCallback(const char*, int, int);
+
+#ifdef TEST_BUILD	
+	Word testResetPC = 0;
+	Byte testResetSP = INITIAL_SP;
+	bool _testReset = false;
+#endif
+	
 };

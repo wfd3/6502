@@ -16,13 +16,12 @@ cmake_minimum_required(VERSION 3.0...3.7)
 
 project( apple1 )
 
-# source for the  executable
+# source for the 6502 executable
 set (APPLE1_SOURCES "apple1.cc")
 source_group("src" FILE ${APPLE1_SOURCES})
 
 add_executable(apple1 ${APPLE1_SOURCES})
 target_link_libraries(apple1 6502) 
-
 if(LINUX)
   target_link_libraries(apple1 readline fmt)
 elseif(APPLE)
@@ -31,13 +30,30 @@ elseif(MSVC)
 	target_link_libraries(apple1 fmt::fmt-header-only)
 endif()
 
+# source for the 65C02 executable
+set (APPLE1_SOURCES "65C02-apple1.cc")
+source_group("src" FILE ${APPLE1_SOURCES})
+
+add_executable(65C02-apple1 ${APPLE1_SOURCES})
+target_link_libraries(65C02-apple1 65C02 6502) 
+if(LINUX)
+  target_link_libraries(65C02-apple1 readline fmt)
+elseif(APPLE)
+	target_link_libraries(65C02-apple1 readline fmt::fmt-header-only)
+elseif(MSVC)
+	target_link_libraries(65C02-apple1 fmt::fmt-header-only)
+endif()
+
 # Copy apple1 to {BUILDDIR}/bin
 add_custom_command(TARGET apple1 POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:apple1>" "${BINDIR}")
+# Copy 65C02-apple1 to {BUILDDIR}/bin
+add_custom_command(TARGET 65C02-apple1 POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:65C02-apple1>" "${BINDIR}")
 
-
-# source for the  executable
+# source for the tester executable
 set (TESTER_SOURCES "tester.cc")
 source_group("src" FILE ${TESTER_SOURCES})
   
