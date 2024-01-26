@@ -1,4 +1,4 @@
-// Emulated Apple 1
+// Emulated Apple 1 65C02 version
 //
 // Copyright (C) 2023 Walt Drummond
 //
