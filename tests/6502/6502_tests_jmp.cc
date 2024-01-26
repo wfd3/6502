@@ -34,7 +34,7 @@ public:
 };
 
 TEST_F(MOS6502JMPTests, JmpIndirectBug) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.JMP_IND;
 
 	//Given:
@@ -50,11 +50,11 @@ TEST_F(MOS6502JMPTests, JmpIndirectBug) {
 	mem[0x3100] = 0x50;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x4080);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 #define testClass MOS6502JMPTests

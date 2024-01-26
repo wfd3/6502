@@ -34,7 +34,7 @@ public:
 };
 
 TEST_F(MOS65C02pushpopTests, PHYImplied) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.PHY_IMP;
 
 	//Given:
@@ -44,16 +44,16 @@ TEST_F(MOS65C02pushpopTests, PHYImplied) {
 	cpu.setY(0x52);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x01ff], 0x52);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(MOS65C02pushpopTests, PLYImplied) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.PLY_IMP;
 
 	//Given:
@@ -64,18 +64,18 @@ TEST_F(MOS65C02pushpopTests, PLYImplied) {
 	cpu.setY(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getY(), 0x52);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(MOS65C02pushpopTests, PHXImplied) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.PHX_IMP;
 
 	//Given:
@@ -85,16 +85,16 @@ TEST_F(MOS65C02pushpopTests, PHXImplied) {
 	cpu.setX(0x52);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x01ff], 0x52);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(MOS65C02pushpopTests, PLXImplied) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.PLX_IMP;
 
 	//Given:
@@ -105,12 +105,12 @@ TEST_F(MOS65C02pushpopTests, PLXImplied) {
 	cpu.setX(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getX(), 0x52);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

@@ -38,7 +38,7 @@ public:
 
 // Test that the 65C02 JMP instruction works as expected on 65C02
 TEST_F(testClass, JmpIndirectBugIsFixedOn65C02) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.JMP_IND;
 
 	//Given:
@@ -54,15 +54,15 @@ TEST_F(testClass, JmpIndirectBugIsFixedOn65C02) {
 	mem[0x3100] = 0x50;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x5080);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, JmpAbsoluteIndexedIndirect) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.JMP_AII;
 
 	//Given:
@@ -76,9 +76,9 @@ TEST_F(testClass, JmpAbsoluteIndexedIndirect) {
 	mem[0x1016] = 0x43;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x4321);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

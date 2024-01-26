@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, AslAccumulator) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ACC;
 	Byte data = 0b01010101;
 
@@ -32,18 +32,18 @@ TEST_F(testClass, AslAccumulator) {
 	cpu.setA(data); 
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(cpu.getA(), data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslAccumulatorSetsCarryFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ACC;
 	Byte data = 0b10000001;
 
@@ -54,18 +54,18 @@ TEST_F(testClass, AslAccumulatorSetsCarryFlag) {
 	cpu.setA(data);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(cpu.getA(), Byte(data << 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslAccumulatorSetsNegativeFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ACC;
 	Byte data = 0b01000001;
 
@@ -76,18 +76,18 @@ TEST_F(testClass, AslAccumulatorSetsNegativeFlag) {
 	cpu.setA(data);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(cpu.getA(), Byte(data << 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslAccumulatorSetsZeroFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ACC;
 	Byte data = 0b00000000;
 
@@ -98,18 +98,18 @@ TEST_F(testClass, AslAccumulatorSetsZeroFlag) {
 	cpu.setA(data);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_EQ(cpu.getA(), Byte(data << 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ZP;
 	Byte data = 0b01010101;
 
@@ -121,18 +121,18 @@ TEST_F(testClass, AslZeroPage) {
 	mem[0x0001] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(mem[0x0001], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ZPX;
 	Byte data = 0b01010101;
 
@@ -145,18 +145,18 @@ TEST_F(testClass, AslZeroPageX) {
 	mem[0x0003] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(mem[0x0003], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ABX;
 	Byte data = 0b01010101;
 
@@ -169,18 +169,18 @@ TEST_F(testClass, AslAbsolute) {
 	mem[0x2000] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(mem[0x2000], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, AslAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ASL_ABX;
 	Byte data = 0b01010101;
 
@@ -194,12 +194,12 @@ TEST_F(testClass, AslAbsoluteX) {
 	mem[0x2002] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_EQ(mem[0x2002], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

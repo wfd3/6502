@@ -49,7 +49,7 @@ void MOS6502::exitReset() {
 	_testReset = false;
 #endif
 
-	_debuggingEnabled = false;
+	_debugMode = false;
 	debug_alwaysShowPS = false;
 
 	_hitException = false;
@@ -126,8 +126,12 @@ bool MOS6502::IRQ() {
 //////////
 // CPU Exception
 void MOS6502::exception(const std::string &message) {
-	std::string msg = "6502 CPU Exception: " + message;
+	std::string msg = "CPU Exception: " + message;
 	_hitException = true;
+	
+	if (_debugModeOnException && !_debugMode) 
+		_debugMode = true;
+
 	throw std::runtime_error(msg);
 }
 
@@ -340,20 +344,31 @@ Byte MOS6502::getData(Byte opcode, Cycles_t &expectedCycles) {
 
 //////////
 // Instruction execution
-void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse, bool& loopDetected) {
+void MOS6502::executeOneInstruction() {
 	Byte opcode;
 	Word startPC;
 	struct instruction ins;
 
-	if (_inReset)
+	if (hitCPUException()) {
+		fmt::print("CPU has hit an exception\n");
+		return;
+	}
+	
+ 	if (_inReset)
 		return;
 
 	if (_pendingReset) {
 		exitReset();
 	}
-	
+
+	if (isPCAtHaltAddress()) {
+		fmt::print("At halt address {:04x}\n", PC);
+		return;
+	}
+
+	// Saving the PC and zeroing the cycle counter has to happen before readByteAtPC(), which consumes clock cycles
 	startPC = PC;
-	Cycles = 0;
+	Cycles = 0; 
 
 	opcode = readByteAtPC();
 	try {
@@ -366,17 +381,18 @@ void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t
 		return;
 	}
 
-	expectedCyclesToUse = ins.cycles;
-	ins.opfn(opcode, expectedCyclesToUse);
-	usedCycles = Cycles;
+	_expectedCyclesToUse = ins.cycles;
+	
+	ins.opfn(opcode, _expectedCyclesToUse);
 
 	if ( startPC == PC) {
-		if (loopDetected) 
+		if (_loopDetected) 
 			throw std::runtime_error("Recursive loop detected");
 			
 		if (debug_loopDetection) 
 			fmt::print("# Loop detected at {:04x}\n", PC);
-		loopDetected = true;
+		_loopDetected = true;
+		return;
 	}
 
 	// Check for a pending Non-maskable interrupt.  If none then
@@ -385,38 +401,16 @@ void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t
 		IRQ();
 }
 
-void MOS6502::executeOneInstructionWithCycleCount(Cycles_t& usedCycles, Cycles_t& expectedCyclesToUse) {
-	bool loopDetected;
-	executeOneInstructionWithCycleCount(usedCycles, expectedCyclesToUse, loopDetected);
-}
+void MOS6502::execute() {
 
-void MOS6502::execute(bool& atHaltAddress, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed) {
-	atHaltAddress = false;
-	startDebugOnNextInstruction = false;
-	cyclesUsed = 0;
-	bool loopDetected = false;
+	_debugMode |= isPCBreakpoint();
 
-	if (isPCBreakpoint()) { // && Flags.D == 1 && mem[0x0012] == 0 && mem[0x000d] == 0x99) {
-		startDebugOnNextInstruction = true;
-		return;
-	} 
-
-	if (isPCAtHaltAddress()) {
-		fmt::print("At halt address {:04x}\n", PC);
-		atHaltAddress = true;
+	if (_debugMode) {
+		executeDebug();
 		return;
 	}
 
-	Cycles_t expected;
-	try {
-		executeOneInstructionWithCycleCount(cyclesUsed, expected, loopDetected);
-	}
-	catch(std::exception &e) {
-		if (debug_OnException) {
-			fmt::print("{}\n", e.what());
-			startDebugOnNextInstruction = true;
-		}
-	}
+	executeOneInstruction();
 
-	startDebugOnNextInstruction |= loopDetected;
+	_debugMode |= loopDetected();
 }

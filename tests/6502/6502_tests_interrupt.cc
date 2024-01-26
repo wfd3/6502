@@ -33,16 +33,12 @@ public:
 	virtual void TearDown()	{
 	}
 
-	bool executeOneInstruction() {
-		Cycles_t used;
-		bool halt, debug;
-		cpu.execute(halt, debug, used);
-		return halt;
-	}
-
-	void execute() {
-		while(!executeOneInstruction())
-			;
+	void executeProgram() {
+		while(1) {
+			cpu.execute();
+			if (cpu.isPCAtHaltAddress()) 
+				break;
+		}
 	}
 };
 

@@ -21,7 +21,7 @@
 #endif
 
 void testClass::TestLD(Byte ins, Registers r) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte reg;
 	static constexpr Byte VAL = 0xff;
 
@@ -30,26 +30,26 @@ void testClass::TestLD(Byte ins, Registers r) {
 	setReg(r, VAL);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	reg = getReg(r);
 	EXPECT_EQ(reg, 0x0F);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // Test STA, STX and STY
 void testClass::TestST(Byte ins, Word addr, Registers r) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte reg = 0;
 
 	//Given:
 	mem[0xFFFC] = ins;
 
 	// When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	//Then:
 	reg = getReg(r);

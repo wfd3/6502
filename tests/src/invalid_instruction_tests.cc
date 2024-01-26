@@ -24,7 +24,7 @@
 TEST_F(testClass, InvalidOpcodeThrowsException) {
     bool caughtRuntimeException = false;
     bool caughtOtherException = false;
-    Cycles_t UsedCycles, ExpectedCycles;
+    
     Byte ins = 0x33;  // TODO: Really need a way to pick an unused address programmatically. 
 
     //Given:
@@ -33,7 +33,7 @@ TEST_F(testClass, InvalidOpcodeThrowsException) {
 
     try {
         //When:
-        cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+        cpu.execute();
     }
 
     catch ([[maybe_unused]] const std::runtime_error& e) {

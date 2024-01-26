@@ -37,7 +37,7 @@ public:
 #include "brk_tests.cc"
 
 TEST_F(testClass, CmpZeroPageIndirect) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ZPI;
 
 	//Given:
@@ -51,11 +51,11 @@ TEST_F(testClass, CmpZeroPageIndirect) {
 	cpu.setA(0x20);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

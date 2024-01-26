@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, CLCClearsCarryFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CLC_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -31,14 +31,15 @@ TEST_F(testClass, CLCClearsCarryFlag) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 
 TEST_F(testClass, SECSetsCarryFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SEC_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -48,14 +49,15 @@ TEST_F(testClass, SECSetsCarryFlag) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 
 TEST_F(testClass, CLDClearsDecimalFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CLD_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -65,14 +67,15 @@ TEST_F(testClass, CLDClearsDecimalFlag) {
 	cpu.setFlagD(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagD());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 
 TEST_F(testClass, SEDSetsDecimalFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SED_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -82,14 +85,15 @@ TEST_F(testClass, SEDSetsDecimalFlag) {
 	cpu.setFlagD(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagD());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 
 TEST_F(testClass, CLIClearsInterruptFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CLI_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -99,14 +103,15 @@ TEST_F(testClass, CLIClearsInterruptFlag) {
 	cpu.setFlagI(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagI());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 
 TEST_F(testClass, SEISetsInterruptFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SEI_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -116,14 +121,15 @@ TEST_F(testClass, SEISetsInterruptFlag) {
 	cpu.setFlagI(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagI());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 
 TEST_F(testClass, CLVClearsOverflowFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CLV_IMP;
 
 	cpu.TestReset(MOS6502::RESET_VECTOR);
@@ -133,8 +139,9 @@ TEST_F(testClass, CLVClearsOverflowFlag) {
 	cpu.setFlagV(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagV());
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }

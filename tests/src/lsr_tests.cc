@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, LsrAccumulator) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.LSR_ACC;
 
 	//Given:
@@ -31,17 +31,17 @@ TEST_F(testClass, LsrAccumulator) {
 	cpu.setA(0b01010101);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), 0b00101010);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, LsrZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.LSR_ZP;
 
 	//Given:
@@ -52,17 +52,17 @@ TEST_F(testClass, LsrZeroPage) {
 	mem[0x0020] = 0b01010101;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], 0b00101010);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, LsrZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.LSR_ZPX;
 
 	//Given:
@@ -74,17 +74,17 @@ TEST_F(testClass, LsrZeroPageX) {
 	mem[0x0020] = 0b01010101;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], 0b00101010);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, LsrAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.LSR_ABS;
 
 	//Given:
@@ -96,17 +96,17 @@ TEST_F(testClass, LsrAbsolute) {
 	mem[0x2000] = 0b01010101;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2000], 0b00101010);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, LsrAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.LSR_ABX;
 
 	//Given:
@@ -119,12 +119,12 @@ TEST_F(testClass, LsrAbsoluteX) {
 	mem[0x2005] = 0b01010101;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2005], 0b00101010);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 

@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, CmpImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IMM;
 
 	//Given:
@@ -32,17 +32,17 @@ TEST_F(testClass, CmpImmediate) {
 	cpu.setA(0x30);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpImmediateSetsCFlagFalse) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IMM;
 
 	//Given:
@@ -53,17 +53,17 @@ TEST_F(testClass, CmpImmediateSetsCFlagFalse) {
 	cpu.setA(0x0f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpImmediateSetsZFlagTrue) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IMM;
 
 	//Given:
@@ -74,17 +74,17 @@ TEST_F(testClass, CmpImmediateSetsZFlagTrue) {
 	cpu.setA(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpImmediateSetsNFlagTrue) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IMM;
 
 	//Given:
@@ -95,17 +95,17 @@ TEST_F(testClass, CmpImmediateSetsNFlagTrue) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ZP;
 
 	//Given:
@@ -117,17 +117,17 @@ TEST_F(testClass, CmpZeroPage) {
 	cpu.setA(0x20);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ZPX;
 
 	//Given:
@@ -140,17 +140,17 @@ TEST_F(testClass, CmpZeroPageX) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ABS;
 
 	//Given:
@@ -163,17 +163,17 @@ TEST_F(testClass, CmpAbsolute) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ABX;
 
 	//Given:
@@ -187,17 +187,17 @@ TEST_F(testClass, CmpAbsoluteX) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpAbsoluteXCrossesPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ABX;
 
 	//Given:
@@ -211,17 +211,17 @@ TEST_F(testClass, CmpAbsoluteXCrossesPage) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpAbsoluteY) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ABY;
 
 	//Given:
@@ -235,17 +235,17 @@ TEST_F(testClass, CmpAbsoluteY) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpAbsoluteYCrossesPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_ABY;
 
 	//Given:
@@ -259,17 +259,17 @@ TEST_F(testClass, CmpAbsoluteYCrossesPage) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpIndirectX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IDX;
 
 	//Given:
@@ -284,17 +284,17 @@ TEST_F(testClass, CmpIndirectX) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpIndirectY) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IDY;
 
 	//Given:
@@ -309,17 +309,17 @@ TEST_F(testClass, CmpIndirectY) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CmpIndirectYCrossesPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CMP_IDY;
 
 	//Given:
@@ -334,18 +334,18 @@ TEST_F(testClass, CmpIndirectYCrossesPage) {
 	cpu.setA(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // CPX
 TEST_F(testClass, CpxImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPX_IMM;
 
 	//Given:
@@ -356,17 +356,17 @@ TEST_F(testClass, CpxImmediate) {
 	cpu.setX(0x30);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpxImmediateSetsCFlagFalse) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPX_IMM;
 
 	//Given:
@@ -377,17 +377,17 @@ TEST_F(testClass, CpxImmediateSetsCFlagFalse) {
 	cpu.setX(0x0e);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpxImmediateSetsZFlagTrue) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPX_IMM;
 
 	//Given:
@@ -398,17 +398,17 @@ TEST_F(testClass, CpxImmediateSetsZFlagTrue) {
 	cpu.setX(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpxImmediateSetsNFlagTrue) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPX_IMM;
 
 	//Given:
@@ -419,17 +419,17 @@ TEST_F(testClass, CpxImmediateSetsNFlagTrue) {
 	cpu.setX(0x1f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpxZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPX_ZP;
 
 	//Given:
@@ -441,17 +441,17 @@ TEST_F(testClass, CpxZeroPage) {
 	cpu.setX(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpxAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPX_ABS;
 
 	//Given:
@@ -464,18 +464,18 @@ TEST_F(testClass, CpxAbsolute) {
 	cpu.setX(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // CPY
 TEST_F(testClass, CpyImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPY_IMM;
 
 	//Given:
@@ -486,17 +486,17 @@ TEST_F(testClass, CpyImmediate) {
 	cpu.setY(0x30);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpyImmediateSetsCFlagFalse) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPY_IMM;
 
 	//Given:
@@ -507,17 +507,17 @@ TEST_F(testClass, CpyImmediateSetsCFlagFalse) {
 	cpu.setY(0x0e);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpyImmediateSetsZFlagTrue) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPY_IMM;
 
 	//Given:
@@ -528,17 +528,17 @@ TEST_F(testClass, CpyImmediateSetsZFlagTrue) {
 	cpu.setY(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpyImmediateSetsNFlagTrue) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPY_IMM;
 
 	//Given:
@@ -549,17 +549,17 @@ TEST_F(testClass, CpyImmediateSetsNFlagTrue) {
 	cpu.setY(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpyZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPY_ZP;
 
 	//Given:
@@ -571,17 +571,17 @@ TEST_F(testClass, CpyZeroPage) {
 	cpu.setY(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, CpyAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.CPY_ABS;
 
 	//Given:
@@ -594,11 +594,11 @@ TEST_F(testClass, CpyAbsolute) {
 	cpu.setY(0x2f);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

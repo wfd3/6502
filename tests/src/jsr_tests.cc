@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, JsrAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.JSR_ABS;
 
 	//Given:
@@ -32,11 +32,11 @@ TEST_F(testClass, JsrAbsolute) {
 	mem[0xFFFE] = 0x43;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x4321);
 	EXPECT_EQ(mem[0x01FE], 0xFC+2);
 	EXPECT_EQ(mem[0x01FF], 0xFF);	
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

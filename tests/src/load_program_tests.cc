@@ -58,7 +58,7 @@ TEST_F(testClass, TestLoadProgram) {
 
 TEST_F(testClass, TestLoadAProgramAndRun)
 {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 
 	// Given:
 
@@ -69,14 +69,14 @@ TEST_F(testClass, TestLoadAProgramAndRun)
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
-		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
-		EXPECT_EQ(UsedCycles, ExpectedCycles);
+		cpu.execute();
+		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 	}
 }
 
 TEST_F(testClass, TestLoadAProgramFromAFileAndRun)
 {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 
 	// Given:
 
@@ -87,15 +87,15 @@ TEST_F(testClass, TestLoadAProgramFromAFileAndRun)
 
 	//Then:
 	for (Word cycles = 0; cycles < 1000; cycles++) 	{
-		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
-		EXPECT_EQ(UsedCycles, ExpectedCycles);
+		cpu.execute();
+		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 	}
 }
 
 
 TEST_F(testClass, TestLoadAProgramAndTrace)
 {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	// Given:
 	constexpr unsigned long loops = 2;
 
@@ -106,8 +106,8 @@ TEST_F(testClass, TestLoadAProgramAndTrace)
 
 	//Then:
 	for (unsigned long l = 0; l < sizeof(testProgram) * loops; l++) {
-			cpu.traceOneInstruction(UsedCycles, ExpectedCycles);
-		EXPECT_EQ(UsedCycles, ExpectedCycles);
+			cpu.traceOneInstruction();
+		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 	}
 }
 
@@ -119,19 +119,18 @@ std::vector<Byte> testLoopDetectionProgram = {
 
 TEST_F(testClass, TestLoopDetection)
 {
-	Cycles_t UsedCycles, ExpectedCycles;
-	bool loopDetected = false;
-
 	mem.loadData(testLoopDetectionProgram, startAddress);
 	cpu.TestReset(startAddress);
 	cpu.loopDetection(true);
 
 	Word cycles = 1000;
-	while (--cycles && !loopDetected) {
-		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles, loopDetected);
-		EXPECT_EQ(UsedCycles, ExpectedCycles);
+	while (--cycles && !cpu.loopDetected()) {
+		cpu.execute();
+		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 		EXPECT_EQ(cpu.getPC(), startAddress);
 	}
-	EXPECT_TRUE(loopDetected);
+	EXPECT_TRUE(cpu.loopDetected());
+	EXPECT_EQ(cpu.getPC(), startAddress);
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }
 #endif

@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, BRKImplied) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.BRK_IMP;
 	Word pushed_PC = MOS6502::RESET_VECTOR + 2;
 	constexpr Word STACK_FRAME = 0x0100 | MOS6502::INITIAL_SP;
@@ -33,7 +33,7 @@ TEST_F(testClass, BRKImplied) {
 	mem[0xFFFF] = 0x60;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x6000);
@@ -42,5 +42,5 @@ TEST_F(testClass, BRKImplied) {
 	EXPECT_EQ(mem[STACK_FRAME], pushed_PC >> 8);
 	EXPECT_TRUE(cpu.getFlagB());
 	EXPECT_TRUE(cpu.getFlagI());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

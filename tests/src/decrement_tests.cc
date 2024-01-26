@@ -22,7 +22,7 @@
 
 // DEC 
 TEST_F(testClass, DecZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ZP;
 
 	//Given:
@@ -33,18 +33,18 @@ TEST_F(testClass, DecZeroPage) {
 	mem[0x0020] = 0x02;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], 0x01);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DecZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ZPX;
 
 	//Given:
@@ -56,18 +56,18 @@ TEST_F(testClass, DecZeroPageX) {
 	mem[0x0040] = 0x02;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0040], 0x01);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DecAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ABS;
 
 	//Given:
@@ -79,18 +79,18 @@ TEST_F(testClass, DecAbsolute) {
 	mem[0x2000] = 0x02;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2000], 0x01);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DecAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ABX;
 
 	//Given:
@@ -103,18 +103,18 @@ TEST_F(testClass, DecAbsoluteX) {
 	mem[0x2002] = 0x02;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2002], 0x01);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DecZeroPageSetsZeroFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ZP;
 
 	//Given:
@@ -125,17 +125,17 @@ TEST_F(testClass, DecZeroPageSetsZeroFlag) {
 	mem[0x0020] = 0x01;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], 0x00);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DecZeroPageSetsNegativeFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ZP;
 
 	//Given:
@@ -146,18 +146,18 @@ TEST_F(testClass, DecZeroPageSetsNegativeFlag) {
 	mem[0x0020] = 0x00;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], 0xff);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // DEX
 TEST_F(testClass, DexImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEX_IMP;
 
 	//Given:
@@ -167,18 +167,18 @@ TEST_F(testClass, DexImmediate) {
 	cpu.setX(10);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getX(), 9);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DexImmediateSetsZeroFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEX_IMP;
 
 	//Given:
@@ -188,17 +188,17 @@ TEST_F(testClass, DexImmediateSetsZeroFlag) {
 	cpu.setX(1);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getX(), 0);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DexImmediateSetsNegativeFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEX_IMP;
 
 	//Given:
@@ -208,18 +208,18 @@ TEST_F(testClass, DexImmediateSetsNegativeFlag) {
 	cpu.setX(0);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getX(), 0xff);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // DEY
 TEST_F(testClass, DeyImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEY_IMP;
 
 	//Given:
@@ -229,18 +229,18 @@ TEST_F(testClass, DeyImmediate) {
 	cpu.setY(10);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getY(), 9);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DeyImmediateSetsZeroFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEY_IMP;
 
 	//Given:
@@ -250,17 +250,17 @@ TEST_F(testClass, DeyImmediateSetsZeroFlag) {
 	cpu.setY(1);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getY(), 0);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, DeyImmediateSetsNegativeFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEY_IMP;
 
 	//Given:
@@ -270,11 +270,11 @@ TEST_F(testClass, DeyImmediateSetsNegativeFlag) {
 	cpu.setY(0);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getY(), 0xff);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

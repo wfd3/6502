@@ -36,7 +36,7 @@ public:
 #include "bit_tests.cc"
 
 TEST_F(testClass, BitImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.BIT_IMM;
 
 	//Given:
@@ -47,17 +47,17 @@ TEST_F(testClass, BitImmediate) {
 	cpu.setA(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, BitImmediateLeavesNFlagAlone) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.BIT_IMM;
 
 	//Given:
@@ -69,17 +69,17 @@ TEST_F(testClass, BitImmediateLeavesNFlagAlone) {
 	cpu.setFlagN(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, BitImmediateLeavesVFlagAlone) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.BIT_IMM;
 
 	//Given:
@@ -91,17 +91,17 @@ TEST_F(testClass, BitImmediateLeavesVFlagAlone) {
 	cpu.setFlagV(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, BitAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.BIT_ABX;
 
 	//Given:
@@ -115,17 +115,17 @@ TEST_F(testClass, BitAbsoluteX) {
 	cpu.setA(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, BitZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.BIT_ZPX;
 
 	//Given:
@@ -140,12 +140,12 @@ TEST_F(testClass, BitZeroPageX) {
 	//When:
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 

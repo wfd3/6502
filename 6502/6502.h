@@ -73,7 +73,7 @@ public:
 	void Reset();
 	void setResetVector(Word);
 	void setPendingReset() {
-		if (!_debuggingEnabled)
+		if (!_debugMode)
 			_pendingReset = true;
 	}
 	bool inReset() { return _inReset; }
@@ -94,21 +94,26 @@ public:
 	bool isPCAtHaltAddress() {
 		return _haltAddressSet && (PC == _haltAddress);
 	}
+
 	void loopDetection(bool l) {
 		debug_loopDetection = l;
 	}
+	bool loopDetected() { return _loopDetected; }
+
+	bool isInDebugMode() { return _debugMode; }
+	void setDebugMode(bool m) { _debugMode = m; }
+
+	bool hitCPUException() { return _hitException; }
+
+	Cycles_t expectedCycles() {return _expectedCyclesToUse; }
+	Cycles_t usedCycles() { return Cycles; }
 
 	// Execution
-	void execute(bool& stop, bool& startDebugOnNextInstruction, Cycles_t& cyclesUsed);
-	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &);
-	void executeOneInstructionWithCycleCount(Cycles_t &, Cycles_t &, bool&);
-
-	// Debugger
-	bool executeDebug();
+	void execute();
 
 #ifdef TEST_BUILD
 	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
-	void traceOneInstruction(Cycles_t &, Cycles_t &);
+	void traceOneInstruction();
 
 	Word getPC() { return PC; }
 	Byte getSP() { return SP; } 
@@ -322,7 +327,8 @@ protected:
 		struct ProcessorStatusBits Flags;
 	};
 
-	Cycles_t Cycles = 0;     // Cycle counter
+	Cycles_t Cycles = 0;              // Cycle counter
+	Cycles_t _expectedCyclesToUse = 0; 
 
 	//////////
 	// Special addresses/vectors
@@ -401,6 +407,7 @@ protected:
 
 	// CPU functions
 	void exception(const std::string &);
+	void executeOneInstruction();
 
 	// Flags
 	void setFlagZByValue(Byte);
@@ -503,11 +510,14 @@ protected:
 	////
 	// Built-in Debugger
 
-	bool _debuggingEnabled = false;
+	void executeDebug();
+
+	bool _debugMode = false;
 	std::string debug_lastCmd = "";
 	bool debug_alwaysShowPS = false;
 	bool debug_loopDetection = false;
-	bool debug_OnException = false;
+	bool _loopDetected = false;
+	bool _debugModeOnException = false;
 
 	void initDebugger();
 	bool executeDebuggerCmd(std::string);

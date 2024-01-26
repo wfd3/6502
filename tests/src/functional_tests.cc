@@ -44,8 +44,8 @@ TEST_F(testClass, TestLoad6502TestSuite)
 	// Uncomment to start in debugger
 	//cpu.SetDebug(true);
 	
-	while (!executeOneInstruction())
-		;
+	while (!cpu.isPCAtHaltAddress())
+		cpu.execute();
 
 	EXPECT_EQ(cpu.getPC(), haltAddress);
 #endif

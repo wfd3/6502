@@ -38,7 +38,7 @@ public:
 
 
 TEST_F(testClass, AndZeroPageIndirect) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.AND_ZPI;
 	
 	// Given:
@@ -52,11 +52,11 @@ TEST_F(testClass, AndZeroPageIndirect) {
 	cpu.setA(0xff); 
 
 	// When: 
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then
 	EXPECT_EQ(cpu.getA(), 0x0f);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

@@ -34,7 +34,7 @@ public:
 };
 
 TEST_F(MOS65C02TRBTests, TRBAbsolute) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.TRB_ABS;
 
 	//Given:
@@ -52,7 +52,7 @@ TEST_F(MOS65C02TRBTests, TRBAbsolute) {
     EXPECT_EQ(cpu.getA(), regval);
    
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x1010], memval & ~regval);
@@ -63,11 +63,11 @@ TEST_F(MOS65C02TRBTests, TRBAbsolute) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles);  
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());  
 }
 
 TEST_F(MOS65C02TRBTests, TRBZeroPage) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.TRB_ZP;
 
 	//Given:
@@ -84,7 +84,7 @@ TEST_F(MOS65C02TRBTests, TRBZeroPage) {
     EXPECT_EQ(cpu.getA(), regval);
    
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x10], memval & ~regval);
@@ -95,5 +95,5 @@ TEST_F(MOS65C02TRBTests, TRBZeroPage) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles);  
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());  
 }

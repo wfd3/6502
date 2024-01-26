@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, OraImmediateWhenNegativeFlagShouldNotBeSet) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ORA_IMM;
 
 	//Given:
@@ -32,17 +32,17 @@ TEST_F(testClass, OraImmediateWhenNegativeFlagShouldNotBeSet) {
 	cpu.setA(0x0F);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x0F);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, OraImmediateWhenNegativeFlagShouldBeSet) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ORA_IMM;
 
 	//Given:
@@ -53,12 +53,12 @@ TEST_F(testClass, OraImmediateWhenNegativeFlagShouldBeSet) {
 	cpu.setA(0xf0);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0xFF);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_TRUE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 

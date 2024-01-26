@@ -37,7 +37,7 @@ public:
 #include "adc_tests.cc"
 
 TEST_F(testClass, ADCZeroPageIndirectAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ZPI;
 
 	//Given:
@@ -51,7 +51,7 @@ TEST_F(testClass, ADCZeroPageIndirectAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -59,5 +59,5 @@ TEST_F(testClass, ADCZeroPageIndirectAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

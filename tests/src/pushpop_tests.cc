@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, PhaImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.PHA_IMP;
 
 	//Given:
@@ -31,16 +31,16 @@ TEST_F(testClass, PhaImmediate) {
 	cpu.setA(0x52);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0X01FF], 0x52);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, PlaImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.PLA_IMP;
 
 	//Given:
@@ -51,18 +51,18 @@ TEST_F(testClass, PlaImmediate) {
 	cpu.setA(0xff);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x52);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, PhpImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.PHP_IMP;
 
 	//Given:
@@ -73,16 +73,16 @@ TEST_F(testClass, PhpImmediate) {
 	cpu.setPS(0b01010101);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x01FF], 0b01110101);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, PlpImmediate) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.PLP_IMP;
 
 	//Given:
@@ -93,10 +93,10 @@ TEST_F(testClass, PlpImmediate) {
 	cpu.setPS(0x52);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPS(), 0b01000101);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

@@ -38,13 +38,6 @@ public:
 
 	virtual void TearDown() {
 	}
-
-	bool executeOneInstruction() {
-		Cycles_t used;
-		bool halt, debug;
-		cpu.execute(halt, debug, used);
-		return halt;
-	}
 };
 
 #define testClass MOS6502XXXFunctionalTestSuite

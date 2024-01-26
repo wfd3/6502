@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, ADCImmediateAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -32,7 +32,7 @@ TEST_F(testClass, ADCImmediateAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -40,11 +40,11 @@ TEST_F(testClass, ADCImmediateAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCZeroPageAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ZP;
 
 	//Given:
@@ -56,7 +56,7 @@ TEST_F(testClass, ADCZeroPageAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -64,11 +64,11 @@ TEST_F(testClass, ADCZeroPageAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCZeroPageXAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ZPX;
 
 	//Given:
@@ -81,7 +81,7 @@ TEST_F(testClass, ADCZeroPageXAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -89,11 +89,11 @@ TEST_F(testClass, ADCZeroPageXAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCAbsoluteAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ABS;
 
 	//Given:
@@ -106,7 +106,7 @@ TEST_F(testClass, ADCAbsoluteAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -114,11 +114,11 @@ TEST_F(testClass, ADCAbsoluteAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCAbsoluteXAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ABX;
 
 	//Given:
@@ -132,7 +132,7 @@ TEST_F(testClass, ADCAbsoluteXAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -140,11 +140,11 @@ TEST_F(testClass, ADCAbsoluteXAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ABX;
 
 	//Given:
@@ -158,7 +158,7 @@ TEST_F(testClass, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -166,11 +166,11 @@ TEST_F(testClass, ADCAbsoluteXCrossPageBoundaryAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCAbsoluteYAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ABY;
 
 	//Given:
@@ -184,7 +184,7 @@ TEST_F(testClass, ADCAbsoluteYAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -192,11 +192,11 @@ TEST_F(testClass, ADCAbsoluteYAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles);  
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());  
 }
 
 TEST_F(testClass, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_ABY;
 
 	//Given:
@@ -210,7 +210,7 @@ TEST_F(testClass, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -218,11 +218,11 @@ TEST_F(testClass, ADCAbsoluteYCrossPageBoundaryAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCIndirectXAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IDX;
 
 	//Given:
@@ -237,7 +237,7 @@ TEST_F(testClass, ADCIndirectXAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -245,11 +245,11 @@ TEST_F(testClass, ADCIndirectXAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCIndirectYAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IDY;
 
 	//Given:
@@ -264,7 +264,7 @@ TEST_F(testClass, ADCIndirectYAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -272,11 +272,11 @@ TEST_F(testClass, ADCIndirectYAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCIndirectYCrossPageAddsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IDY;
 
 	//Given:
@@ -291,7 +291,7 @@ TEST_F(testClass, ADCIndirectYCrossPageAddsPositiveNumbers) {
 	cpu.setA(0x10);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x20);
@@ -299,11 +299,11 @@ TEST_F(testClass, ADCIndirectYCrossPageAddsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsWithCarry) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -315,7 +315,7 @@ TEST_F(testClass, ADCImmediateAddsWithCarry) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x21);
@@ -323,11 +323,11 @@ TEST_F(testClass, ADCImmediateAddsWithCarry) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsNegativeNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -339,7 +339,7 @@ TEST_F(testClass, ADCImmediateAddsNegativeNumbers) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), Byte(-3));
@@ -347,11 +347,11 @@ TEST_F(testClass, ADCImmediateAddsNegativeNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsNegativeNumbersWithCarry) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -363,7 +363,7 @@ TEST_F(testClass, ADCImmediateAddsNegativeNumbersWithCarry) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), Byte(-2));
@@ -371,11 +371,11 @@ TEST_F(testClass, ADCImmediateAddsNegativeNumbersWithCarry) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsZero) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -387,7 +387,7 @@ TEST_F(testClass, ADCImmediateAddsZero) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0);
@@ -395,11 +395,11 @@ TEST_F(testClass, ADCImmediateAddsZero) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsWithCarryOverflow) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -411,7 +411,7 @@ TEST_F(testClass, ADCImmediateAddsWithCarryOverflow) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), Byte(0xf0+0x20));
@@ -419,11 +419,11 @@ TEST_F(testClass, ADCImmediateAddsWithCarryOverflow) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsWithOverflow) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -435,7 +435,7 @@ TEST_F(testClass, ADCImmediateAddsWithOverflow) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 127);
@@ -443,12 +443,12 @@ TEST_F(testClass, ADCImmediateAddsWithOverflow) {
 	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // SBC tests
 TEST_F(testClass, SBCImmediateSubtractsPositiveNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -460,7 +460,7 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveNumbers) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x09 - 0x01);
@@ -468,11 +468,11 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, SBCImmediateSubtractsZeroNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -484,7 +484,7 @@ TEST_F(testClass, SBCImmediateSubtractsZeroNumbers) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x0);
@@ -492,11 +492,11 @@ TEST_F(testClass, SBCImmediateSubtractsZeroNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 
 }
 TEST_F(testClass, SBCImmediateSubtractsZeroWitCarryNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -508,7 +508,7 @@ TEST_F(testClass, SBCImmediateSubtractsZeroWitCarryNumbers) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), Byte(-1));
@@ -516,12 +516,12 @@ TEST_F(testClass, SBCImmediateSubtractsZeroWitCarryNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 
 TEST_F(testClass, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -533,7 +533,7 @@ TEST_F(testClass, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 128);
@@ -541,12 +541,12 @@ TEST_F(testClass, SBCImmediateSubtractsPosAndNegWithSignedOverflow) {
 	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // BCD ADC tests
 TEST_F(testClass, ADCImmediateAddsPositiveBCDNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -558,7 +558,7 @@ TEST_F(testClass, ADCImmediateAddsPositiveBCDNumbers) {
 	cpu.setFlagD(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x60);
@@ -566,11 +566,11 @@ TEST_F(testClass, ADCImmediateAddsPositiveBCDNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -583,7 +583,7 @@ TEST_F(testClass, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:n
 	EXPECT_EQ(cpu.getA(), 0x60 + 1);
@@ -591,11 +591,11 @@ TEST_F(testClass, ADCImmediateAddsPositiveBCDNumbersWithCarry) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsZeroBCDNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -607,7 +607,7 @@ TEST_F(testClass, ADCImmediateAddsZeroBCDNumbers) {
 	cpu.setFlagD(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0);
@@ -615,11 +615,11 @@ TEST_F(testClass, ADCImmediateAddsZeroBCDNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -632,7 +632,7 @@ TEST_F(testClass, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 	cpu.setFlagD(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x98);
@@ -640,13 +640,13 @@ TEST_F(testClass, ADCImmediateAddsLargePositiveBCDNumbersWithCarry) {
 	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // BCD SBC
 
 TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbers) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -659,7 +659,7 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbers) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x30);
@@ -667,11 +667,11 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbers) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -684,7 +684,7 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0);
@@ -692,11 +692,11 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZero) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNotSet) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -709,7 +709,7 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNot
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0);
@@ -717,11 +717,11 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsZeroWhenCarryNot
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarrySet) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -734,7 +734,7 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarr
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x87);
@@ -742,11 +742,11 @@ TEST_F(testClass, SBCImmediateSubtractsPositiveBCDNumbersAndGetsNegativeWhenCarr
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, SBCImmediateSubtractsSimple) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -759,7 +759,7 @@ TEST_F(testClass, SBCImmediateSubtractsSimple) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x99);
@@ -767,11 +767,11 @@ TEST_F(testClass, SBCImmediateSubtractsSimple) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, ADCBCDOnePlus99EqualsZero) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ADC_IMM;
 
 	//Given:
@@ -784,7 +784,7 @@ TEST_F(testClass, ADCBCDOnePlus99EqualsZero) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x00);
@@ -792,11 +792,11 @@ TEST_F(testClass, ADCBCDOnePlus99EqualsZero) {
 	EXPECT_TRUE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, SBCBCD80MinusZeroWithNoCarry) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.SBC_IMM;
 
 	//Given:
@@ -811,7 +811,7 @@ TEST_F(testClass, SBCBCD80MinusZeroWithNoCarry) {
 	cpu.setFlagC(false);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x79);
 	EXPECT_FALSE(cpu.getFlagZ());
@@ -819,5 +819,5 @@ TEST_F(testClass, SBCBCD80MinusZeroWithNoCarry) {
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagD());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

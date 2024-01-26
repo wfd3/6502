@@ -34,7 +34,7 @@ public:
 };
 
 TEST_F(MOS65C02STZTests, stz_absolute_zeros_memory) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.STZ_ABS;
 
 	//Given:
@@ -47,7 +47,7 @@ TEST_F(MOS65C02STZTests, stz_absolute_zeros_memory) {
     mem[0x1010] = 0xff;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x1010], 0);
@@ -55,11 +55,11 @@ TEST_F(MOS65C02STZTests, stz_absolute_zeros_memory) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(MOS65C02STZTests, stz_absolutex_zeros_memory) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.STZ_ABX;
 
 	//Given:
@@ -73,7 +73,7 @@ TEST_F(MOS65C02STZTests, stz_absolutex_zeros_memory) {
     mem[0x1011] = 0xff;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x1011], 0);
@@ -81,11 +81,11 @@ TEST_F(MOS65C02STZTests, stz_absolutex_zeros_memory) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(MOS65C02STZTests, stz_zeropage_zeros_memory) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.STZ_ZP;
 
 	//Given:
@@ -96,7 +96,7 @@ TEST_F(MOS65C02STZTests, stz_zeropage_zeros_memory) {
 	mem[0x00] = 0x10;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x00], 0);
@@ -104,11 +104,11 @@ TEST_F(MOS65C02STZTests, stz_zeropage_zeros_memory) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(MOS65C02STZTests, stz_zeropagex_zeros_memory) {
-    Cycles_t UsedCycles, ExpectedCycles;
+    
 	Byte ins = cpu.Opcodes.STZ_ZPX;
 
 	//Given:
@@ -121,7 +121,7 @@ TEST_F(MOS65C02STZTests, stz_zeropagex_zeros_memory) {
 	mem[0x10] = 0x10;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(mem[0x10], 0);
@@ -129,5 +129,5 @@ TEST_F(MOS65C02STZTests, stz_zeropagex_zeros_memory) {
 	EXPECT_FALSE(cpu.getFlagV());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

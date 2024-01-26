@@ -37,7 +37,7 @@ public:
 
 // DEC Accumulator
 TEST_F(testClass, DexAccumulator) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.DEC_ACC;
 
 	//Given:
@@ -47,12 +47,12 @@ TEST_F(testClass, DexAccumulator) {
 	cpu.setA(10);
 	
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), 9);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

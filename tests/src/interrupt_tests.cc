@@ -45,7 +45,7 @@ void usleep(__int64 usec)
 #define CONCATENATE4(a, b, c, d) CONCATENATE3(CONCATENATE_INDIRECT(a, b), c, d)
 #define STRINGIZE(x) #x
 #define EXPAND_AND_STRINGIZE(x) STRINGIZE(x)
-#define executeFunction(f) &CONCATENATE4(testClass, _, f, _Test::execute)
+#define executeFunction(f) &CONCATENATE4(testClass, _, f, _Test::executeProgram)
 
 std::vector<Byte> interruptTestProgram = {
 	0xca,					// 1000: dex
@@ -70,7 +70,7 @@ TEST_F(testClass, InlineMaskableInterrupt) {
 	EXPECT_FALSE(cpu.getFlagI());
 
 	// When
-	executeOneInstruction();
+	cpu.execute();
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
@@ -94,7 +94,7 @@ TEST_F(testClass, InlineMaskableInterruptDoesNotInterruptWhenIFlagSet) {
 	EXPECT_TRUE(cpu.getFlagI());
 
 	// When
-	executeOneInstruction();
+	cpu.execute();
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x1001);

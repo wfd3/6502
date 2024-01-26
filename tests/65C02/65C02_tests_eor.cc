@@ -37,7 +37,7 @@ public:
 #include "eor_tests.cc"
 
 TEST_F(testClass, EorZeroPageIndirect) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.EOR_ZPI;
 
 	//Given:
@@ -52,11 +52,11 @@ TEST_F(testClass, EorZeroPageIndirect) {
 	cpu.setA(0x0);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x01);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN()) ;
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

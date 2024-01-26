@@ -33,7 +33,7 @@ public:
 	}
 
 	bool testRMB(Byte ins, uint8_t bit) {
-		Cycles_t UsedCycles, ExpectedCycles;
+		
 		Byte mask = ~(1 << bit);
 		const Byte value = 0xff;
 		Byte result = value & mask;
@@ -46,7 +46,7 @@ public:
 		mem[0x0010] = value;
 
 		//When:
-		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+		cpu.execute();
 
 		// Then:
 		EXPECT_EQ(mem[0x0010], result);
@@ -55,13 +55,13 @@ public:
 		EXPECT_FALSE(cpu.getFlagV());
 		EXPECT_FALSE(cpu.getFlagN());
 		EXPECT_FALSE(cpu.getFlagC());
-		EXPECT_EQ(UsedCycles, ExpectedCycles);  
+		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());  
 
 		return !::testing::UnitTest::GetInstance()->current_test_info()->result()->Failed();
 	}
 
 	bool testSMB(Byte ins, uint8_t bit) {
-		Cycles_t UsedCycles, ExpectedCycles;
+		
 		Byte mask = 1 << bit;
 		const Byte value = 0xff;
 		Byte result = 0xff | mask;
@@ -74,7 +74,7 @@ public:
 		mem[0x0010] = value;
 
 		//When:
-		cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+		cpu.execute();
 
 		// Then:
 		EXPECT_EQ(mem[0x0010], result);
@@ -83,7 +83,7 @@ public:
 		EXPECT_FALSE(cpu.getFlagV());
 		EXPECT_FALSE(cpu.getFlagN());
 		EXPECT_FALSE(cpu.getFlagC());
-		EXPECT_EQ(UsedCycles, ExpectedCycles);  
+		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());  
 
 		return !::testing::UnitTest::GetInstance()->current_test_info()->result()->Failed();
 	}

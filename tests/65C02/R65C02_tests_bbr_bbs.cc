@@ -33,7 +33,7 @@ public:
 	}
 
 	void testBranchIfBitSet(Byte ins, uint8_t bit, bool set, bool expectBranch, Byte zpAddress, Word startAddress, Byte offset) {
-        Cycles_t UsedCycles, ExpectedCycles;
+        
 
 		// Given:
         cpu.TestReset(startAddress);
@@ -51,11 +51,11 @@ public:
             result += SByte(offset);
 
         //When:
-        cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+        cpu.execute();
        
         // Then:
         EXPECT_EQ(cpu.getPC(), result);
-        EXPECT_EQ(UsedCycles, ExpectedCycles); 
+        EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
     }
 
 };

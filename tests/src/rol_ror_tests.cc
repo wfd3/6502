@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, RolAccumulator) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROL_ACC;
 	Byte data = 0b01010101;
 
@@ -32,17 +32,17 @@ TEST_F(testClass, RolAccumulator) {
 	cpu.setA(data);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RolAccumulatorSetsCarryFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROL_ACC;
 	Byte data = 0b10000001;
 
@@ -53,17 +53,17 @@ TEST_F(testClass, RolAccumulatorSetsCarryFlag) {
 	cpu.setA(data); 
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), Byte(data << 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RolZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROL_ZP;
 	Byte data = 0b01010101;
 
@@ -75,17 +75,17 @@ TEST_F(testClass, RolZeroPage) {
 	mem[0x0020] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RolZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROL_ZPX;
 	Byte data = 0b01010101;
 	
@@ -98,17 +98,17 @@ TEST_F(testClass, RolZeroPageX) {
 	mem[0x0020] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RolAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROL_ABS;
 	Byte data = 0b01010101;
 	
@@ -121,17 +121,17 @@ TEST_F(testClass, RolAbsolute) {
 	mem[0x2000] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2000], data << 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RolAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROL_ABX;
 	Byte data = 0b01010101;
 	
@@ -145,18 +145,18 @@ TEST_F(testClass, RolAbsoluteX) {
 	mem[0x2005] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2005], Byte(data << 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // ROR
 TEST_F(testClass, RorAccumulator) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ACC;
 	Byte data = 0b01010101;
 
@@ -167,17 +167,17 @@ TEST_F(testClass, RorAccumulator) {
 	cpu.setA(data); 
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), data >> 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RorAccumulatorSetsCarryFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ACC;
 	Byte data = 0b10000001;
 
@@ -188,17 +188,17 @@ TEST_F(testClass, RorAccumulatorSetsCarryFlag) {
 	cpu.setA(data); 
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), Byte(data >> 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ACC;
 	Byte data = 0b10000000;
 
@@ -210,17 +210,17 @@ TEST_F(testClass, RorAccumulatorClearsCarryAndSetsNegativeFlag) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_FALSE(cpu.getFlagC());
 	EXPECT_TRUE(cpu.getFlagN());
 	EXPECT_EQ(cpu.getA(), Byte(data >> 1) | (1 << 7));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RorZeroPage) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ZP;
 	Byte data = 0b01010101;
 
@@ -232,17 +232,17 @@ TEST_F(testClass, RorZeroPage) {
 	mem[0x0020] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data >> 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RorZeroPageX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ZPX;
 	Byte data = 0b01010101;
 	
@@ -255,17 +255,17 @@ TEST_F(testClass, RorZeroPageX) {
 	mem[0x0020] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x0020], data >> 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RorAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ABS;
 	Byte data = 0b01010101;
 	
@@ -278,17 +278,17 @@ TEST_F(testClass, RorAbsolute) {
 	mem[0x2000] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2000], data >> 1);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, RorAbsoluteX) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ROR_ABX;
 	Byte data = 0b01010101;
 	
@@ -302,11 +302,11 @@ TEST_F(testClass, RorAbsoluteX) {
 	mem[0x2005] = data;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_TRUE(cpu.getFlagC());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(mem[0x2005], Byte(data >> 1));
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

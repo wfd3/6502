@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, JmpAbsolute) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.JMP_ABS;
 
 	//Given:
@@ -32,15 +32,15 @@ TEST_F(testClass, JmpAbsolute) {
 	mem[0xFFFE] = 0x43;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x4321);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 TEST_F(testClass, JmpIndirect) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.JMP_IND;
 
 	//Given:
@@ -53,9 +53,9 @@ TEST_F(testClass, JmpIndirect) {
 	mem[0x2001] = 0x43;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x4321);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

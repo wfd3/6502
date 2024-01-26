@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, RtiImplied) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.RTI_IMP;
 
 	//Given:
@@ -35,12 +35,12 @@ TEST_F(testClass, RtiImplied) {
 	cpu.setFlagC(true);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0xAAFF);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
 	EXPECT_FALSE(cpu.getFlagB());
 	EXPECT_FALSE(cpu.getFlagC());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

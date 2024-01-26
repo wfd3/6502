@@ -37,7 +37,7 @@ public:
 #include "ora_tests.cc"
 
 TEST_F(testClass, OraZeroPageIndirectWhenNegativeFlagShouldNotBeSet) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.ORA_ZPI;
 
 	//Given:
@@ -52,11 +52,11 @@ TEST_F(testClass, OraZeroPageIndirectWhenNegativeFlagShouldNotBeSet) {
 	cpu.setA(0x0F);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x0F);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

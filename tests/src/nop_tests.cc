@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, Nop) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.NOP_IMP;
 
 	//Given:
@@ -29,8 +29,8 @@ TEST_F(testClass, Nop) {
 
 	mem[0xFFFC] = ins;
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
-	EXPECT_EQ(UsedCycles, ExpectedCycles);
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }

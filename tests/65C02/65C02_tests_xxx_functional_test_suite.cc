@@ -41,17 +41,6 @@ public:
 
 	virtual void TearDown() {
 	}
-
-	bool executeOneInstruction() {
-		Cycles_t used;
-		bool halt = false;
-		//fmt::print("PC: {:04}\r", cpu.getPC());
-		if (debug)
-			cpu.executeDebug();
-		else 
-			cpu.execute(halt, debug, used);
-		return cpu.isPCAtHaltAddress();
-	}
 };
 
 #define testClass MOS65C02XXXFunctionalTestSuite
@@ -79,9 +68,9 @@ TEST_F(testClass, TestLoad65C02ExtendedOpcodesTestSuite)
 	std::cout << "# 65C02 extended opcode functional tests, can take 20 to 30 seconds..." << std::endl;
 	std::cout << "#  Test will drop into debugger if test fails" << std::endl;
 
-	while (!executeOneInstruction())
-		;
-
+	while (!cpu.isPCAtHaltAddress()) 
+		cpu.execute();
+		
 	EXPECT_EQ(cpu.getPC(), haltAddress);
 #endif
 }

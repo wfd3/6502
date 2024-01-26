@@ -21,7 +21,7 @@
 #endif
 
 void testClass::BranchesWhenFlagSet(Word saddr, Byte rel, Byte ins) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 
 	//Given:
 	mem[saddr]   = ins;
@@ -30,11 +30,11 @@ void testClass::BranchesWhenFlagSet(Word saddr, Byte rel, Byte ins) {
 	Word result = (saddr + 2) + SByte(rel);
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), result);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
 // BCC

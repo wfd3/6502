@@ -107,25 +107,20 @@ int main() {
 	// - Delay however many clock cycles we've used, then
 	// - Handle entering or exiting debug mode.
 
-	Cycles_t cyclesUsed;
-	bool halt = false;
-	bool debug = false;
-
 	cpu.Reset();	    // Exit the CPU from reset
-	while (!halt) {
+	while (!cpu.isPCAtHaltAddress()) {
 		// If we're in debug mode we have to toggle the terminal out of and in to non-blocking mode
 		// so the CPU debugger (implemented in the CPU class) can access the terminal in non-blocking 
 		// mode.
-		if (debug) {
+		auto debug = cpu.isInDebugMode();
+		if (debug) 
 			pia->setTermBlocking();
-			debug = cpu.executeDebug();
+		
+		cpu.execute();
+		
+		if (debug) 
 			pia->setTermNonblocking();
-		} else 
-			cpu.execute(halt, debug, cyclesUsed);
 
-		if (halt) 
-			continue;
-	
 		auto signals = pia->housekeeping();
 
 		for (const auto& signal : signals) {
@@ -138,7 +133,7 @@ int main() {
 					cpu.Reset();
 				break;
 			case Device::Debug:
-				debug = true;
+				cpu.setDebugMode(true);
 				break;
 			case Device::Exit:
 				fmt::print("\nExiting emulator\n");
@@ -146,7 +141,7 @@ int main() {
 			}
 		}
 
-		busClock.delay(cyclesUsed);
+		busClock.delay(cpu.usedCycles());
 	}
 
 	pia->setTermNonblocking();	

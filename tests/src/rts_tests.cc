@@ -21,7 +21,7 @@
 #endif
 
 TEST_F(testClass, RtsImplied) {
-	Cycles_t UsedCycles, ExpectedCycles;
+	
 	Byte ins = cpu.Opcodes.RTS_IMP;
 
 	//Given:
@@ -32,10 +32,10 @@ TEST_F(testClass, RtsImplied) {
 	mem[0xFFFC] = ins;
 
 	//When:
-	cpu.executeOneInstructionWithCycleCount(UsedCycles, ExpectedCycles);
+	cpu.execute();
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x2000 + 1);
 	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
-	EXPECT_EQ(UsedCycles, ExpectedCycles); 
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

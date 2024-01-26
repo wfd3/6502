@@ -1271,7 +1271,7 @@ bool MOS6502::continueCmd([[maybe_unused]] std::string &line) {
 		fmt::print("CPU Exception hit; can't continue.  Reset CPU to clear.\n");
 		return false;
 	}
-	_debuggingEnabled = false;
+	_debugMode = false;
 	return true;
 }
 
@@ -1458,11 +1458,9 @@ bool MOS6502::executeDebuggerCmd(std::string line) {
 	// Check if command is numbers, convert it to an integer and execute that many instructions.
 	try {
 		uint64_t insCnt = std::stol(line);
-		bool loop;
 		debug_lastCmd = line;
 		while (insCnt--) {
-			Cycles_t cyclesUsed, cyclesExpected;
-			executeOneInstructionWithCycleCount(cyclesUsed, cyclesExpected, loop);
+			executeOneInstruction();
 			if (debug_alwaysShowPS) 
 				printCPUState();
 			disassemble(PC, 1);
@@ -1491,10 +1489,12 @@ bool MOS6502::executeDebuggerCmd(std::string line) {
 	return (this->*f)(line);
 }
 
-bool MOS6502::executeDebug() {
-	if (!_debuggingEnabled) {
+void MOS6502::executeDebug() {
+	static bool header = false;
+
+	if (!header) {
 		listPC = PC;
-		_debuggingEnabled = true;
+		header = true;
 
 		fmt::print("\nDebugger starting at PC {:#06x}\n", PC);
 		printCPUState();
@@ -1504,19 +1504,17 @@ bool MOS6502::executeDebug() {
 	std::string line;
 	getReadline(line);
 	executeDebuggerCmd(line);
-	#if 0
-	if (debug_alwaysShowPS) 
-		printCPUState();
-	#endif
-	if (_debuggingEnabled == false) 
+
+	if (!_debugMode) { 
 		fmt::print("Exiting debugger\n");
-	return _debuggingEnabled;
+		header = false;
+	}
 }
 
 #ifdef TEST_BUILD
 // This is used for basic disassembler testing
-void MOS6502::traceOneInstruction(Cycles_t& usedCycles, Cycles_t &expectedCycles) {
+void MOS6502::traceOneInstruction() {
 	disassemble(PC, 1);
-	executeOneInstructionWithCycleCount(usedCycles, expectedCycles);
+	executeOneInstruction();
 }
 #endif
