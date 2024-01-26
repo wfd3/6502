@@ -16,7 +16,7 @@ cmake_minimum_required(VERSION 3.7)
 
 project( lib65C02 )
 
-set (SOURCES "65C02.h" )
+set (SOURCES "65C02.h" "65C02.cc" )
 source_group("src" FILES ${SOURCES})
 include_directories(AFTER ${fmt_INCLUDE_DIRS})
 

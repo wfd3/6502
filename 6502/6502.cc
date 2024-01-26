@@ -403,7 +403,11 @@ void MOS6502::executeOneInstruction() {
 
 void MOS6502::execute() {
 
-	_debugMode |= isPCBreakpoint();
+	if (isPCBreakpoint() && !_debugMode) {
+		// Set debug mode and return so the caller can setup the terminal if needed.
+		_debugMode = true;
+		return;
+	}
 
 	if (_debugMode) {
 		executeDebug();
