@@ -36,6 +36,8 @@ public:
 
 	virtual void SetUp() {
 		mem.mapRAM(0, MOS65C02::MAX_MEM);
+		std::cout << "## Functional tests will drop into debugger in case of failure" << std::endl;
+
 		debug = false;
 	}
 
@@ -46,27 +48,23 @@ public:
 #define testClass MOS65C02XXXFunctionalTestSuite
 #include "functional_tests.cc"
 
-#ifdef RUN_65C02_FUNCTIONAL_TEST
-static const char *fileName65C02 = BINFILE_PATH "/65C02_extended_opcodes_test_without_illegal_instructions.bin";
-//static const char *fileName65C02 = BINFILE_PATH "/65C02_extended_opcodes_test.bin";
-#endif
-
 TEST_F(testClass, TestLoad65C02ExtendedOpcodesTestSuite)
 {
 #ifdef RUN_65C02_FUNCTIONAL_TEST
 	// Given:
-	constexpr Word haltAddress = 0x1a95;
+	static const char *fileName = BINFILE_PATH "/65C02_extended_opcodes_test_without_illegal_instructions.bin";
+	constexpr Word haltAddress  = 0x1a95;
+	constexpr Word startAddress = 0x0400;
 
 	// When:
-	mem.loadDataFromFile(fileName65C02, 0x0000);
-	cpu.setResetVector(0x0400);
+	mem.loadDataFromFile(fileName, 0x0000);
+	cpu.setResetVector(startAddress);
 	cpu.setHaltAddress(haltAddress);
 	cpu.loopDetection(true); // Force a halt on 'jmp *'
 	cpu.Reset();
 
 	//Then:
-	std::cout << "# 65C02 extended opcode functional tests, can take 20 to 30 seconds..." << std::endl;
-	std::cout << "#  Test will drop into debugger if test fails" << std::endl;
+	std::cout << "# 65C02 Extended Opcode Functional Tests (can take 20 to 30 seconds)" << std::endl;
 
 	while (!cpu.isPCAtHaltAddress()) 
 		cpu.execute();

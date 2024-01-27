@@ -20,26 +20,51 @@
 # error "Macro 'testClass' not defined"
 #endif
 
-#ifdef RUN_6502_FUNCTIONAL_TEST
-static const char *fileName6502 = BINFILE_PATH "/6502_functional_test.bin";
-#endif
-
 TEST_F(testClass, TestLoad6502TestSuite)
 {
 #ifdef RUN_6502_FUNCTIONAL_TEST
 	// Given:
-	constexpr Word haltAddress = 0x3469;
+	static const char *fileName = BINFILE_PATH "/6502_functional_test.bin";
+	constexpr Word haltAddress  = 0x3469;
+	constexpr Word startAddress = 0x0400;
 
 	// When:
-	mem.loadDataFromFile(fileName6502, 0x0000);
-	cpu.setResetVector(0x0400);
+	mem.loadDataFromFile(fileName, 0x0000);
+	cpu.setResetVector(startAddress);
 	cpu.setHaltAddress(haltAddress);
 	cpu.loopDetection(true); // Force a halt on 'jmp *'
 	cpu.Reset();
 
 	//Then:
-	std::cout << "# 6502 functional tests, can take 20 to 30 seconds..." << std::endl;
-	std::cout << "#  Test will drop into debugger in case of failure" << std::endl;
+	std::cout << "# 6502 Functional Test (can take 20 to 30 seconds)" << std::endl;
+
+	// Uncomment to start in debugger
+	//cpu.SetDebug(true);
+	
+	while (!cpu.isPCAtHaltAddress())
+		cpu.execute();
+
+	EXPECT_EQ(cpu.getPC(), haltAddress);
+#endif
+}
+
+TEST_F(testClass, TestLoad6502DecimalTestSuite)
+{
+#ifdef RUN_6502_DECIMAL_TEST
+	// Given:
+	static const char *fileName = BINFILE_PATH "/6502_decimal_test.bin";
+	constexpr Word haltAddress  = 0x044b;
+	constexpr Word startAddress = 0x0400;
+
+	// When:
+	mem.loadDataFromFile(fileName, 0x0000);
+	cpu.setResetVector(startAddress);
+	cpu.setHaltAddress(haltAddress);
+	cpu.loopDetection(true); // Force a halt on 'jmp *'
+	cpu.Reset();
+
+	//Then:
+	std::cout << "# 6502 decimal tests" << std::endl;
 
 	// Uncomment to start in debugger
 	//cpu.SetDebug(true);

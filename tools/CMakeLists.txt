@@ -22,8 +22,26 @@ source_group("src" FILE ${BIN2HEX_SOURCES})
 add_executable(bin2hex ${BIN2HEX_SOURCES})
 target_link_libraries(bin2hex fmt)
 
-
-# Copy apple1 to {BUILDDIR}/bin
+# Copy bin2hex to {BUILDDIR}/bin
 add_custom_command(TARGET bin2hex POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:bin2hex>" "${BINDIR}")
+
+# tester 
+set (TESTER_SOURCES "tester.cc")
+source_group("src" FILE ${TESTER_SOURCES})
+include_directories(${CMAKE_SOURCE_DIR}/apple1)  
+add_executable(tester ${TESTER_SOURCES})
+target_link_libraries(tester 65C02 6502) 
+
+if(LINUX)
+  target_link_libraries(tester readline fmt)
+elseif(APPLE)
+	target_link_libraries(tester readline fmt::fmt-header-only)
+elseif(MSVC)
+	target_link_libraries(tester fmt::fmt-header-only)
+endif()
+
+add_custom_command(TARGET tester POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:tester>" "${BINDIR}")

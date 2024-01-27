@@ -26,6 +26,7 @@
 // 
 // To disable this test comment out the next line
 #define RUN_6502_FUNCTIONAL_TEST
+#define RUN_6502_DECIMAL_TEST
 
 class MOS6502XXXFunctionalTestSuite : public testing::Test {
 public:	
@@ -34,6 +35,7 @@ public:
 
 	virtual void SetUp() {
 		mem.mapRAM(0, MOS6502::MAX_MEM);
+		std::cout << "## Functional tests will drop into debugger in case of failure" << std::endl;
 	}
 
 	virtual void TearDown() {
