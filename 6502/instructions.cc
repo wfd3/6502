@@ -16,14 +16,14 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "6502.h"
+#include <6502.h>
 
 //////////
 // Helper functions
 
 // The shift and rotate instructions (ASL, LSR, ROL, ROR) can operate on A implicitly, or on 
 // data in memory.  These helpers make that a bit easier.
-void MOS6502::getAorData(Byte& data, Byte opcode, Word& address) {
+void MOS6502::getAorData(Byte& data, const Byte opcode, Word& address) {
 	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
 
 	if (accumulator)
@@ -34,7 +34,7 @@ void MOS6502::getAorData(Byte& data, Byte opcode, Word& address) {
 	}
 }
 
-void MOS6502::putAorData(Byte data, Byte opcode, Word address) {
+void MOS6502::putAorData(Byte data, const Byte opcode, Word address) {
 	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
 
 	if (accumulator)
@@ -44,7 +44,7 @@ void MOS6502::putAorData(Byte data, Byte opcode, Word address) {
 }
 
 // Set PC to @address if @condition is true
-void MOS6502::doBranch(bool condition, Byte opcode) {
+void MOS6502::doBranch(bool condition, const Byte opcode) {
 	Word address = getAddress(opcode);
 
 	if (condition) {
@@ -141,7 +141,7 @@ void MOS6502::doADC(Byte operand) {
 // CPU Instructions
 
 // ADC
-void MOS6502::ins_adc(Byte opcode) {
+void MOS6502::ins_adc(const Byte opcode) {
 	Byte operand = getData(opcode);
 	
 	if (Flags.D) {
@@ -152,7 +152,7 @@ void MOS6502::ins_adc(Byte opcode) {
 }
 
 // AND
-void MOS6502::ins_and(Byte opcode) {
+void MOS6502::ins_and(const Byte opcode) {
 	Byte data = getData(opcode);
 	A &= data;
 	setFlagZByValue(A);
@@ -160,7 +160,7 @@ void MOS6502::ins_and(Byte opcode) {
 }
 
 // ASL
-void MOS6502::ins_asl(Byte opcode) {
+void MOS6502::ins_asl(const Byte opcode) {
 	Word address;
 	Byte data;
 	
@@ -179,22 +179,22 @@ void MOS6502::ins_asl(Byte opcode) {
 }
 
 // BCC
-void MOS6502::ins_bcc(Byte opcode) {
+void MOS6502::ins_bcc(const Byte opcode) {
 	doBranch(!Flags.C, opcode);
 }
 
 // BCS
-void MOS6502::ins_bcs(Byte opcode) {
+void MOS6502::ins_bcs(const Byte opcode) {
 	doBranch(Flags.C, opcode);
 }
 
 // BEQ
-void MOS6502::ins_beq(Byte opcode) {
+void MOS6502::ins_beq(const Byte opcode) {
 	doBranch(Flags.Z, opcode);
 }
 
 // BIT
-void MOS6502::ins_bit(Byte opcode) {
+void MOS6502::ins_bit(const Byte opcode) {
 	Byte data;
 
 	data = getData(opcode);
@@ -205,22 +205,22 @@ void MOS6502::ins_bit(Byte opcode) {
 }
 
 // BMI
-void MOS6502::ins_bmi(Byte opcode) {
+void MOS6502::ins_bmi(const Byte opcode) {
 	doBranch(Flags.N, opcode);
 }
 
 // BNE
-void MOS6502::ins_bne(Byte opcode) {
+void MOS6502::ins_bne(const Byte opcode) {
 	doBranch(!Flags.Z, opcode);
 }
 
 // BPL
-void MOS6502::ins_bpl(Byte opcode) {
+void MOS6502::ins_bpl(const Byte opcode) {
 	doBranch(!Flags.N, opcode);
 }
 
 // BRK
-void MOS6502::ins_brk([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_brk([[maybe_unused]] const Byte opcode) {
 	// push PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
 	addBacktrace(PC - 1);
@@ -231,41 +231,41 @@ void MOS6502::ins_brk([[maybe_unused]] Byte opcode) {
 }
 
 // BVC
-void MOS6502::ins_bvc(Byte opcode) {
+void MOS6502::ins_bvc(const Byte opcode) {
 	doBranch(!Flags.V, opcode);
 }
 
 // BVS
-void MOS6502::ins_bvs(Byte opcode) {
+void MOS6502::ins_bvs(const Byte opcode) {
 	doBranch(Flags.V, opcode);
 }
 
 // CLC
-void MOS6502::ins_clc([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_clc([[maybe_unused]] const Byte opcode) {
 	Flags.C = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLD
-void MOS6502::ins_cld([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_cld([[maybe_unused]] const Byte opcode) {
 	Flags.D = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLI
-void MOS6502::ins_cli([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_cli([[maybe_unused]] const Byte opcode) {
 	Flags.I = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CLV
-void MOS6502::ins_clv([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_clv([[maybe_unused]] const Byte opcode) {
 	Flags.V = 0;
 	Cycles++;		// Single byte instruction
 }
 
 // CMP
-void MOS6502::ins_cmp(Byte opcode) {
+void MOS6502::ins_cmp(const Byte opcode) {
 	Byte data = getData(opcode);
 
 	Flags.C = A >= data;
@@ -276,7 +276,7 @@ void MOS6502::ins_cmp(Byte opcode) {
 }
 
 // CPX
-void MOS6502::ins_cpx(Byte opcode) {
+void MOS6502::ins_cpx(const Byte opcode) {
 	Byte data = getData(opcode);
 
 	Flags.C = X >= data;
@@ -287,7 +287,7 @@ void MOS6502::ins_cpx(Byte opcode) {
 }
 
 // CPY
-void MOS6502::ins_cpy(Byte opcode) {
+void MOS6502::ins_cpy(const Byte opcode) {
 	Byte data = getData(opcode);
 	
 	Flags.C = Y >= data;
@@ -298,7 +298,7 @@ void MOS6502::ins_cpy(Byte opcode) {
 }
 
 // DEC
-void MOS6502::ins_dec(Byte opcode) {
+void MOS6502::ins_dec(const Byte opcode) {
 	Word address;
 	Byte data;
 
@@ -314,7 +314,7 @@ void MOS6502::ins_dec(Byte opcode) {
 }
 
 // DEX
-void MOS6502::ins_dex([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_dex([[maybe_unused]] const Byte opcode) {
 	X--;
 	setFlagNByValue(X);
 	setFlagZByValue(X);
@@ -322,7 +322,7 @@ void MOS6502::ins_dex([[maybe_unused]] Byte opcode) {
 }
 
 // DEY
-void MOS6502::ins_dey([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_dey([[maybe_unused]] const Byte opcode) {
 	Y--;
 	setFlagNByValue(Y);
 	setFlagZByValue(Y);
@@ -330,7 +330,7 @@ void MOS6502::ins_dey([[maybe_unused]] Byte opcode) {
 }
 
 // EOR
-void MOS6502::ins_eor(Byte opcode) {
+void MOS6502::ins_eor(const Byte opcode) {
 	Byte data;
 
 	data = getData(opcode);
@@ -340,7 +340,7 @@ void MOS6502::ins_eor(Byte opcode) {
 }
 
 // INC
-void MOS6502::ins_inc(Byte opcode) {
+void MOS6502::ins_inc(const Byte opcode) {
 	Word address;
 	Byte data;
 
@@ -356,7 +356,7 @@ void MOS6502::ins_inc(Byte opcode) {
 }
 
 // INX
-void MOS6502::ins_inx([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_inx([[maybe_unused]] const Byte opcode) {
 	X++;
 	setFlagZByValue(X);
 	setFlagNByValue(X);
@@ -364,7 +364,7 @@ void MOS6502::ins_inx([[maybe_unused]] Byte opcode) {
 }
 
 // INY
-void MOS6502::ins_iny([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_iny([[maybe_unused]] const Byte opcode) {
 	Y++;
 	setFlagZByValue(Y);
 	setFlagNByValue(Y);
@@ -372,7 +372,7 @@ void MOS6502::ins_iny([[maybe_unused]] Byte opcode) {
 }
 
 // JMP
-void MOS6502::ins_jmp(Byte opcode) {
+void MOS6502::ins_jmp(const Byte opcode) {
 	Word address = readWord(PC);
 	bool indirect = _instructions.at(opcode).addrmode == AddressingMode::Indirect;
 	
@@ -390,7 +390,7 @@ void MOS6502::ins_jmp(Byte opcode) {
 }
 
 // JSR
-void MOS6502::ins_jsr([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_jsr([[maybe_unused]] const Byte opcode) {
 	addBacktrace(PC - 1);
 
 	pushWord(PC + 1);
@@ -399,28 +399,28 @@ void MOS6502::ins_jsr([[maybe_unused]] Byte opcode) {
 }
 
 // LDA
-void MOS6502::ins_lda(Byte opcode) {
+void MOS6502::ins_lda(const Byte opcode) {
 	A = getData(opcode);
 	setFlagZByValue(A);
 	setFlagNByValue(A);
 }
 
 // LDX
-void MOS6502::ins_ldx(Byte opcode) {
+void MOS6502::ins_ldx(const Byte opcode) {
 	X = getData(opcode);
 	setFlagZByValue(X);
 	setFlagNByValue(X);
 }
 
 // LDY
-void MOS6502::ins_ldy(Byte opcode) {
+void MOS6502::ins_ldy(const Byte opcode) {
 	Y = getData(opcode);
 	setFlagZByValue(Y);
 	setFlagNByValue(Y);
 }
 
 // LSR
-void MOS6502::ins_lsr(Byte opcode) {
+void MOS6502::ins_lsr(const Byte opcode) {
 	Word address;
 	Byte data;
 
@@ -439,33 +439,33 @@ void MOS6502::ins_lsr(Byte opcode) {
 }
 
 // NOP
-void MOS6502::ins_nop([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_nop([[maybe_unused]] const Byte opcode) {
 	// NOP, like all single byte instructions, takes
 	// two cycles.
 	Cycles++;
 }
 
 // ORA
-void MOS6502::ins_ora(Byte opcode) {
+void MOS6502::ins_ora(const Byte opcode) {
 	A |= getData(opcode);
 	setFlagNByValue(A);
 	setFlagZByValue(A);
 }
 
 // PHA
-void MOS6502::ins_pha([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_pha([[maybe_unused]] const Byte opcode) {
 	push(A);
 	Cycles++;		// Single byte instruction
 }
 
 // PHP
-void MOS6502::ins_php([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_php([[maybe_unused]] const Byte opcode) {
 	pushPS();
 	Cycles++;		// Single byte instruction
 }
 
 // PLA
-void MOS6502::ins_pla([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_pla([[maybe_unused]] const Byte opcode) {
 	A = pop();
 	setFlagNByValue(A);
 	setFlagZByValue(A);
@@ -473,13 +473,13 @@ void MOS6502::ins_pla([[maybe_unused]] Byte opcode) {
 }
 
 // PLP
-void MOS6502::ins_plp([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_plp([[maybe_unused]] const Byte opcode) {
 	popPS();
 	Cycles += 2;
 }
 
 // ROL
-void MOS6502::ins_rol(Byte opcode) {
+void MOS6502::ins_rol(const Byte opcode) {
 	Word address;
 	Byte data, oldCarryFlag;
 	
@@ -500,7 +500,7 @@ void MOS6502::ins_rol(Byte opcode) {
 }
 
 // ROR
-void MOS6502::ins_ror(Byte opcode) {
+void MOS6502::ins_ror(const Byte opcode) {
 	Word address;
 	Byte data, newCarryFlag;
 	
@@ -522,7 +522,7 @@ void MOS6502::ins_ror(Byte opcode) {
 }
 
 // RTI
-void MOS6502::ins_rti([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_rti([[maybe_unused]] const Byte opcode) {
 	removeBacktrace();
 	popPS();
 	PC = popWord();
@@ -530,14 +530,14 @@ void MOS6502::ins_rti([[maybe_unused]] Byte opcode) {
 }
 
 // RTS
-void MOS6502::ins_rts([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_rts([[maybe_unused]] const Byte opcode) {
 	removeBacktrace();
 	PC = popWord() + 1;
 	Cycles += 3;	       
 }
 
 // SBC
-void MOS6502::ins_sbc(Byte opcode) {
+void MOS6502::ins_sbc(const Byte opcode) {
 	Byte operand = getData(opcode);
 
 	if (Flags.D) {
@@ -548,43 +548,43 @@ void MOS6502::ins_sbc(Byte opcode) {
 }
 
 // SEC
-void MOS6502::ins_sec([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_sec([[maybe_unused]] const Byte opcode) {
 	Flags.C = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // SED
-void MOS6502::ins_sed([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_sed([[maybe_unused]] const Byte opcode) {
 	Flags.D = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // SEI
-void MOS6502::ins_sei([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_sei([[maybe_unused]] const Byte opcode) {
 	Flags.I = 1;
 	Cycles++;		// Single byte instruction
 }
 
 // STA
-void MOS6502::ins_sta(Byte opcode) {
+void MOS6502::ins_sta(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, A);
 }
 
 // STX
-void MOS6502::ins_stx(Byte opcode) {
+void MOS6502::ins_stx(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, X);
 }
 
 // STY
-void MOS6502::ins_sty(Byte opcode) {
+void MOS6502::ins_sty(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, Y);
 }
 
 // TAX
-void MOS6502::ins_tax([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_tax([[maybe_unused]] const Byte opcode) {
 	X = A;
 	setFlagZByValue(X);
 	setFlagNByValue(X);
@@ -592,7 +592,7 @@ void MOS6502::ins_tax([[maybe_unused]] Byte opcode) {
 }
 
 // TAY
-void MOS6502::ins_tay([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_tay([[maybe_unused]] const Byte opcode) {
 	Y = A;
 	setFlagZByValue(Y);
 	setFlagNByValue(Y);
@@ -600,7 +600,7 @@ void MOS6502::ins_tay([[maybe_unused]] Byte opcode) {
 }
 
 // TSX
-void MOS6502::ins_tsx([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_tsx([[maybe_unused]] const Byte opcode) {
 	X = SP;
 	setFlagZByValue(X);
 	setFlagNByValue(X);
@@ -608,7 +608,7 @@ void MOS6502::ins_tsx([[maybe_unused]] Byte opcode) {
 }
 
 // TXA
-void MOS6502::ins_txa([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_txa([[maybe_unused]] const Byte opcode) {
 	A = X;
 	setFlagZByValue(A);
 	setFlagNByValue(A);
@@ -616,13 +616,13 @@ void MOS6502::ins_txa([[maybe_unused]] Byte opcode) {
 }
 
 // TXS
-void MOS6502::ins_txs([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_txs([[maybe_unused]] const Byte opcode) {
 	SP = X;
 	Cycles++;
 }
 
 // TYA
-void MOS6502::ins_tya([[maybe_unused]] Byte opcode) {
+void MOS6502::ins_tya([[maybe_unused]] const Byte opcode) {
 	A = Y;
 	setFlagZByValue(A);
 	setFlagNByValue(A);

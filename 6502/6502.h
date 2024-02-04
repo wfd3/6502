@@ -358,7 +358,7 @@ protected:
 	using _instructionMap_t = std::map<Byte, instruction>;
 	_instructionMap_t _instructions;
 
-	std::map<Byte, instruction> setupInstructionMap();
+	const _instructionMap_t setupInstructionMap();
 
 	// CPU functions
 	void exception(const std::string &);
@@ -528,30 +528,30 @@ private:
 
 	static std::vector<debugCommand> setupDebugCommands();
 	bool matchCommand(const std::string &, debugFn_t &);
-	bool helpCmd(std::string &);
-	bool listCmd(std::string &);
-	bool loadCmd(std::string &);
-	bool stackCmd(std::string &);
-	bool breakpointCmd(std::string &);
-	bool cpustateCmd(std::string &);
-	bool autostateCmd(std::string &);
-	bool resetListPCCmd(std::string &);
-	bool memdumpCmd(std::string &);
-	bool memmapCmd(std::string &);
-	bool setCmd(std::string &);
-	bool resetCmd(std::string &);
-	bool continueCmd(std::string &);
-	bool loopdetectCmd(std::string &);
-	bool backtraceCmd(std::string &);
-	bool labelCmd(std::string &);
-	bool whereCmd(std::string &);
-	bool watchCmd(std::string &);
-	bool quitCmd(std::string &);
-	bool findCmd(std::string &);
-	bool clockCmd(std::string &);
-	bool loadScriptCmd(std::string &);
-	bool savememCmd(std::string &);
-	bool loadhexCmd(std::string &);
+	bool helpCmd(std::string&);
+	bool listCmd(std::string&);
+	bool loadCmd(std::string&);
+	bool stackCmd(std::string&);
+	bool breakpointCmd(std::string&);
+	bool cpustateCmd(std::string&);
+	bool autostateCmd(std::string&);
+	bool resetListPCCmd(std::string&);
+	bool memdumpCmd(std::string&);
+	bool memmapCmd(std::string&);
+	bool setCmd(std::string&);
+	bool resetCmd(std::string&);
+	bool continueCmd(std::string&);
+	bool loopdetectCmd(std::string&);
+	bool backtraceCmd(std::string&);
+	bool labelCmd(std::string&);
+	bool whereCmd(std::string&);
+	bool watchCmd(std::string&);
+	bool quitCmd(std::string&);
+	bool findCmd(std::string&);
+	bool clockCmd(std::string&);
+	bool loadScriptCmd(std::string&);
+	bool savememCmd(std::string&);
+	bool loadhexCmd(std::string&);
 
 	// Hex file
 	bool loadHexFile(const std::string&);

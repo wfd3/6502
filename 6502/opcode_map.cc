@@ -20,15 +20,14 @@
 
 // The instructions.  Flags field provides information about any special
 // handling the instruction requires.  For the 6502, the flags are:
-//  - InstructionFlags::Branch: Add a cycle if conditional branch is taken (all
-//                  conditional branches).
+//  - InstructionFlags::Branch: Add a cycle if conditional branch is taken (all conditional branches).
 //  - InstructionFlags::PageBoundary : Add two cycles if an instruction causes a read from
 //                  an address on an adjacent page, specifically indexed addressing modes.
 //
 // See http://www.6502.org/users/obelisk/6502/addressing.html for more
 // information.
 
-MOS6502::_instructionMap_t MOS6502::setupInstructionMap() { 
+const MOS6502::_instructionMap_t MOS6502::setupInstructionMap() { 
 	return  {
 		// The table below is formatted as follows:
 		// { Opcode, 

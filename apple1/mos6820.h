@@ -60,7 +60,7 @@ public:
 		return fmt::format("MOS6820");
     }
 
-	Cell Read(Address address) override {
+	Cell Read(const Address address) override {
 		auto port = this->decodeAddress(address);
 
 		switch (port) {
@@ -75,7 +75,7 @@ public:
 		return 0;
 	}
 
-	void Write(Address address, Cell c) override {
+	void Write(const Address address, const Cell c) override {
 		uint8_t port = this->decodeAddress(address);
 
 		switch (port) {
@@ -349,7 +349,7 @@ private:
         return retval;
 	}
 
-	void displayWrite(uint8_t port, Cell c) {
+	void displayWrite(const uint8_t port, const Cell c) {
 		switch (port) {
 		case DISPLAY:
 			_dspData = c;
@@ -358,7 +358,7 @@ private:
 		}
 	}
 
-	Cell displayRead(uint8_t port) const {
+	Cell displayRead(const uint8_t port) const {
 		switch (port) {
 		case DISPLAY:
 			return 0x7f;
@@ -369,7 +369,7 @@ private:
 		return 0;
 	}
 
-	Cell keyboardRead(uint8_t port) {
+	Cell keyboardRead(const uint8_t port) {
 		Cell ch;
 
 		switch (port) {
@@ -407,7 +407,7 @@ private:
 		}
 	}
 
-	void keyboardWrite([[maybe_unused]] uint8_t port, [[maybe_unused]] Cell c) { }
+	void keyboardWrite([[maybe_unused]] const uint8_t port, [[maybe_unused]] const Cell c) { }
 };
 
 #ifdef _WIN64

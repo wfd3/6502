@@ -65,7 +65,7 @@ set (R65C02_TEST_SOURCES
 
 # 65C02 functional tests
 set (65C02_FUNCTIONAL_TEST_SOURCES
-"65C02_tests_xxx_functional_test_suite.cc"
+"65C02_tests_functional_test_suite.cc"
 )
 
 # Regression tests

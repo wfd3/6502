@@ -17,16 +17,16 @@
 
 #include <65C02.h>
 
-MOS6502::AddressingMode MOS65C02::convertAddressingMode(AddressingMode mode) {
+MOS6502::AddressingMode MOS65C02::convertAddressingMode(const AddressingMode mode) {
 	return static_cast<MOS6502::AddressingMode>(mode);
 }
 
-bool MOS65C02::isAddrMode(Byte opcode, AddressingMode addrmode) {
+bool MOS65C02::isAddrMode(const Byte opcode, const AddressingMode addrmode) {
 	return static_cast<MOS65C02::AddressingMode>(_instructions.at(opcode).addrmode) == addrmode;
 }
 
 // 65C02 addressing modes.
-Word MOS65C02::getAddress(Byte opcode) {
+Word MOS65C02::getAddress(const Byte opcode) {
 	Word address;
 
 	auto checkPageBoundary = [&](Byte op, Word addr, Byte reg) {
@@ -61,8 +61,8 @@ Word MOS65C02::getAddress(Byte opcode) {
 }
 
 // Argument decoding for 65C02/R65C02
-void MOS65C02::decodeArgs(bool atPC, Byte ins, std::string& disassembly, std::string& opcodes, std::string& address, 
-				std::string& computedAddr) {
+void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassembly, std::string& opcodes, 
+						  std::string& address, std::string& computedAddr) {
 	Byte byteval;
 	Word wordval;
 	std::string out, addr, label;
@@ -149,7 +149,8 @@ void MOS65C02::decodeArgs(bool atPC, Byte ins, std::string& disassembly, std::st
 //////////
 // 65C02 specific instructions
 
-void MOS65C02::ins_bra(Byte opcode) {
+// BRA
+void MOS65C02::ins_bra(const Byte opcode) {
 	Word address = getAddress(opcode);
 	
 	if ((PC >> 8) != (address >> 8)) { // Crossed page boundary
@@ -161,7 +162,8 @@ void MOS65C02::ins_bra(Byte opcode) {
 	Cycles++;
 }
 
-void MOS65C02::ins_stz(Byte opcode) {
+// STZ
+void MOS65C02::ins_stz(const Byte opcode) {
 	Address_t address = getAddress(opcode);
 	writeByte(address, 0);
 
@@ -169,7 +171,8 @@ void MOS65C02::ins_stz(Byte opcode) {
 		Cycles++;
 }
 
-void MOS65C02::ins_trb(Byte opcode) {
+// TRB
+void MOS65C02::ins_trb(const Byte opcode) {
 	Word address = getAddress(opcode);
 	Byte data = readByte(address);
 	writeByte(address, data & ~A);
@@ -177,7 +180,8 @@ void MOS65C02::ins_trb(Byte opcode) {
 	Cycles++;
 }
 
-void MOS65C02::ins_tsb(Byte opcode) {
+// TSB
+void MOS65C02::ins_tsb(const Byte opcode) {
 	Word address = getAddress(opcode);
 	Byte data = readByte(address);
 	writeByte(address, data | A);
@@ -185,23 +189,28 @@ void MOS65C02::ins_tsb(Byte opcode) {
 	Cycles++;
 }
 
-void MOS65C02::ins_phx([[maybe_unused]] Byte opcode) {
+// PHX
+void MOS65C02::ins_phx([[maybe_unused]] const Byte opcode) {
 	push(X);
 	Cycles++;
 }
 
-void MOS65C02::ins_phy([[maybe_unused]] Byte opcode) {
+// PHY
+void MOS65C02::ins_phy([[maybe_unused]] const Byte opcode) {
 	push(Y);
 	Cycles++;
 }
 
-void MOS65C02::ins_plx([[maybe_unused]] Byte opcode) {
+// PLX
+void MOS65C02::ins_plx([[maybe_unused]] const Byte opcode) {
 	X = pop();
 	setFlagNByValue(X);
 	setFlagZByValue(X);
 	Cycles += 2;
 }
-void MOS65C02::ins_ply([[maybe_unused]] Byte opcode) {
+
+// PLY
+void MOS65C02::ins_ply([[maybe_unused]] const Byte opcode) {
 	Y = pop();
 	setFlagNByValue(Y);
 	setFlagZByValue(Y);
@@ -209,9 +218,10 @@ void MOS65C02::ins_ply([[maybe_unused]] Byte opcode) {
 }
 
 //////////
-// 6502 instructions with new modes/flags on 65C02
+// 6502 instructions with new addressing modes or behaviors on 65C02
 
-void MOS65C02::ins_adc(Byte opcode) {
+// ADC
+void MOS65C02::ins_adc(const Byte opcode) {
 	MOS6502::ins_adc(opcode);
 	if (Flags.D) {
 		Cycles++;
@@ -219,7 +229,8 @@ void MOS65C02::ins_adc(Byte opcode) {
 	}
 }
 
-void MOS65C02::ins_bit(Byte opcode) {
+// BIT
+void MOS65C02::ins_bit(const Byte opcode) {
 	bool V, N;
 	
 	if (isAddrMode(opcode, AddressingMode::Immediate)) {
@@ -235,12 +246,14 @@ void MOS65C02::ins_bit(Byte opcode) {
 	}
 }
 
-void MOS65C02::ins_brk(Byte opcode) {
+// BRK
+void MOS65C02::ins_brk(const Byte opcode) {
 	MOS6502::ins_brk(opcode);
 	Flags.D = 0;
 }
 
-void MOS65C02::ins_dec(Byte opcode) {
+// DEC
+void MOS65C02::ins_dec(const Byte opcode) {
 	bool accumulator = isAddrMode(opcode, AddressingMode::Accumulator);
 	if (accumulator) {
 		A--;
@@ -252,7 +265,8 @@ void MOS65C02::ins_dec(Byte opcode) {
 	}
 }
 
-void MOS65C02::ins_inc(Byte opcode) {
+// INC
+void MOS65C02::ins_inc(const Byte opcode) {
 	bool accumulator = isAddrMode(opcode, AddressingMode::Accumulator);
 	if (accumulator) {
 		A++;
@@ -264,8 +278,9 @@ void MOS65C02::ins_inc(Byte opcode) {
 	}
 }
 
-// 65C02 JMP fixes the 6502 JMP bug and introduces a new addressing mode
-void MOS65C02::ins_jmp(Byte opcode) {
+// JMP
+//   65C02 JMP fixes the 6502 JMP bug and introduces a new addressing mode
+void MOS65C02::ins_jmp(const Byte opcode) {
 	Word address = readWord(PC);
 	
 	bool indirect = isAddrMode(opcode, AddressingMode::Indirect);
@@ -285,39 +300,48 @@ void MOS65C02::ins_jmp(Byte opcode) {
 //////////
 // 6502 instructions that support new 65C02 addressing modes
 
-void MOS65C02::ins_and(Byte opcode) {
+// AND
+void MOS65C02::ins_and(const Byte opcode) {
 	MOS6502::ins_and(opcode);
 }
 
-void MOS65C02::ins_asl(Byte opcode) {
+// ASL
+void MOS65C02::ins_asl(const Byte opcode) {
 	MOS6502::ins_asl(opcode);
 }
 
-void MOS65C02::ins_cmp(Byte opcode) {
+// CMP
+void MOS65C02::ins_cmp(const Byte opcode) {
 	MOS6502::ins_cmp(opcode);
 }
 
-void MOS65C02::ins_eor(Byte opcode) {
+// EOR
+void MOS65C02::ins_eor(const Byte opcode) {
 	MOS6502::ins_eor(opcode);
 }
 
-void MOS65C02::ins_lda(Byte opcode) {
+// LDA
+void MOS65C02::ins_lda(const Byte opcode) {
 	MOS6502::ins_lda(opcode);
 }
-	
-void MOS65C02::ins_lsr(Byte opcode) {
+
+// LSR
+void MOS65C02::ins_lsr(const Byte opcode) {
 	MOS6502::ins_lsr(opcode);
 }
 
-void MOS65C02::ins_ora(Byte opcode) {
+// ORA
+void MOS65C02::ins_ora(const Byte opcode) {
 	MOS6502::ins_ora(opcode);
 }
 
-void MOS65C02::ins_ror(Byte opcode) {
+// ROR
+void MOS65C02::ins_ror(const Byte opcode) {
 	MOS6502::ins_ror(opcode);
 }
 
-void MOS65C02::ins_sbc(Byte opcode) {
+// SBC
+void MOS65C02::ins_sbc(const Byte opcode) {
 	MOS6502::ins_sbc(opcode);
 	if (Flags.D) {
 		Cycles++;
@@ -325,15 +349,16 @@ void MOS65C02::ins_sbc(Byte opcode) {
 	}
 }
 
-void MOS65C02::ins_sta(Byte opcode) {
+// STA
+void MOS65C02::ins_sta(const Byte opcode) {
 	MOS6502::ins_sta(opcode);
 }
 
 // Instructions only available on the Rockwell variants of the 65C02 (R65C02).
 // These are assumed by the extended opcode tests.
 
-// Branch on Bit Reset
-void MOS65C02::ins_bbr(Byte opcode) {
+// BBR - Branch on Bit Reset
+void MOS65C02::ins_bbr(const Byte opcode) {
 	Byte zpaddr = readByteAtPC();
 	Word address = getAddress(opcode);
 	Byte m = readByte(zpaddr);
@@ -344,8 +369,8 @@ void MOS65C02::ins_bbr(Byte opcode) {
 	Cycles++;
 }
 
-// Branch on Bit Set -- sets D flag??
-void MOS65C02::ins_bbs(Byte opcode) {
+// BBS - Branch on Bit Set
+void MOS65C02::ins_bbs(const Byte opcode) {
 	Byte zpaddr = readByteAtPC();
 	Word address = getAddress(opcode);
 	Byte m = readByte(zpaddr);
@@ -356,8 +381,8 @@ void MOS65C02::ins_bbs(Byte opcode) {
 	Cycles++;
 }
 
-// Reset Memory Bit
-void MOS65C02::ins_rmb(Byte opcode) {
+// RMB - Reset Memory Bit
+void MOS65C02::ins_rmb(const Byte opcode) {
 	Byte zpaddr = readByteAtPC();
 	Byte bitmask = 1 << ((opcode >> 4));
 	Byte m = readByte(zpaddr);
@@ -366,8 +391,8 @@ void MOS65C02::ins_rmb(Byte opcode) {
 	Cycles++;
 }
 
-// Set Memory Bit
-void MOS65C02::ins_smb(Byte opcode) {
+// SMB - Set Memory Bit
+void MOS65C02::ins_smb(const Byte opcode) {
 	Byte zpaddr = readByteAtPC();
 	Byte bitmask = 1 << ((opcode >> 4) - 8);
 	Byte m = readByte(zpaddr);
@@ -380,7 +405,7 @@ void MOS65C02::ins_smb(Byte opcode) {
 // 65C02/R65C02 instruction map
 
 MOS6502::_instructionMap_t MOS65C02::setup65C02Instructions() {
-	_instructionMap_t newInstructions = {
+	const _instructionMap_t newInstructions = {
 		// The table below is formatted as follows:
 		// { Opcode,
 		//   {"name", AddressingMode, ByteLength, CyclesUsed, Flags, Function pointer for instruction}}
@@ -643,7 +668,6 @@ MOS6502::_instructionMap_t MOS65C02::setup65C02Instructions() {
 		{ Opcodes.BRK_IMM,
 			{ "brk", convertAddressingMode(AddressingMode::Immediate), 1, 7, InstructionFlags::None,
 			std::bind(&MOS65C02::ins_brk, this, std::placeholders::_1)}},
-
 	};
 
 	// Fold the new instructions into the 6502 instruction map

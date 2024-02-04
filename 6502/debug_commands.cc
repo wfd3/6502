@@ -36,7 +36,7 @@ Word listPC;
 #if defined(__linux__) || defined(__MACH__)
 //////////
 // readline helpers
-void getReadline(std::string &line) {
+void getReadline(std::string& line) {
 	char *c_line = readline(": ");
 	if (c_line == nullptr) { // ^D
 		line = "continue";
@@ -72,9 +72,7 @@ char* readlineCommandGenerator(const char* text, int state) {
 }
 
 // Static completion callback function outside the class
-extern "C" char **readlineCompletionCallback(const char* text,
-					     [[maybe_unused]] int start,
-					     [[maybe_unused]] int end) {
+extern "C" char **readlineCompletionCallback(const char* text, [[maybe_unused]] int start, [[maybe_unused]] int end) {
 	auto commands = MOS6502::setupDebugCommands();
 
 	rl_attempted_completion_over = 1;
@@ -225,7 +223,7 @@ std::vector<MOS6502::debugCommand> MOS6502::setupDebugCommands() {
 	};
 }
 
-bool MOS6502::helpCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::helpCmd([[maybe_unused]] std::string& line) {
 	for (const auto& cmd : _debugCommands) {
 		fmt::print("{:<10}: {}\n", cmd.command,
 			   // Add ': '
@@ -234,7 +232,7 @@ bool MOS6502::helpCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool MOS6502::listCmd(std::string &line) {
+bool MOS6502::listCmd(std::string& line) {
 
 	if (!lookupAddress(line, listPC) && !line.empty()) {
 		return false;
@@ -243,7 +241,7 @@ bool MOS6502::listCmd(std::string &line) {
 	return true;
 }
 
-bool MOS6502::loadCmd(std::string &line) {
+bool MOS6502::loadCmd(std::string& line) {
 	std::string fname;
 	Address_t address;
 
@@ -270,7 +268,7 @@ bool MOS6502::loadCmd(std::string &line) {
 	return false;
 }
 
-bool MOS6502::loadScriptCmd(std::string &line) {
+bool MOS6502::loadScriptCmd(std::string& line) {
 	std::string fname;
 
 	std::istringstream iss(line);
@@ -284,14 +282,14 @@ bool MOS6502::loadScriptCmd(std::string &line) {
 	return r;
 }
 
-bool MOS6502::loadhexCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::loadhexCmd([[maybe_unused]] std::string& line) {
 	line = stripLeadingSpaces(line);
 	line = stripTrailingSpaces(line);
 
 	return loadHexFile(line);
 }
 
-bool MOS6502::savememCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::savememCmd([[maybe_unused]] std::string& line) {
 	std::vector<std::pair<Word, Word>> ranges;
 	std::string addressRanges, filename;
 	
@@ -339,12 +337,12 @@ bool MOS6502::savememCmd([[maybe_unused]] std::string &line) {
 	return saveToHexFile(filename, ranges);
 }
 
-bool MOS6502::stackCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::stackCmd([[maybe_unused]] std::string& line) {
 	dumpStack();
 	return true;
 }
 
-bool MOS6502::breakpointCmd(std::string &line) {
+bool MOS6502::breakpointCmd(std::string& line) {
 	Word addr;
 	bool remove = false;
 
@@ -374,12 +372,12 @@ bool MOS6502::breakpointCmd(std::string &line) {
 	return true;
 }
 
-bool MOS6502::cpustateCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::cpustateCmd([[maybe_unused]] std::string& line) {
 	printCPUState();
 	return true;
 }
 
-bool MOS6502::autostateCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::autostateCmd([[maybe_unused]] std::string& line) {
 	debug_alwaysShowPS = !debug_alwaysShowPS;
 	fmt::print("Processor status auto-display ");
 	if (debug_alwaysShowPS)
@@ -389,7 +387,7 @@ bool MOS6502::autostateCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool MOS6502::resetListPCCmd(std::string &line) {
+bool MOS6502::resetListPCCmd(std::string& line) {
 	Word i;
 
 	try {
@@ -409,7 +407,7 @@ bool MOS6502::resetListPCCmd(std::string &line) {
 	return true;
 }
 
-bool MOS6502::memdumpCmd(std::string &line) {
+bool MOS6502::memdumpCmd(std::string& line) {
 	const std::string wordPattern   = R"((\w+))";  				// A word, like a label or identifier
 	const std::string offsetPattern = R"(([+-][0-9a-fA-F]+)?)"; // Optional offset, positive or negative, in hexadecimal
 	const std::string valuePattern  = R"(([0-9a-fA-F]+))";  	// A value, in hexadecimal
@@ -494,12 +492,12 @@ bool MOS6502::memdumpCmd(std::string &line) {
 	return false;
 }
 
-bool MOS6502::memmapCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::memmapCmd([[maybe_unused]] std::string& line) {
 	mem.printMap();
 	return true;
 }
 
-bool MOS6502::setCmd(std::string &line) {
+bool MOS6502::setCmd(std::string& line) {
 	std::string v;
 	std::string reg;					
 	uint64_t value;
@@ -597,7 +595,7 @@ bool MOS6502::setCmd(std::string &line) {
 	return true;
 }
 
-bool MOS6502::resetCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::resetCmd([[maybe_unused]] std::string& line) {
 	fmt::print("Resetting 6502\n");
 	Reset();    	// Enter reset
 	if (inReset())
@@ -605,7 +603,7 @@ bool MOS6502::resetCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 		
-bool MOS6502::continueCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::continueCmd([[maybe_unused]] std::string& line) {
 	if (_hitException) {
 		fmt::print("CPU Exception hit; can't continue.  Reset CPU to clear.\n");
 		return false;
@@ -614,7 +612,7 @@ bool MOS6502::continueCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool MOS6502::loopdetectCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::loopdetectCmd([[maybe_unused]] std::string& line) {
 	debug_loopDetection = !debug_loopDetection;
 	fmt::print("Loop detection ");
 	if (debug_loopDetection)
@@ -624,17 +622,17 @@ bool MOS6502::loopdetectCmd([[maybe_unused]] std::string &line) {
 	return true;
 }
 
-bool MOS6502::backtraceCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::backtraceCmd([[maybe_unused]] std::string& line) {
 	showBacktrace();
 	return true;
 }
 
-bool MOS6502::whereCmd([[maybe_unused]] std::string &line) {
+bool MOS6502::whereCmd([[maybe_unused]] std::string& line) {
 	disassemble(PC, 1);
 	return true;
 }
 
-bool MOS6502::watchCmd(std::string &line) {
+bool MOS6502::watchCmd(std::string& line) {
 	Word addr;
 	bool remove = false;
 
@@ -673,7 +671,7 @@ bool MOS6502::watchCmd(std::string &line) {
 	return true;
 }
 
-bool MOS6502::labelCmd(std::string &line) {
+bool MOS6502::labelCmd(std::string& line) {
 	Word addr;
 	bool remove = false;
 
@@ -768,7 +766,7 @@ bool MOS6502::findCmd(std::string& line) {
 	return true;
 }
 
-bool MOS6502::matchCommand(const std::string &input, debugFn_t &func) {
+bool MOS6502::matchCommand(const std::string& input, debugFn_t& func) {
 
 	for (const auto &cmd : _debugCommands) {
 		if (std::strcmp(cmd.command, input.c_str()) == 0 ||

@@ -94,13 +94,13 @@ bool MOS6502::isPCBreakpoint() {
 	return isBreakpoint(PC); 
 }
 
-bool MOS6502::isBreakpoint(Word bp) {
+bool MOS6502::isBreakpoint(const Word bp) {
 	if (bp > MAX_MEM) 
 		return false;
 	return breakpoints.find(bp) != breakpoints.end();
 }
 
-void MOS6502::deleteBreakpoint(Word bp) {
+void MOS6502::deleteBreakpoint(const Word bp) {
 	if (bp > MAX_MEM) 
 		return;
 	
@@ -116,7 +116,7 @@ void MOS6502::deleteBreakpoint(Word bp) {
 	fmt::print("\n");
 }
 
-void MOS6502::addBreakpoint(Word bp) {
+void MOS6502::addBreakpoint(const Word bp) {
 	if (bp > MAX_MEM) {
 		fmt::print("Error: Breakpoint address outside of available "
 			   "address range\n");
@@ -151,13 +151,13 @@ void MOS6502::showBacktrace() {
 		fmt::print("#{:02d}:  {}\n", cnt++, (*i).c_str());
 }
 
-void MOS6502::addBacktrace(Word backtracePC) {
+void MOS6502::addBacktrace(const Word backtracePC) {
 	std::string ins;
 	disassembleAt(backtracePC, ins);
 	backtrace.push_back(ins);
 }
 
-void MOS6502::addBacktraceInterrupt(Word backtracePC) {
+void MOS6502::addBacktraceInterrupt(const Word backtracePC) {
 	std::string ins;
 	disassembleAt(backtracePC, ins);
 	ins += " [IRQ/NMI]";
@@ -339,7 +339,7 @@ bool MOS6502::saveToHexFile(const std::string& filename, const std::vector<std::
 	return true;
 }
 
-bool MOS6502::saveToHexFile(const std::string& filename, Word startAddress, Word endAddress) {
+bool MOS6502::saveToHexFile(const std::string& filename, const Word startAddress, const Word endAddress) {
 	std::vector<std::pair<Word, Word>> range = {{startAddress, endAddress}};
 	return saveToHexFile(filename, range);
 }

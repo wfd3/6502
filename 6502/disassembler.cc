@@ -25,9 +25,8 @@
 #include <6502.h>
 #include <utils.h>
 
-void MOS6502::decodeArgs(bool atPC, Byte ins, std::string& disassembly, 
-					 std::string& opcodes, std::string& address, 
-					 std::string& computedAddr) {
+void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassembly, 
+					 std::string& opcodes, std::string& address, std::string& computedAddr) {
 
 	auto mode = _instructions.at(ins).addrmode;
 	Byte byteval;
@@ -257,7 +256,7 @@ Address_t MOS6502::disassembleAt(Address_t dPC, std::string& disassembly) {
 		decodeArgs(atPC, opcode, args, opcodes, address, computedAddress);
 	}
 
-//  B*| label^addr  : | 23 56 89 | ins     args | [opt. address]
+    //  B*| label^addr  : | 23 56 89 | ins     args | [opt. address]
 	auto addr = fmt::format("{:04x}", dPC);
 	std::string label = addressLabel(dPC);
 	if (!label.empty()) 
@@ -268,7 +267,7 @@ Address_t MOS6502::disassembleAt(Address_t dPC, std::string& disassembly) {
 
 	if (!bytes) 
 		disassembly += fmt::format("{:<20} | {:<5.5} | {}", args, address, computedAddress);
-	dPC = PC;
+    dPC = PC;
 	PC = savePC;
 	Cycles = saveCycles;
 

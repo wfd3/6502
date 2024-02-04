@@ -28,7 +28,7 @@
 #define RUN_6502_FUNCTIONAL_TEST 
 #define RUN_65C02_FUNCTIONAL_TEST
 
-class MOS65C02XXXFunctionalTestSuite : public testing::Test {
+class MOS65C02FunctionalTestSuite : public testing::Test {
 public:	
 	Memory<Address_t, Byte> mem{MOS65C02::MAX_MEM};
 	MOS65C02 cpu{mem};
@@ -64,7 +64,7 @@ public:
 	}
 };
 
-#define testClass MOS65C02XXXFunctionalTestSuite
+#define testClass MOS65C02FunctionalTestSuite
 #include "functional_tests.cc"
 
 TEST_F(testClass, TestLoad65C02ExtendedOpcodesTestSuite)

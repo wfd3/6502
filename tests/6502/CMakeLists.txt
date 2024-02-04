@@ -48,7 +48,7 @@ set (6502_REGRESSION_TEST_SOURCES
 )
 
 set (6502_FUNCTIONAL_TEST_SOURCES 
-"6502_tests_xxx_functional_test_suite.cc"
+"6502_tests_functional_test_suite.cc"
  )
 
  # Regression tests

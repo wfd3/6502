@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "6502.h"
+#include <6502.h>
 
 //////////
 // CPU Setup and reset
@@ -28,11 +28,11 @@ MOS6502::MOS6502(Memory<Address_t, Byte>& m) : mem(m),
 	initDebugger();
 }
 
-void MOS6502::setResetVector(Word address) {
+void MOS6502::setResetVector(const Word address) {
 	writeWord(RESET_VECTOR, address);
 }
 
-void MOS6502::setInterruptVector(Word address) {
+void MOS6502::setInterruptVector(const Word address) {
 	writeWord(INTERRUPT_VECTOR, address);
 }
 void MOS6502::setPendingReset() {
@@ -64,7 +64,7 @@ void MOS6502::unsetHaltAddress() {
 	_haltAddressSet = false; 
 }
 
-void MOS6502::setHaltAddress(Address_t _pc) {
+void MOS6502::setHaltAddress(const Word _pc) {
 	_haltAddress = _pc;
 	_haltAddressSet = true;
 }
@@ -73,7 +73,7 @@ bool MOS6502::isPCAtHaltAddress() {
 	return _haltAddressSet && (PC == _haltAddress);
 }
 
-void MOS6502::loopDetection(bool l) {
+void MOS6502::loopDetection(const bool l) {
 	debug_loopDetection = l;
 }
 
@@ -85,7 +85,7 @@ bool MOS6502::isInDebugMode() {
 	return _debugMode; 
 }
 
-void MOS6502::setDebugMode(bool m) { 
+void MOS6502::setDebugMode(const bool m) { 
 	_debugMode = m; 
 }
 
@@ -130,7 +130,7 @@ void MOS6502::exitReset() {
 // Stack Pointer values, exits reset so that the next call to execute...() 
 // executes code.
 #ifdef TEST_BUILD
-void MOS6502::TestReset(Word initialPC, Byte initialSP)  {
+void MOS6502::TestReset(const Word initialPC, const Byte initialSP)  {
 	_inReset = true;
 	_pendingReset = true;
 	_testReset = true;
@@ -190,7 +190,7 @@ bool MOS6502::IRQ() {
 
 //////////
 // CPU Exception
-void MOS6502::exception(const std::string &message) {
+void MOS6502::exception(const std::string& message) {
 	std::string msg = "CPU Exception: " + message;
 	_hitException = true;
 	
@@ -202,15 +202,15 @@ void MOS6502::exception(const std::string &message) {
 
 //////////
 // Flags
-bool MOS6502::isNegative(Byte val) {
+bool MOS6502::isNegative(const Byte val) {
 	return (val & NegativeBit);
 }
 
-void MOS6502::setFlagNByValue(Byte val) {
+void MOS6502::setFlagNByValue(const Byte val) {
 	Flags.N = isNegative(val);
 }
 
-void MOS6502::setFlagZByValue(Byte val) {
+void MOS6502::setFlagZByValue(const Byte val) {
 	Flags.Z = (val == 0);
 }
 
@@ -220,23 +220,23 @@ bool MOS6502::IRQBlocked() {
 
 //////////
 // Memory access
-Byte MOS6502::readByte(Word address) {
+Byte MOS6502::readByte(const Word address) {
 	Byte data = mem.Read(address);
 	Cycles++;
 	return data;
 }
 
-void MOS6502::writeByte(Word address, Byte value) {
+void MOS6502::writeByte(const Word address, const Byte value) {
 	mem.Write(address, value);
 	Cycles++;
 }
 
-Word MOS6502::readWord(Word address) {
+Word MOS6502::readWord(const Word address) {
 	Word w = readByte(address) | (readByte(address + 1) << 8);
 	return w;
 }
 
-void MOS6502::writeWord(Word address, Word word) {
+void MOS6502::writeWord(const Word address, const Word word) {
 	writeByte(address, word & 0xff);
 	writeByte(address + 1, (Byte) (word >> 8));
 }
@@ -254,7 +254,7 @@ Byte MOS6502::readByteAtPC() {
 
 //////////
 // Stack operations
-void MOS6502::push(Byte value) {
+void MOS6502::push(const Byte value) {
 	Word SPAddress = STACK_FRAME + SP;
 	writeByte(SPAddress, value);
 	SP--;
@@ -267,7 +267,7 @@ Byte MOS6502::pop() {
 	return readByte(SPAddress);
 }
 
-void MOS6502::pushWord(Word value) {
+void MOS6502::pushWord(const Word value) {
 	push((Byte) (value >> 8)); // value high
 	push((Byte) value & 0xff); // value low
 }
@@ -292,7 +292,7 @@ void MOS6502::popPS() {
 
 //////////
 // Address decoding
-Word MOS6502::getAddress(Byte opcode) {
+Word MOS6502::getAddress(const Byte opcode) {
 	Word address;
 	SByte rel;
 
@@ -379,7 +379,7 @@ Word MOS6502::getAddress(Byte opcode) {
 	return address;
 }
 
-Byte MOS6502::getData(Byte opcode) {
+Byte MOS6502::getData(const Byte opcode) {
 	Byte data = 0;
 	Word address;
 
