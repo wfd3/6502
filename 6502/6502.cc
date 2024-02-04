@@ -35,6 +35,71 @@ void MOS6502::setResetVector(Word address) {
 void MOS6502::setInterruptVector(Word address) {
 	writeWord(INTERRUPT_VECTOR, address);
 }
+void MOS6502::setPendingReset() {
+		if (!_debugMode)
+			_pendingReset = true;
+	}
+
+bool MOS6502::inReset() { 
+	return _inReset; 
+}
+
+void MOS6502::raiseIRQ() { 
+	_pendingIRQ = true; 
+}
+
+void MOS6502::raiseNMI() { 
+	_pendingNMI = true; 
+}
+
+bool MOS6502::pendingIRQ() { 
+	return _pendingIRQ; 
+}
+
+bool MOS6502::pendingNMI() { 
+	return _pendingNMI; 
+}
+	
+void MOS6502::unsetHaltAddress() { 
+	_haltAddressSet = false; 
+}
+
+void MOS6502::setHaltAddress(Address_t _pc) {
+	_haltAddress = _pc;
+	_haltAddressSet = true;
+}
+
+bool MOS6502::isPCAtHaltAddress() {
+	return _haltAddressSet && (PC == _haltAddress);
+}
+
+void MOS6502::loopDetection(bool l) {
+	debug_loopDetection = l;
+}
+
+bool MOS6502::loopDetected() { 
+	return _loopDetected;
+}
+
+bool MOS6502::isInDebugMode() { 
+	return _debugMode; 
+}
+
+void MOS6502::setDebugMode(bool m) { 
+	_debugMode = m; 
+}
+
+bool MOS6502::hitCPUException() { 
+	return _hitException; 
+}
+
+Cycles_t MOS6502::expectedCycles() {
+	return _expectedCyclesToUse; 
+}
+
+Cycles_t MOS6502::usedCycles() { 
+	return Cycles; 
+}
 
 void MOS6502::exitReset() {
 	PC = readWord(RESET_VECTOR);

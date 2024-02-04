@@ -230,7 +230,7 @@ void getReadline(std::string& line) {
 // Called by MOS6502::CPU() to initialize the debugger
 void MOS6502::initDebugger() {
 	setupReadline();
-	breakpoints.assign(mem.size(), false);
+	deleteAllBreakpoints();
 }
 
 //////////
@@ -548,27 +548,33 @@ Address_t MOS6502::disassemble(Address_t dPC, uint64_t cnt) {
 
 void MOS6502::listBreakpoints() {
 	fmt::print("Active breakpoints:\n");
-	for (Word i = 0; i < breakpoints.size(); i++) {
-		if (breakpoints[i]) {
-			fmt::print("{:04x}", i);
-			auto label = addressLabel(i);
-			if (!label.empty()) 
-				fmt::print(": {}", label);
-			fmt::print("\n");
-		}
+	for (const auto& address : breakpoints) {
+		fmt::print("{:04x}", address);
+		auto label = addressLabel(address);
+		if (!label.empty()) 
+			fmt::print(": {}", label);
+		fmt::print("\n");
 	}
 }
 
-bool MOS6502::isBreakpoint(Word _pc) {
-	if (_pc > MAX_MEM) 
+bool MOS6502::isPCBreakpoint() { 
+	return isBreakpoint(PC); 
+}
+
+bool MOS6502::isBreakpoint(Word bp) {
+	if (bp > MAX_MEM) 
 		return false;
-	return breakpoints[_pc];
+	return breakpoints.find(bp) != breakpoints.end();
 }
 
 void MOS6502::deleteBreakpoint(Word bp) {
 	if (bp > MAX_MEM) 
 		return;
-	breakpoints[bp] = false;
+	
+	if (breakpoints.erase(bp) == 0) {
+		fmt::print("No breakpoint at {:04x}\n", bp);
+		return;
+	}
 	
 	fmt::print("Removed breakpoint at {:04x}", bp);
 	auto label = addressLabel(bp);
@@ -587,13 +593,17 @@ void MOS6502::addBreakpoint(Word bp) {
 		fmt::print("Breakpoint already set at {:04x}\n", bp);
 		return;
 	}
-	breakpoints[bp] = true;
+	breakpoints.insert(bp);
 
 	fmt::print("Set breakpoint at {:04x}", bp);
 	auto label = addressLabel(bp);
 	if (!label.empty()) 
 		fmt::print(": {}", label);
 	fmt::print("\n");
+}
+
+void MOS6502::deleteAllBreakpoints() { 
+	breakpoints.clear();
 }
 
 //////////
@@ -606,7 +616,6 @@ void MOS6502::showBacktrace() {
 	fmt::print("Backtrace: {} entries\n", backtrace.size());
 	for ( ; i < backtrace.end(); i++ )
 		fmt::print("#{:02d}:  {}\n", cnt++, (*i).c_str());
-
 }
 
 void MOS6502::addBacktrace(Word backtracePC) {

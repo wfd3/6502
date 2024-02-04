@@ -69,43 +69,31 @@ public:
 
 	// CPU Setup & reset
 	MOS6502(cMemory &);
+
 	void Reset();
-	void setResetVector(Word);
-	void setPendingReset() {
-		if (!_debugMode)
-			_pendingReset = true;
-	}
-	bool inReset() { return _inReset; }
 
 	void setInterruptVector(Word);
-	void raiseIRQ() { _pendingIRQ = true; }
-	void raiseNMI() { _pendingNMI = true; }
+	void setResetVector(Word);
+
+	void setPendingReset();
+	bool inReset();
+
+	void raiseIRQ();
+	void raiseNMI();
+	bool pendingIRQ();
+	bool pendingNMI();
 	
-	// Public only for tests
-	bool pendingIRQ() { return _pendingIRQ; }
-	bool pendingNMI() { return _pendingNMI; }
+	void unsetHaltAddress();
+	void setHaltAddress(Address_t);
+	bool isPCAtHaltAddress();
+	void loopDetection(bool);
+	bool loopDetected();
+	bool isInDebugMode();
+	void setDebugMode(bool);
+	bool hitCPUException();
 
-	void unsetHaltAddress() { _haltAddressSet = false; }
-	void setHaltAddress(Address_t _pc) {
-		_haltAddress = _pc;
-		_haltAddressSet = true;
-	}
-	bool isPCAtHaltAddress() {
-		return _haltAddressSet && (PC == _haltAddress);
-	}
-
-	void loopDetection(bool l) {
-		debug_loopDetection = l;
-	}
-	bool loopDetected() { return _loopDetected; }
-
-	bool isInDebugMode() { return _debugMode; }
-	void setDebugMode(bool m) { _debugMode = m; }
-
-	bool hitCPUException() { return _hitException; }
-
-	Cycles_t expectedCycles() {return _expectedCyclesToUse; }
-	Cycles_t usedCycles() { return Cycles; }
+	Cycles_t expectedCycles();
+	Cycles_t usedCycles();
 
 	// Execution
 	void execute();
@@ -301,6 +289,7 @@ public:
 		constexpr static Byte ADC_IDX = 0x61;
 		constexpr static Byte PLA_IMP = 0x68;
 	};
+	
 	OpcodeConstants Opcodes;
 
 protected:
@@ -570,19 +559,16 @@ private:
 	bool saveToHexFile(const std::string&, Word startAddress, Word);
 
 	// Breakpoints
-	std::vector<bool> breakpoints;
+	std::set<Word> breakpoints;
 	void listBreakpoints();
 	bool isBreakpoint(Word);
-	bool isPCBreakpoint() { return isBreakpoint(PC); }
+	bool isPCBreakpoint();
 	void deleteBreakpoint(Word);
 	void addBreakpoint(Word);
-	void deleteAllBreakpoints() { 
-		breakpoints.assign(mem.size(), false);
-		fmt::print("Deleted all breakpoints\n");
-	}
+	void deleteAllBreakpoints();
 
 	// Backtrace
-	std::vector<std::string> backtrace;
+	std::vector<std::string> backtrace;  // Use ::vector so we can easily iterate
 	void showBacktrace();
 	void addBacktrace(Word);
 	void addBacktraceInterrupt(Word);
