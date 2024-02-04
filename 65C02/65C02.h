@@ -24,7 +24,7 @@ public:
 	}
 
 	// Must be public so the tests can access
-    class OpcodeConstants : public MOS6502::OpcodeConstants  {
+    class OpcodeConstants : public MOS6502::OpcodeConstants {
     public:
 		static constexpr Byte BRK_IMM = 0x00;
 
@@ -170,43 +170,43 @@ private:
 	
 	MOS6502::AddressingMode convertAddressingMode(AddressingMode);
 	bool isAddrMode(Byte, AddressingMode);
-	Word getAddress(Byte, Cycles_t&);
+	Word getAddress(Byte);
 	void decodeArgs(bool, Byte, std::string&, std::string&, std::string&, std::string&);
 
 	// 65C02 specific instructions
-	void ins_bra([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_stz([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_trb([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_tsb([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_phx([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_phy([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_plx([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_ply([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
+	void ins_bra(Byte);
+	void ins_stz(Byte);
+	void ins_trb(Byte);
+	void ins_tsb(Byte);
+	void ins_phx(Byte);
+	void ins_phy(Byte);
+	void ins_plx(Byte);
+	void ins_ply(Byte);
 	
 	// 6502 instructions with new modes/flags on 65C02
-	void ins_adc(Byte opcode, Cycles_t& expectedCycles);
-	void ins_and(Byte opcode, Cycles_t& expectedCycles);
-	void ins_asl(Byte opcode, Cycles_t& expectedCycles);
-	void ins_bit(Byte opcode, Cycles_t& expectedCycles);
-	void ins_brk(Byte opcode, Cycles_t& expectedCycles);
-	void ins_cmp(Byte opcode, Cycles_t& expectedCycles);
-	void ins_dec(Byte opcode, Cycles_t& expectedCycles);
-	void ins_eor(Byte opcode, Cycles_t& expectedCycles);
-	void ins_inc(Byte opcode, Cycles_t& expectedCycles);
-	void ins_jmp([[maybe_unused]] Byte, [[maybe_unused]] Cycles_t&);
-	void ins_lda(Byte opcode, Cycles_t& expectedCycles);
-	void ins_lsr(Byte opcode, Cycles_t& expectedCycles);
-	void ins_ora(Byte opcode, Cycles_t& expectedCycles);
-	void ins_ror(Byte opcode, Cycles_t& expectedCycles);
-	void ins_sbc(Byte opcode, Cycles_t& expectedCycles);
-	void ins_sta(Byte opcode, Cycles_t& expectedCycles);
+	void ins_adc(Byte);
+	void ins_and(Byte);
+	void ins_asl(Byte);
+	void ins_bit(Byte);
+	void ins_brk(Byte);
+	void ins_cmp(Byte);
+	void ins_dec(Byte);
+	void ins_eor(Byte);
+	void ins_inc(Byte);
+	void ins_jmp(Byte);
+	void ins_lda(Byte);
+	void ins_lsr(Byte);
+	void ins_ora(Byte);
+	void ins_ror(Byte);
+	void ins_sbc(Byte);
+	void ins_sta(Byte);
 	
 	// Instructions only available on the Rockwell variants of the 65C02 (R65C02).
-	// These are assumed by the extended opcode tests.
+	// These are assumed by the extended tests.
+	void ins_bbr(Byte);
+	void ins_bbs(Byte);
+	void ins_rmb(Byte);
+	void ins_smb(Byte);
 
-	void ins_bbr(Byte opcode, Cycles_t& expectedCycles);
-	void ins_bbs(Byte opcode, Cycles_t& expectedCycles);
-	void ins_rmb(Byte opcode, [[maybe_unused]] Cycles_t& expectedCycles);
-	void ins_smb(Byte opcode, [[maybe_unused]] Cycles_t& expectedCycles);
 	MOS6502::_instructionMap_t setup65C02Instructions(); 
 }; // class 65C02

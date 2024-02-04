@@ -100,7 +100,7 @@ void MOS6502::interrupt() {
 }
 
 bool MOS6502::NMI() {
-	if (_pendingNMI) {
+	if (pendingNMI()) {
 		addBacktraceInterrupt(PC);
 		_IRQCount++;
 		interrupt();
@@ -112,7 +112,7 @@ bool MOS6502::NMI() {
 }
 
 bool MOS6502::IRQ() {
-	if (_pendingIRQ && !IRQBlocked()) {
+	if (pendingIRQ() && !IRQBlocked()) {
 		addBacktraceInterrupt(PC);
 		_NMICount++;
 		interrupt();
@@ -227,7 +227,7 @@ void MOS6502::popPS() {
 
 //////////
 // Address decoding
-Word MOS6502::getAddress(Byte opcode, Cycles_t &expectedCycles) {
+Word MOS6502::getAddress(Byte opcode) {
 	Word address;
 	SByte rel;
 
@@ -235,7 +235,7 @@ Word MOS6502::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 	auto updateCycles = [&](Byte reg) {
 		if (( _instructions.at(opcode).flags & InstructionFlags::PageBoundary) &&
 		    ((address + reg) >> 8) != (address >> 8)) {
-			expectedCycles++;
+			_expectedCyclesToUse++;
 			Cycles++;
 		}
 	};
@@ -314,7 +314,7 @@ Word MOS6502::getAddress(Byte opcode, Cycles_t &expectedCycles) {
 	return address;
 }
 
-Byte MOS6502::getData(Byte opcode, Cycles_t &expectedCycles) {
+Byte MOS6502::getData(Byte opcode) {
 	Byte data = 0;
 	Word address;
 
@@ -334,7 +334,7 @@ Byte MOS6502::getData(Byte opcode, Cycles_t &expectedCycles) {
 		break;
 
 	default:
-		address = getAddress(opcode, expectedCycles);
+		address = getAddress(opcode);
 		data = readByte(address);
 		break;
 	}
@@ -366,7 +366,8 @@ void MOS6502::executeOneInstruction() {
 		return;
 	}
 
-	// Saving the PC and zeroing the cycle counter has to happen before readByteAtPC(), which consumes clock cycles
+	// Saving the PC and zeroing the cycle counter has to happen before readByteAtPC(), which consumes clock cycles and
+	// increments the PC
 	startPC = PC;
 	Cycles = 0; 
 
@@ -375,7 +376,7 @@ void MOS6502::executeOneInstruction() {
 		ins = _instructions.at(opcode);
 	} 
 	catch (...) {
-		PC--;
+		PC = startPC;
 		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}", opcode, PC);
 		exception(s);
 		return;
@@ -383,7 +384,7 @@ void MOS6502::executeOneInstruction() {
 
 	_expectedCyclesToUse = ins.cycles;
 	
-	ins.opfn(opcode, _expectedCyclesToUse);
+	ins.opfn(opcode);
 
 	if ( startPC == PC) {
 		if (_loopDetected) 

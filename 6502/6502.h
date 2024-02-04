@@ -314,28 +314,19 @@ protected:
 	Byte Y  = 0;		 // Y Register
 	
 	struct ProcessorStatusBits {
-		Byte C:1; 	 // Carry (bit 0)
-		Byte Z:1;	 // Zero (bit 1)
-		Byte I:1;	 // Interrupt disable (bit 2)
-		Byte D:1;	 // Decimal mode (bit 3)
-		Byte B:1;	 // Break (bit 4)
+		Byte C:1; 	     // Carry (bit 0)
+		Byte Z:1;	     // Zero (bit 1)
+		Byte I:1;	     // Interrupt disable (bit 2)
+		Byte D:1;	     // Decimal mode (bit 3)
+		Byte B:1;	     // Break (bit 4)
 		Byte _unused:1;	 // Unused (bit 5)
-		Byte V:1;	 // Overflow (bit 6)
-		Byte N:1;	 // Negative (bit 7)
+		Byte V:1;	     // Overflow (bit 6)
+		Byte N:1;	     // Negative (bit 7)
 	};
 	union {
 		Byte PS = 0;
 		struct ProcessorStatusBits Flags;
 	};
-
-	//////////
-	// Special addresses/vectors
-	
-	// Interrupt/NMI vector
-	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
-	
-	// 6502 stack is one page at 01ff, down to 0100.  This is the stack frame for that page.
-	constexpr static Word STACK_FRAME = 0x0100;
 
 	// Addressing modes
 	enum AddressingMode {
@@ -354,8 +345,8 @@ protected:
 		Accumulator
 	};
 	
-    // How the CPU should add cycle counts on branches and when
-    // instructions fetch data across page boundaries.
+    // Some instructions add to the cycle count if they branch or when instructions fetch data across page 
+	// boundaries.  These flags tell us what to do.
 	class InstructionFlags {
 	public:
 		static constexpr uint8_t None           = 0;
@@ -363,11 +354,10 @@ protected:
 		static constexpr uint8_t PageBoundary   = 2;
 	};
 	
-	// Setup & reset
 	cMemory& mem;
 	
 	// Instruction map
-	using opfn_t = std::function<void(Byte, Cycles_t&)>;
+	using opfn_t = std::function<void(Byte)>;
 	struct instruction {
 		const char *name;
 	    AddressingMode addrmode;
@@ -407,8 +397,8 @@ protected:
 	Word readWord(Word);
 
 	// Address decoding
-	virtual Word getAddress(Byte, Cycles_t &);
-	virtual Byte getData(Byte, Cycles_t &);
+	virtual Word getAddress(Byte);
+	virtual Byte getData(Byte);
 
 	// Debugger
 	std::string addressLabel(const Word);
@@ -416,64 +406,72 @@ protected:
 	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
 	
 	// Instruction implementations
-	void ins_adc(Byte, Cycles_t &);
-	void ins_and(Byte, Cycles_t &);
-	void ins_asl(Byte, Cycles_t &);
-	void ins_bcc(Byte, Cycles_t &);
-	void ins_bcs(Byte, Cycles_t &);
-	void ins_beq(Byte, Cycles_t &);
-	void ins_bit(Byte, Cycles_t &);
-	void ins_bmi(Byte, Cycles_t &);
-	void ins_bne(Byte, Cycles_t &);
-	void ins_bpl(Byte, Cycles_t &);
-	void ins_brk(Byte, Cycles_t &);
-	void ins_bvc(Byte, Cycles_t &);
-	void ins_bvs(Byte, Cycles_t &);
-	void ins_clc(Byte, Cycles_t &);
-	void ins_cld(Byte, Cycles_t &);
-	void ins_cli(Byte, Cycles_t &);
-	void ins_clv(Byte, Cycles_t &);
-	void ins_cmp(Byte, Cycles_t &);
-	void ins_cpx(Byte, Cycles_t &);
-	void ins_cpy(Byte, Cycles_t &);
-	void ins_dec(Byte, Cycles_t &);
-	void ins_dex(Byte, Cycles_t &);
-	void ins_dey(Byte, Cycles_t &);
-	void ins_eor(Byte, Cycles_t &);
-	void ins_inc(Byte, Cycles_t &);
-	void ins_inx(Byte, Cycles_t &);
-	void ins_iny(Byte, Cycles_t &);
-	void ins_jmp(Byte, Cycles_t &);
-	void ins_jsr(Byte, Cycles_t &);
-	void ins_lda(Byte, Cycles_t &);
-	void ins_ldx(Byte, Cycles_t &);
-	void ins_ldy(Byte, Cycles_t &);
-	void ins_lsr(Byte, Cycles_t &);
-	void ins_nop(Byte, Cycles_t &);
-	void ins_ora(Byte, Cycles_t &);
-	void ins_pha(Byte, Cycles_t &);
-	void ins_pla(Byte, Cycles_t &);
-	void ins_php(Byte, Cycles_t &);
-	void ins_plp(Byte, Cycles_t &);
-	void ins_rol(Byte, Cycles_t &);
-	void ins_ror(Byte, Cycles_t &);
-	void ins_rti(Byte, Cycles_t &);
-	void ins_rts(Byte, Cycles_t &);
-	void ins_sbc(Byte, Cycles_t &);
-	void ins_sec(Byte, Cycles_t &);
-	void ins_sed(Byte, Cycles_t &);
-	void ins_sei(Byte, Cycles_t &);
-	void ins_sta(Byte, Cycles_t &);
-	void ins_stx(Byte, Cycles_t &);
-	void ins_sty(Byte, Cycles_t &);
-	void ins_tax(Byte, Cycles_t &);
-	void ins_tay(Byte, Cycles_t &);
-	void ins_tsx(Byte, Cycles_t &);
-	void ins_txa(Byte, Cycles_t &);
-	void ins_txs(Byte, Cycles_t &);
-	void ins_tya(Byte, Cycles_t &);
+	void ins_adc(Byte);
+	void ins_and(Byte);
+	void ins_asl(Byte);
+	void ins_bcc(Byte);
+	void ins_bcs(Byte);
+	void ins_beq(Byte);
+	void ins_bit(Byte);
+	void ins_bmi(Byte);
+	void ins_bne(Byte);
+	void ins_bpl(Byte);
+	void ins_brk(Byte);
+	void ins_bvc(Byte);
+	void ins_bvs(Byte);
+	void ins_clc(Byte);
+	void ins_cld(Byte);
+	void ins_cli(Byte);
+	void ins_clv(Byte);
+	void ins_cmp(Byte);
+	void ins_cpx(Byte);
+	void ins_cpy(Byte);
+	void ins_dec(Byte);
+	void ins_dex(Byte);
+	void ins_dey(Byte);
+	void ins_eor(Byte);
+	void ins_inc(Byte);
+	void ins_inx(Byte);
+	void ins_iny(Byte);
+	void ins_jmp(Byte);
+	void ins_jsr(Byte);
+	void ins_lda(Byte);
+	void ins_ldx(Byte);
+	void ins_ldy(Byte);
+	void ins_lsr(Byte);
+	void ins_nop(Byte);
+	void ins_ora(Byte);
+	void ins_pha(Byte);
+	void ins_pla(Byte);
+	void ins_php(Byte);
+	void ins_plp(Byte);
+	void ins_rol(Byte);
+	void ins_ror(Byte);
+	void ins_rti(Byte);
+	void ins_rts(Byte);
+	void ins_sbc(Byte);
+	void ins_sec(Byte);
+	void ins_sed(Byte);
+	void ins_sei(Byte);
+	void ins_sta(Byte);
+	void ins_stx(Byte);
+	void ins_sty(Byte);
+	void ins_tax(Byte);
+	void ins_tay(Byte);
+	void ins_tsx(Byte);
+	void ins_txa(Byte);
+	void ins_txs(Byte);
+	void ins_tya(Byte);
 
 private:
+	//////////
+	// Special addresses/vectors
+	
+	// Interrupt/NMI vector
+	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
+	// 6502 stack is one page at 01ff, down to 0100.  This is the stack frame for that page.
+	constexpr static Word STACK_FRAME      = 0x0100;
+
 	// Interrupts
 	void interrupt();
 	bool NMI();
@@ -500,11 +498,12 @@ private:
 	void exitReset();
 	
 	// Helper functions for instruction implementations
-	void doBranch(bool, Word, Cycles_t &);
+	void doBranch(bool, Byte);
 	void doADC(Byte);
 	void bcdADC(Byte);
 	void bcdSBC(Byte);
-	
+	void getAorData(Byte&, Byte, Word&);
+	void putAorData(Byte, Byte, Word);
 	////
 	// Built-in Debugger
 	void executeDebug();

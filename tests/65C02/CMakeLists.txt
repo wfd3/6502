@@ -47,7 +47,6 @@ set (6502_TEST_SOURCES
 "65C02_tests_rti.cc"
 "65C02_tests_rts.cc"
 "65C02_tests_tx_ty.cc"
-"65C02_tests_xxx_functional_test_suite.cc"
 )
 
 # 65C02 instructions
@@ -64,6 +63,12 @@ set (R65C02_TEST_SOURCES
 "R65C02_tests_bbr_bbs.cc"
 )
 
+# 65C02 functional tests
+set (65C02_FUNCTIONAL_TEST_SOURCES
+"65C02_tests_xxx_functional_test_suite.cc"
+)
+
+# Regression tests
 source_group("src" FILES ${65C02_TEST_SOURCES} ${R65C02_TEST_SOURCES} ${6502_TEST_SOURCES})
 add_executable( 65C02_tests ${65C02_TEST_SOURCES} ${R65C02_TEST_SOURCES} ${6502_TEST_SOURCES})
 
@@ -81,6 +86,27 @@ add_custom_target(run_65C02_tests
 DEPENDS 65C02_tests
 COMMAND 65C02_tests)
 
+# Functional tests
+source_group("src" FILES ${65C02_FUNCTIONAL_TEST_SOURCES})
+add_executable( 65C02_functional_tests ${65C02_FUNCTIONAL_TEST_SOURCES})
+
+add_dependencies(65C02_functional_tests 65C02-test 6502-test)
+add_dependencies(65C02_functional_tests gtest_main)
+target_link_libraries(65C02_functional_tests gtest_main 65C02-test 6502-test)
+if(MSVC)
+ target_link_libraries(65C02_functional_tests fmt::fmt-header-only)
+else()
+ target_compile_definitions(65C02_functional_tests PRIVATE FMT_HEADER_ONLY)  
+ target_link_libraries(65C02_functional_tests readline)
+endif()
+target_compile_definitions(65C02_functional_tests PRIVATE TEST_BUILD)
+add_custom_target(run_65C02_functional_tests 
+DEPENDS 65C02_functional_tests
+COMMAND 65C02_functional_tests)
+
 add_custom_command(TARGET 65C02_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:65C02_tests>" "${BINDIR}")
+add_custom_command(TARGET 65C02_functional_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:65C02_functional_tests>" "${BINDIR}")

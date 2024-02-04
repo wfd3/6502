@@ -40,6 +40,25 @@ public:
 
 	virtual void TearDown() {
 	}
+
+	void runProgram() {
+		const char cursorChars[] = {'|', '/', '-', '\\'};
+		const int numChars = sizeof(cursorChars) / sizeof(char);
+		uint64_t instructionCount = 0;
+		uint8_t cursorCount = 0;
+
+		while (!cpu.isPCAtHaltAddress()) {
+			cpu.execute();
+
+			if (instructionCount % 1000000 == 0) {
+				std::cout << cursorChars[cursorCount % numChars] << std::flush;
+				std::cout << "\b" << std::flush;
+				cursorCount++;
+			}
+			instructionCount++;
+		}
+		std::cout << " \b" << std::flush;
+	}
 };
 
 #define testClass MOS6502XXXFunctionalTestSuite

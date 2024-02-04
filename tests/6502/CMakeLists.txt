@@ -19,7 +19,7 @@ project( 6502_tests )
 ##########
 # 6502 tests
 # source for the test executable
-set (6502_TEST_SOURCES
+set (6502_REGRESSION_TEST_SOURCES
 "6502_tests_adc.cc"
 "6502_tests_and.cc"
 "6502_tests_asl.cc"
@@ -45,11 +45,15 @@ set (6502_TEST_SOURCES
 "6502_tests_rti.cc"
 "6502_tests_rts.cc"
 "6502_tests_tx_ty.cc"
+)
+
+set (6502_FUNCTIONAL_TEST_SOURCES 
 "6502_tests_xxx_functional_test_suite.cc"
  )
 
-source_group("src" FILES ${6502_TEST_SOURCES})
-add_executable( 6502_tests ${6502_TEST_SOURCES})
+ # Regression tests
+source_group("src" FILES ${6502_REGRESSION_TEST_SOURCES})
+add_executable( 6502_tests ${6502_REGRESSION_TEST_SOURCES})
 add_dependencies(6502_tests 6502-test)
 add_dependencies(6502_tests gtest_main)
 target_link_libraries(6502_tests gtest_main 6502-test)
@@ -64,6 +68,27 @@ add_custom_target(run_6502_tests
 DEPENDS 6502_tests
 COMMAND 6502_tests)
 
+ # Functional tests
+ source_group("src" FILES ${6502_FUNCTIONAL_TEST_SOURCES})
+ add_executable( 6502_functional_tests ${6502_FUNCTIONAL_TEST_SOURCES})
+ add_dependencies(6502_functional_tests 6502-test)
+ add_dependencies(6502_functional_tests gtest_main)
+ target_link_libraries(6502_functional_tests gtest_main 6502-test)
+ if(MSVC)
+  target_link_libraries(6502_functional_tests fmt::fmt-header-only)
+ else()
+  target_compile_definitions(6502_functional_tests PRIVATE FMT_HEADER_ONLY)  
+  target_link_libraries(6502_functional_tests readline)
+ endif()
+ target_compile_definitions(6502_functional_tests PRIVATE TEST_BUILD)
+ add_custom_target(run_6502_functional_tests 
+ DEPENDS 6502_functional_tests
+ COMMAND 6502_functional_tests)
+ 
 add_custom_command(TARGET 6502_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:6502_tests>" "${BINDIR}")
+add_custom_command(TARGET 6502_functional_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:6502_functional_tests>" "${BINDIR}")
+

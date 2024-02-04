@@ -41,8 +41,7 @@ TEST_F(testClass, TestLoad6502TestSuite)
 	// Uncomment to start in debugger
 	//cpu.SetDebug(true);
 	
-	while (!cpu.isPCAtHaltAddress())
-		cpu.execute();
+	runProgram();
 
 	EXPECT_EQ(cpu.getPC(), haltAddress);
 #endif
@@ -69,8 +68,7 @@ TEST_F(testClass, TestLoad6502DecimalTestSuite)
 	// Uncomment to start in debugger
 	//cpu.SetDebug(true);
 	
-	while (!cpu.isPCAtHaltAddress())
-		cpu.execute();
+	runProgram();
 
 	EXPECT_EQ(cpu.getPC(), haltAddress);
 #endif

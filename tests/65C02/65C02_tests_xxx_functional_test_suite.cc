@@ -43,6 +43,25 @@ public:
 
 	virtual void TearDown() {
 	}
+
+	void runProgram() {
+		const char cursorChars[] = {'|', '/', '-', '\\'};
+		const int numChars = sizeof(cursorChars) / sizeof(char);
+		uint64_t instructionCount = 0;
+		uint8_t cursorCount = 0;
+
+		while (!cpu.isPCAtHaltAddress()) {
+			cpu.execute();
+
+			if (instructionCount % 1000000 == 0) {
+				std::cout << cursorChars[cursorCount % numChars] << std::flush;
+				std::cout << "\b" << std::flush;
+				cursorCount++;
+			}
+			instructionCount++;
+		}
+		std::cout << " \b" << std::flush;
+	}
 };
 
 #define testClass MOS65C02XXXFunctionalTestSuite
@@ -65,9 +84,7 @@ TEST_F(testClass, TestLoad65C02ExtendedOpcodesTestSuite)
 
 	//Then:
 	std::cout << "# 65C02 Extended Opcode Functional Tests (can take 20 to 30 seconds)" << std::endl;
-
-	while (!cpu.isPCAtHaltAddress()) 
-		cpu.execute();
+	runProgram();
 		
 	EXPECT_EQ(cpu.getPC(), haltAddress);
 #endif
