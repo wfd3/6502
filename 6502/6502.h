@@ -589,6 +589,7 @@ private:
 	// _debugCommands vector.
 	friend char *readlineCommandGenerator(const char*, int);
 	friend char **readlineCompletionCallback(const char*, int, int);
+	void setupConsoleInput();
 
 #ifdef TEST_BUILD	
 	Word testResetPC = 0;

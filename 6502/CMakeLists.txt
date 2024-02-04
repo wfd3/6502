@@ -19,9 +19,13 @@ project( lib6502 )
 set (SOURCES
   "6502.h"
   "6502.cc"
-  "debug.cc"
   "opcode_map.cc"
-  "instructions.cc" )
+  "instructions.cc"
+  "disassembler.cc"
+  "debug.cc"
+  "debug_commands.cc"
+  "utils.cc"
+)
 		
 source_group("src" FILES ${SOURCES})
 include_directories(AFTER ${fmt_INCLUDE_DIRS})
