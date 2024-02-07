@@ -277,7 +277,7 @@ Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 Word MOS6502::disassemble(Word dPC, uint64_t cnt) {
 	std::string disassembly;
 
-	if (dPC > MAX_MEM) {
+	if (dPC > LAST_ADDRESS) {
 		fmt::print("PC at end of memory");
 		return dPC;
 	}
@@ -285,7 +285,7 @@ Word MOS6502::disassemble(Word dPC, uint64_t cnt) {
 	do {
 		dPC = disassembleAt(dPC, disassembly);
 		fmt::print("{}\n", disassembly);
-	} while (--cnt && dPC < MAX_MEM);
+	} while (--cnt && dPC < LAST_ADDRESS);
 	
 	return dPC;
 }

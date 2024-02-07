@@ -30,12 +30,12 @@
 
 class MOS65C02FunctionalTestSuite : public testing::Test {
 public:	
-	Memory<Word, Byte> mem{MOS65C02::MAX_MEM};
+	Memory<Word, Byte> mem{MOS65C02::LAST_ADDRESS};
 	MOS65C02 cpu{mem};
 	bool debug;
 
 	virtual void SetUp() {
-		mem.mapRAM(0, MOS65C02::MAX_MEM);
+		mem.mapRAM(0, MOS65C02::LAST_ADDRESS);
 		std::cout << "## Functional tests will drop into debugger in case of failure" << std::endl;
 
 		debug = false;

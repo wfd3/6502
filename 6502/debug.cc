@@ -95,13 +95,13 @@ bool MOS6502::isPCBreakpoint() {
 }
 
 bool MOS6502::isBreakpoint(const Word bp) {
-	if (bp > MAX_MEM) 
+	if (bp > LAST_ADDRESS) 
 		return false;
 	return breakpoints.find(bp) != breakpoints.end();
 }
 
 void MOS6502::deleteBreakpoint(const Word bp) {
-	if (bp > MAX_MEM) 
+	if (bp > LAST_ADDRESS) 
 		return;
 	
 	if (breakpoints.erase(bp) == 0) {
@@ -117,7 +117,7 @@ void MOS6502::deleteBreakpoint(const Word bp) {
 }
 
 void MOS6502::addBreakpoint(const Word bp) {
-	if (bp > MAX_MEM) {
+	if (bp > LAST_ADDRESS) {
 		fmt::print("Error: Breakpoint address outside of available "
 			   "address range\n");
 		return;

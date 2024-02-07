@@ -44,11 +44,10 @@ using Cycles_t  = uint8_t;
 // friend in class CPU. 
 extern "C" char **readlineCompletionCallback(const char* text, int start, int end);
 
-
 class MOS6502 {
 public:
 	// Last addressable byte
-	constexpr static Word MAX_MEM      = 0xFFFF;
+	constexpr static Word LAST_ADDRESS = 0xFFFF;
 	
 	// CPU initial vectors
 	constexpr static Byte INITIAL_SP   = 0xFF; 
@@ -283,8 +282,6 @@ protected:
 	Cycles_t _cycles = 0;              // Cycle counter
 	Cycles_t _expectedCyclesToUse = 0; 
 
-	Memory<Word, Byte>& mem;
-
 	Word PC = 0;		 // Program counter
 	Byte SP = 0;		 // Stack pointer
 	Byte A  = 0;		 // Accumulator 
@@ -440,6 +437,9 @@ protected:
 	void ins_tya(Byte);
 
 private:
+
+	Memory<Word, Byte>& mem;  // Moved from protected section
+
 	//////////
 	// Special addresses/vectors
 	

@@ -20,9 +20,9 @@
 
 //////////
 // CPU Setup and reset
-MOS6502::MOS6502(Memory<Word, Byte>& m) : mem(m),
-				       _instructions(setupInstructionMap()),
-				       _debugCommands(setupDebugCommands()) {
+MOS6502::MOS6502(Memory<Word, Byte>& m) : _instructions(setupInstructionMap()),
+										  mem(m),
+				       					  _debugCommands(setupDebugCommands()) {
 	
 	_inReset = true;
 	initDebugger();

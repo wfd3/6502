@@ -248,7 +248,7 @@ bool MOS6502::loadCmd(std::string& line) {
 	std::istringstream iss(line);
 	iss >> fname >> std::hex >> address;
 
-	if (address > MOS6502::MAX_MEM) {
+	if (address > MOS6502::LAST_ADDRESS) {
 		fmt::print("Invalid address: {:04x}\n", address);
 		return false;
 	}
@@ -392,7 +392,7 @@ bool MOS6502::resetListPCCmd(std::string& line) {
 
 	try {
 		i = (Word) std::stoul(line, nullptr, 16);
-		if (i > MAX_MEM) {
+		if (i > LAST_ADDRESS) {
 			fmt::print("Error: Program Counter address outside of "
 				   "available address range\n");
 			return false;
@@ -425,7 +425,7 @@ bool MOS6502::memdumpCmd(std::string& line) {
 	Word addr1, addr2, value;	
 
 	auto rangeCheckAddr = [](Word a) {
-		return a <= MAX_MEM;
+		return a <= LAST_ADDRESS;
 	};
 
 	auto rangeCheckValue =[](Word v) {
@@ -648,7 +648,7 @@ bool MOS6502::watchCmd(std::string& line) {
 
 	try {
 		addr = (Word) std::stoul(line, nullptr, 16);
-		if (addr > MAX_MEM) {
+		if (addr > LAST_ADDRESS) {
 			fmt::print("Error: Watchpoint address outside of "
 				   "available address range\n");
 			return false;
@@ -699,7 +699,7 @@ bool MOS6502::labelCmd(std::string& line) {
 		size_t index = 0;
 		addr = (Word) std::stoul(line, &index, 16);
 		
-		if (addr > MAX_MEM) {
+		if (addr > LAST_ADDRESS) {
 			fmt::print("Error: Label address outside of available address range\n");
 			return false;
 		}

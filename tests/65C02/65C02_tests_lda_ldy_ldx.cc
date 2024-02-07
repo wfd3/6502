@@ -22,7 +22,7 @@
 class MOS65C02LDTests : public testing::Test {
 public:
 
-	Memory<Word, Byte> mem{MOS65C02::MAX_MEM};
+	Memory<Word, Byte> mem{MOS65C02::LAST_ADDRESS};
 	MOS65C02 cpu{mem};
 	
 	enum class Registers {
@@ -32,7 +32,7 @@ public:
 	};
 
 	virtual void SetUp() {
-		mem.mapRAM(0, MOS65C02::MAX_MEM);
+		mem.mapRAM(0, MOS65C02::LAST_ADDRESS);
 	}
 	
 	virtual void TearDown()	{

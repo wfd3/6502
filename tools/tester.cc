@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 	constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
 	// Create the memory, CPU, PIA and bus clock
-	Memory<Address, Byte> mem(MOS65C02::MAX_MEM);
+	Memory<Address, Byte> mem(MOS65C02::LAST_ADDRESS);
 	MOS65C02 cpu(mem);
 	auto pia = std::make_shared<MOS6820<Address, Byte>>();
 

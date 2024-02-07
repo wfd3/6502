@@ -57,7 +57,7 @@ constexpr int clockSpeedMHz = 1;
 constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
 // Create the memory, CPU, PIA and bus clock
-Memory<Address, Byte> mem(MOS6502::MAX_MEM);
+Memory<Address, Byte> mem(MOS6502::LAST_ADDRESS);
 MOS6502 cpu(mem);
 auto pia = std::make_shared<MOS6820<Address, Byte>>();
 BusClock_t busClock(clockSpeedMHz);
