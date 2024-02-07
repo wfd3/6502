@@ -20,7 +20,7 @@
 
 //////////
 // CPU Setup and reset
-MOS6502::MOS6502(Memory<Address_t, Byte>& m) : mem(m),
+MOS6502::MOS6502(Memory<Word, Byte>& m) : mem(m),
 				       _instructions(setupInstructionMap()),
 				       _debugCommands(setupDebugCommands()) {
 	
@@ -35,6 +35,7 @@ void MOS6502::setResetVector(const Word address) {
 void MOS6502::setInterruptVector(const Word address) {
 	writeWord(INTERRUPT_VECTOR, address);
 }
+
 void MOS6502::setPendingReset() {
 		if (!_debugMode)
 			_pendingReset = true;
@@ -74,7 +75,7 @@ bool MOS6502::isPCAtHaltAddress() {
 }
 
 void MOS6502::loopDetection(const bool l) {
-	debug_loopDetection = l;
+	_infiniteLoopDetected = l;
 }
 
 bool MOS6502::loopDetected() { 
@@ -98,7 +99,7 @@ Cycles_t MOS6502::expectedCycles() {
 }
 
 Cycles_t MOS6502::usedCycles() { 
-	return Cycles; 
+	return _cycles; 
 }
 
 void MOS6502::exitReset() {
@@ -108,21 +109,21 @@ void MOS6502::exitReset() {
 #ifdef TEST_BUILD
 	// If we're here via TestReset() clobber the PC and SP with test values
 	if (_testReset) {
-		SP = testResetSP;
-		PC = testResetPC;
+		SP = _testResetSP;
+		PC = _testResetPC;
 	}
 	_testReset = false;
 #endif
 
 	_debugMode = false;
-	debug_alwaysShowPS = false;
+	_showCPUStatusAtDebugPrompt = false;
 
 	_hitException = false;
 
 	_inReset = false;
 	_pendingReset = false;
 
-	Cycles += 7;		
+	_cycles += 7;		
 }	
 
 // This is only intended for testing, not for emulation.  It
@@ -134,8 +135,8 @@ void MOS6502::TestReset(const Word initialPC, const Byte initialSP)  {
 	_inReset = true;
 	_pendingReset = true;
 	_testReset = true;
-	testResetPC = initialPC;
-	testResetSP = initialSP;
+	_testResetPC = initialPC;
+	_testResetSP = initialSP;
 	Reset();
 }
 #endif
@@ -161,7 +162,7 @@ void MOS6502::interrupt() {
 
 	Flags.I = 1;
 	PC = readWord(INTERRUPT_VECTOR);
-	Cycles++;
+	_cycles++;
 }
 
 bool MOS6502::NMI() {
@@ -222,13 +223,13 @@ bool MOS6502::IRQBlocked() {
 // Memory access
 Byte MOS6502::readByte(const Word address) {
 	Byte data = mem.Read(address);
-	Cycles++;
+	_cycles++;
 	return data;
 }
 
 void MOS6502::writeByte(const Word address, const Byte value) {
 	mem.Write(address, value);
-	Cycles++;
+	_cycles++;
 }
 
 Word MOS6502::readWord(const Word address) {
@@ -301,7 +302,7 @@ Word MOS6502::getAddress(const Byte opcode) {
 		if (( _instructions.at(opcode).flags & InstructionFlags::PageBoundary) &&
 		    ((address + reg) >> 8) != (address >> 8)) {
 			_expectedCyclesToUse++;
-			Cycles++;
+			_cycles++;
 		}
 	};
 
@@ -317,13 +318,13 @@ Word MOS6502::getAddress(const Byte opcode) {
 	// ZeroPage,X (with zero page wrap around)
 	case AddressingMode::ZeroPageX:
 		address = static_cast<Byte>(readByteAtPC() + X);
-		Cycles++;
+		_cycles++;
 		break;
 
 	// ZeroPage,Y (with zero page wrap around)
 	case AddressingMode::ZeroPageY:
 		address = static_cast<Byte>(readByteAtPC() + Y);
-		Cycles++;
+		_cycles++;
 		break;
 
 	// Relative
@@ -355,7 +356,7 @@ Word MOS6502::getAddress(const Byte opcode) {
 	case AddressingMode::IndirectX:	
 		address = static_cast<Byte>(readByteAtPC() + X);
 		address = readWord(address);
-		Cycles++;
+		_cycles++;
 		break;
 
 	// (Indirect),Y or Indirect Indexed
@@ -422,6 +423,9 @@ void MOS6502::executeOneInstruction() {
  	if (_inReset)
 		return;
 
+	// Reset cycle count before checking if we need to exit reset.
+	_cycles = 0; 
+
 	if (_pendingReset) {
 		exitReset();
 	}
@@ -431,10 +435,8 @@ void MOS6502::executeOneInstruction() {
 		return;
 	}
 
-	// Saving the PC and zeroing the cycle counter has to happen before readByteAtPC(), which consumes clock cycles and
-	// increments the PC
+	// Saving the PC has to happen before readByteAtPC(), which consumes clock cycles and increments the PC
 	startPC = PC;
-	Cycles = 0; 
 
 	opcode = readByteAtPC();
 	try {
@@ -455,7 +457,7 @@ void MOS6502::executeOneInstruction() {
 		if (_loopDetected) 
 			throw std::runtime_error("Recursive loop detected");
 			
-		if (debug_loopDetection) 
+		if (_infiniteLoopDetected) 
 			fmt::print("# Loop detected at {:04x}\n", PC);
 		_loopDetected = true;
 		return;

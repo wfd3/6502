@@ -23,7 +23,7 @@
 class MOS6502InterruptTests : public testing::Test {
 public:
 
-	Memory<Address_t, Byte> mem{MOS6502::MAX_MEM};
+	Memory<Word, Byte> mem{MOS6502::MAX_MEM};
 	MOS6502 cpu{mem};
 
 	virtual void SetUp() {

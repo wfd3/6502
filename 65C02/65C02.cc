@@ -33,7 +33,7 @@ Word MOS65C02::getAddress(const Byte opcode) {
 		if ((_instructions.at(op).flags & InstructionFlags::NoBoundaryCrossed) &&
 			((addr + reg) >> 8) == (addr >> 8)) {
 			_expectedCyclesToUse--;
-			Cycles--;
+			_cycles--;
 		}
 	};
 
@@ -49,7 +49,7 @@ Word MOS65C02::getAddress(const Byte opcode) {
 		address = readWordAtPC();
 		checkPageBoundary(opcode, address, X);
 		address += X;
-		Cycles++;
+		_cycles++;
 		break;
 
 	default:
@@ -154,21 +154,21 @@ void MOS65C02::ins_bra(const Byte opcode) {
 	Word address = getAddress(opcode);
 	
 	if ((PC >> 8) != (address >> 8)) { // Crossed page boundary
-		Cycles++;
+		_cycles++;
 		_expectedCyclesToUse++;
 	}
 	
 	PC = address;
-	Cycles++;
+	_cycles++;
 }
 
 // STZ
 void MOS65C02::ins_stz(const Byte opcode) {
-	Address_t address = getAddress(opcode);
+	Word address = getAddress(opcode);
 	writeByte(address, 0);
 
 	if (isAddrMode(opcode, AddressingMode::AbsoluteX))
-		Cycles++;
+		_cycles++;
 }
 
 // TRB
@@ -177,7 +177,7 @@ void MOS65C02::ins_trb(const Byte opcode) {
 	Byte data = readByte(address);
 	writeByte(address, data & ~A);
 	setFlagZByValue(data & A);
-	Cycles++;
+	_cycles++;
 }
 
 // TSB
@@ -186,19 +186,19 @@ void MOS65C02::ins_tsb(const Byte opcode) {
 	Byte data = readByte(address);
 	writeByte(address, data | A);
 	setFlagZByValue(data & A);
-	Cycles++;
+	_cycles++;
 }
 
 // PHX
 void MOS65C02::ins_phx([[maybe_unused]] const Byte opcode) {
 	push(X);
-	Cycles++;
+	_cycles++;
 }
 
 // PHY
 void MOS65C02::ins_phy([[maybe_unused]] const Byte opcode) {
 	push(Y);
-	Cycles++;
+	_cycles++;
 }
 
 // PLX
@@ -206,7 +206,7 @@ void MOS65C02::ins_plx([[maybe_unused]] const Byte opcode) {
 	X = pop();
 	setFlagNByValue(X);
 	setFlagZByValue(X);
-	Cycles += 2;
+	_cycles += 2;
 }
 
 // PLY
@@ -214,7 +214,7 @@ void MOS65C02::ins_ply([[maybe_unused]] const Byte opcode) {
 	Y = pop();
 	setFlagNByValue(Y);
 	setFlagZByValue(Y);
-	Cycles += 2;
+	_cycles += 2;
 }
 
 //////////
@@ -224,7 +224,7 @@ void MOS65C02::ins_ply([[maybe_unused]] const Byte opcode) {
 void MOS65C02::ins_adc(const Byte opcode) {
 	MOS6502::ins_adc(opcode);
 	if (Flags.D) {
-		Cycles++;
+		_cycles++;
 		_expectedCyclesToUse++;
 	}
 }
@@ -257,7 +257,7 @@ void MOS65C02::ins_dec(const Byte opcode) {
 	bool accumulator = isAddrMode(opcode, AddressingMode::Accumulator);
 	if (accumulator) {
 		A--;
-		Cycles++;
+		_cycles++;
 		setFlagZByValue(A);
 		setFlagNByValue(A);
 	} else {
@@ -270,7 +270,7 @@ void MOS65C02::ins_inc(const Byte opcode) {
 	bool accumulator = isAddrMode(opcode, AddressingMode::Accumulator);
 	if (accumulator) {
 		A++;
-		Cycles++;
+		_cycles++;
 		setFlagZByValue(A);
 		setFlagNByValue(A);
 	} else {
@@ -291,7 +291,7 @@ void MOS65C02::ins_jmp(const Byte opcode) {
 	}
 	if (indirect || absIndexedIndirect) {
 		address = readWord(address);
-		Cycles++;
+		_cycles++;
 	}
 	
 	PC = address;
@@ -344,7 +344,7 @@ void MOS65C02::ins_ror(const Byte opcode) {
 void MOS65C02::ins_sbc(const Byte opcode) {
 	MOS6502::ins_sbc(opcode);
 	if (Flags.D) {
-		Cycles++;
+		_cycles++;
 		_expectedCyclesToUse++;
 	}
 }
@@ -366,7 +366,7 @@ void MOS65C02::ins_bbr(const Byte opcode) {
 	Byte bitmask = 1 << (opcode >> 4);
 	if (!(m & bitmask))
 		PC = address;
-	Cycles++;
+	_cycles++;
 }
 
 // BBS - Branch on Bit Set
@@ -378,7 +378,7 @@ void MOS65C02::ins_bbs(const Byte opcode) {
 	Byte bitmask = 1 << ((opcode >> 4) - 8);
 	if (m & bitmask) 
 		PC = address;
-	Cycles++;
+	_cycles++;
 }
 
 // RMB - Reset Memory Bit
@@ -388,7 +388,7 @@ void MOS65C02::ins_rmb(const Byte opcode) {
 	Byte m = readByte(zpaddr);
 	m = m & ~bitmask;
 	writeByte(zpaddr, m);
-	Cycles++;
+	_cycles++;
 }
 
 // SMB - Set Memory Bit
@@ -398,7 +398,7 @@ void MOS65C02::ins_smb(const Byte opcode) {
 	Byte m = readByte(zpaddr);
 	m = m | bitmask;
 	writeByte(zpaddr, m);
-	Cycles++;
+	_cycles++;
 }
 
 //////////

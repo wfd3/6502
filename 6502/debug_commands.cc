@@ -243,7 +243,7 @@ bool MOS6502::listCmd(std::string& line) {
 
 bool MOS6502::loadCmd(std::string& line) {
 	std::string fname;
-	Address_t address;
+	Word address;
 
 	std::istringstream iss(line);
 	iss >> fname >> std::hex >> address;
@@ -378,9 +378,9 @@ bool MOS6502::cpustateCmd([[maybe_unused]] std::string& line) {
 }
 
 bool MOS6502::autostateCmd([[maybe_unused]] std::string& line) {
-	debug_alwaysShowPS = !debug_alwaysShowPS;
+	_showCPUStatusAtDebugPrompt = !_showCPUStatusAtDebugPrompt;
 	fmt::print("Processor status auto-display ");
-	if (debug_alwaysShowPS)
+	if (_showCPUStatusAtDebugPrompt)
 		fmt::print("enabled\n");
 	else 
 		fmt::print("disabled\n");
@@ -613,9 +613,9 @@ bool MOS6502::continueCmd([[maybe_unused]] std::string& line) {
 }
 
 bool MOS6502::loopdetectCmd([[maybe_unused]] std::string& line) {
-	debug_loopDetection = !debug_loopDetection;
+	_infiniteLoopDetected = !_infiniteLoopDetected;
 	fmt::print("Loop detection ");
-	if (debug_loopDetection)
+	if (_infiniteLoopDetected)
 		fmt::print("enabled\n");
 	else 
 		fmt::print("disabled\n");
@@ -784,21 +784,21 @@ bool MOS6502::executeDebuggerCmd(std::string line) {
 	line = stripTrailingSpaces(line);
 	line = stripLeadingSpaces(line);
 
-	if (line.empty() && debug_lastCmd.empty()) // Blank input
+	if (line.empty() && _lastDebuggerCommand.empty()) // Blank input
 		return true;
 
-	if (line.empty() && !debug_lastCmd.empty()) {
-		line = debug_lastCmd;
+	if (line.empty() && !_lastDebuggerCommand.empty()) {
+		line = _lastDebuggerCommand;
 		fmt::print(": {}\n", line);
 	}
 
 	// Check if command is numbers, convert it to an integer and execute that many instructions.
 	try {
 		uint64_t insCnt = std::stol(line);
-		debug_lastCmd = line;
+		_lastDebuggerCommand = line;
 		while (insCnt--) {
 			executeOneInstruction();
-			if (debug_alwaysShowPS) 
+			if (_showCPUStatusAtDebugPrompt) 
 				printCPUState();
 			disassemble(PC, 1);
 		}
@@ -821,7 +821,7 @@ bool MOS6502::executeDebuggerCmd(std::string line) {
 	}
 
 	if (line != "continue") 
-		debug_lastCmd = savedLine;
+		_lastDebuggerCommand = savedLine;
 
 	return (this->*f)(line);
 }

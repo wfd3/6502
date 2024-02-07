@@ -34,16 +34,16 @@ using Byte    = uint8_t;
 // Define which and where the ROM and other 'built-in' programs will be loaded. 
 
 // WozMon (in ROM)
-constexpr Address_t wozmonAddress = 0xff00;
+constexpr Word wozmonAddress = 0xff00;
 static const char* WOZMON_FILE = BINFILE_PATH "/wozmon.bin";
 
 // Apple Integer Basic (normally loaded from cassette)
-constexpr Address_t apple1BasicAddress = 0xe000;
+constexpr Word apple1BasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE = BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
 
 // bytecode for a modified version of the sample program from the Apple 1 Manual (normally entered 
 // by hand via WozMon).  This ones uses the 65C02 'BRA' instruction rather than JMP.
-constexpr Address_t apple1SampleAddress = 0x0000;
+constexpr Word apple1SampleAddress = 0x0000;
 std::vector<Byte> apple1SampleProg =
 	{ 0xa9, 0x00, 		// lda #$00
 	  0xaa,   			// tax

@@ -19,7 +19,7 @@
 
 class MOS65C02 : public MOS6502 {
 public:
-    MOS65C02(Memory<Address_t, Byte>& m) : MOS6502(m)  {
+    MOS65C02(Memory<Word, Byte>& m) : MOS6502(m)  {
 		_instructions = setup65C02Instructions();
 	}
 

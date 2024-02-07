@@ -15,6 +15,10 @@
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// Reference materials:
+// https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
+// http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
+
 #pragma once
 
 #include <array>
@@ -34,31 +38,14 @@
 using Byte      = uint8_t;
 using SByte     = int8_t;
 using Word      = uint16_t;
-using Address_t = uint16_t;
 using Cycles_t  = uint8_t;
-using cMemory   = Memory<Address_t, Byte>;
 
-// Forward declaration with extern "C" linkage for later use as a
-// friend in class CPU. This is for GNU Readline.
+// GNU Readline forward declaration with extern "C" linkage for later use as a
+// friend in class CPU. 
 extern "C" char **readlineCompletionCallback(const char* text, int start, int end);
 
-//
-// The CPU class is broken up into three different sections:
-// 1) Core CPU public and private API
-// 2) CPU constants, public and private
-// 3) Debugger public and private API
-//
-// Each section is separated by a comment block.
-//
-// Reference materials:
-// https://archive.org/details/6500-50a_mcs6500pgmmanjan76/page/n1/mode/2up
-// http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf
 
 class MOS6502 {
-
-////////////////////
-// CPU
-////////////////////	
 public:
 	// Last addressable byte
 	constexpr static Word MAX_MEM      = 0xFFFF;
@@ -68,7 +55,7 @@ public:
 	constexpr static Word RESET_VECTOR = 0xFFFC;
 
 	// CPU Setup & reset
-	MOS6502(cMemory &);
+	MOS6502(Memory<Word, Byte>&);
 
 	void Reset();
 
@@ -84,7 +71,7 @@ public:
 	bool pendingNMI();
 	
 	void unsetHaltAddress();
-	void setHaltAddress(Address_t);
+	void setHaltAddress(Word);
 	bool isPCAtHaltAddress();
 	void loopDetection(bool);
 	bool loopDetected();
@@ -293,8 +280,10 @@ public:
 	OpcodeConstants Opcodes;
 
 protected:
-	Cycles_t Cycles = 0;              // Cycle counter
+	Cycles_t _cycles = 0;              // Cycle counter
 	Cycles_t _expectedCyclesToUse = 0; 
+
+	Memory<Word, Byte>& mem;
 
 	Word PC = 0;		 // Program counter
 	Byte SP = 0;		 // Stack pointer
@@ -342,8 +331,6 @@ protected:
 		static constexpr uint8_t Branch         = 1;
 		static constexpr uint8_t PageBoundary   = 2;
 	};
-	
-	cMemory& mem;
 	
 	// Instruction map
 	using opfn_t = std::function<void(Byte)>;
@@ -480,7 +467,7 @@ private:
 	bool _pendingNMI   = false;
 	bool _hitException = false;
 
-	Address_t _haltAddress = 0;
+	Word _haltAddress = 0;
 	bool _haltAddressSet = false;
 
 	void executeOneInstruction();
@@ -498,9 +485,9 @@ private:
 	void executeDebug();
 
 	bool _debugMode = false;
-	std::string debug_lastCmd = "";
-	bool debug_alwaysShowPS = false;
-	bool debug_loopDetection = false;
+	std::string _lastDebuggerCommand = "";
+	bool _showCPUStatusAtDebugPrompt = false;
+	bool _infiniteLoopDetected = false;
 	bool _loopDetected = false;
 	bool _debugModeOnException = false;
 
@@ -511,8 +498,8 @@ private:
 	void parseMemCommand(std::string);
 	
 	// Disassembler
-	Address_t disassemble(Address_t, uint64_t);
-	Address_t disassembleAt(Address_t dPC, std::string &);
+	Word disassemble(Word, uint64_t);
+	Word disassembleAt(Word dPC, std::string &);
 
 	typedef bool (MOS6502::*debugFn_t)(std::string &);
 
@@ -592,8 +579,8 @@ private:
 	void setupConsoleInput();
 
 #ifdef TEST_BUILD	
-	Word testResetPC = 0;
-	Byte testResetSP = INITIAL_SP;
+	Word _testResetPC = 0;
+	Byte _testResetSP = INITIAL_SP;
 	bool _testReset = false;
 #endif
 	

@@ -41,7 +41,7 @@ std::vector<Byte> testProgram = {
 //      JMP loop
 
 static const unsigned long programLen = 12;
-constexpr Address_t startAddress = 0x4000;
+constexpr Word startAddress = 0x4000;
 static const char *testProgramFile = BINFILE_PATH "/sampleprg.bin";
 
 TEST_F(testClass, TestLoadProgram) {
@@ -51,7 +51,7 @@ TEST_F(testClass, TestLoadProgram) {
 	mem.loadData(testProgram, startAddress);
 
 	//then:
-	for (Address_t i = 0; i < programLen; i++) 
+	for (Word i = 0; i < programLen; i++) 
 		EXPECT_EQ(mem[startAddress + i ], testProgram[i]);
 }
 

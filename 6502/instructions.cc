@@ -48,11 +48,11 @@ void MOS6502::doBranch(bool condition, const Byte opcode) {
 	Word address = getAddress(opcode);
 
 	if (condition) {
-		Cycles++;	// Branch taken
+		_cycles++;	// Branch taken
 		_expectedCyclesToUse++;
 
 		if ((PC >> 8) != (address >> 8)) { // Crossed page boundary
-			Cycles += 2;
+			_cycles += 2;
 			_expectedCyclesToUse += 2;
 		}
 
@@ -173,9 +173,9 @@ void MOS6502::ins_asl(const Byte opcode) {
 
 	putAorData(data, opcode, address);
 	
-	Cycles++;
+	_cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
-		Cycles++;	
+		_cycles++;	
 }
 
 // BCC
@@ -243,25 +243,25 @@ void MOS6502::ins_bvs(const Byte opcode) {
 // CLC
 void MOS6502::ins_clc([[maybe_unused]] const Byte opcode) {
 	Flags.C = 0;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // CLD
 void MOS6502::ins_cld([[maybe_unused]] const Byte opcode) {
 	Flags.D = 0;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // CLI
 void MOS6502::ins_cli([[maybe_unused]] const Byte opcode) {
 	Flags.I = 0;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // CLV
 void MOS6502::ins_clv([[maybe_unused]] const Byte opcode) {
 	Flags.V = 0;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // CMP
@@ -308,9 +308,9 @@ void MOS6502::ins_dec(const Byte opcode) {
 	writeByte(address, data);
 	setFlagZByValue(data);
 	setFlagNByValue(data);
-	Cycles++;
+	_cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
-		Cycles++;
+		_cycles++;
 }
 
 // DEX
@@ -318,7 +318,7 @@ void MOS6502::ins_dex([[maybe_unused]] const Byte opcode) {
 	X--;
 	setFlagNByValue(X);
 	setFlagZByValue(X);
-	Cycles++;
+	_cycles++;
 }
 
 // DEY
@@ -326,7 +326,7 @@ void MOS6502::ins_dey([[maybe_unused]] const Byte opcode) {
 	Y--;
 	setFlagNByValue(Y);
 	setFlagZByValue(Y);
-	Cycles++;
+	_cycles++;
 }
 
 // EOR
@@ -350,9 +350,9 @@ void MOS6502::ins_inc(const Byte opcode) {
 	writeByte(address, data);
 	setFlagZByValue(data);
 	setFlagNByValue(data);
-	Cycles++;
+	_cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
-		Cycles++;
+		_cycles++;
 }
 
 // INX
@@ -360,7 +360,7 @@ void MOS6502::ins_inx([[maybe_unused]] const Byte opcode) {
 	X++;
 	setFlagZByValue(X);
 	setFlagNByValue(X);
-	Cycles++;
+	_cycles++;
 }
 
 // INY
@@ -368,7 +368,7 @@ void MOS6502::ins_iny([[maybe_unused]] const Byte opcode) {
 	Y++;
 	setFlagZByValue(Y);
 	setFlagNByValue(Y);
-	Cycles++;
+	_cycles++;
 }
 
 // JMP
@@ -395,7 +395,7 @@ void MOS6502::ins_jsr([[maybe_unused]] const Byte opcode) {
 
 	pushWord(PC + 1);
 	PC = readWord(PC);
-	Cycles++;
+	_cycles++;
 }
 
 // LDA
@@ -433,16 +433,16 @@ void MOS6502::ins_lsr(const Byte opcode) {
 	
 	putAorData(data, opcode, address);
 
-	Cycles++;
+	_cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
-		Cycles++;	
+		_cycles++;	
 }
 
 // NOP
 void MOS6502::ins_nop([[maybe_unused]] const Byte opcode) {
 	// NOP, like all single byte instructions, takes
 	// two cycles.
-	Cycles++;
+	_cycles++;
 }
 
 // ORA
@@ -455,13 +455,13 @@ void MOS6502::ins_ora(const Byte opcode) {
 // PHA
 void MOS6502::ins_pha([[maybe_unused]] const Byte opcode) {
 	push(A);
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // PHP
 void MOS6502::ins_php([[maybe_unused]] const Byte opcode) {
 	pushPS();
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // PLA
@@ -469,13 +469,13 @@ void MOS6502::ins_pla([[maybe_unused]] const Byte opcode) {
 	A = pop();
 	setFlagNByValue(A);
 	setFlagZByValue(A);
-	Cycles += 2;      
+	_cycles += 2;      
 }
 
 // PLP
 void MOS6502::ins_plp([[maybe_unused]] const Byte opcode) {
 	popPS();
-	Cycles += 2;
+	_cycles += 2;
 }
 
 // ROL
@@ -494,9 +494,9 @@ void MOS6502::ins_rol(const Byte opcode) {
 
 	putAorData(data, opcode, address);
 
-	Cycles++;
+	_cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
-		Cycles++;
+		_cycles++;
 }
 
 // ROR
@@ -516,9 +516,9 @@ void MOS6502::ins_ror(const Byte opcode) {
 
 	putAorData(data, opcode, address);
 
-	Cycles++;
+	_cycles++;
 	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
-		Cycles++;
+		_cycles++;
 }
 
 // RTI
@@ -526,14 +526,14 @@ void MOS6502::ins_rti([[maybe_unused]] const Byte opcode) {
 	removeBacktrace();
 	popPS();
 	PC = popWord();
-	Cycles += 2;
+	_cycles += 2;
 }
 
 // RTS
 void MOS6502::ins_rts([[maybe_unused]] const Byte opcode) {
 	removeBacktrace();
 	PC = popWord() + 1;
-	Cycles += 3;	       
+	_cycles += 3;	       
 }
 
 // SBC
@@ -550,19 +550,19 @@ void MOS6502::ins_sbc(const Byte opcode) {
 // SEC
 void MOS6502::ins_sec([[maybe_unused]] const Byte opcode) {
 	Flags.C = 1;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // SED
 void MOS6502::ins_sed([[maybe_unused]] const Byte opcode) {
 	Flags.D = 1;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // SEI
 void MOS6502::ins_sei([[maybe_unused]] const Byte opcode) {
 	Flags.I = 1;
-	Cycles++;		// Single byte instruction
+	_cycles++;		// Single byte instruction
 }
 
 // STA
@@ -588,7 +588,7 @@ void MOS6502::ins_tax([[maybe_unused]] const Byte opcode) {
 	X = A;
 	setFlagZByValue(X);
 	setFlagNByValue(X);
-	Cycles++;
+	_cycles++;
 }
 
 // TAY
@@ -596,7 +596,7 @@ void MOS6502::ins_tay([[maybe_unused]] const Byte opcode) {
 	Y = A;
 	setFlagZByValue(Y);
 	setFlagNByValue(Y);
-	Cycles++;
+	_cycles++;
 }
 
 // TSX
@@ -604,7 +604,7 @@ void MOS6502::ins_tsx([[maybe_unused]] const Byte opcode) {
 	X = SP;
 	setFlagZByValue(X);
 	setFlagNByValue(X);
-	Cycles++;
+	_cycles++;
 }
 
 // TXA
@@ -612,13 +612,13 @@ void MOS6502::ins_txa([[maybe_unused]] const Byte opcode) {
 	A = X;
 	setFlagZByValue(A);
 	setFlagNByValue(A);
-	Cycles++;
+	_cycles++;
 }
 
 // TXS
 void MOS6502::ins_txs([[maybe_unused]] const Byte opcode) {
 	SP = X;
-	Cycles++;
+	_cycles++;
 }
 
 // TYA
@@ -626,5 +626,5 @@ void MOS6502::ins_tya([[maybe_unused]] const Byte opcode) {
 	A = Y;
 	setFlagZByValue(A);
 	setFlagNByValue(A);
-	Cycles++;
+	_cycles++;
 }

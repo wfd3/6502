@@ -230,9 +230,9 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 	}
 }
 
-Address_t MOS6502::disassembleAt(Address_t dPC, std::string& disassembly) {
-	Address_t savePC = PC;
-	Cycles_t saveCycles = Cycles;
+Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
+	Word savePC = PC;
+	Cycles_t saveCycles = _cycles;
 	std::string ins, bkpoint, args, opcodes, marker, address, computedAddress;
 	bool atPC = (PC == dPC); 
 	bool bytes = false;
@@ -269,12 +269,12 @@ Address_t MOS6502::disassembleAt(Address_t dPC, std::string& disassembly) {
 		disassembly += fmt::format("{:<20} | {:<5.5} | {}", args, address, computedAddress);
     dPC = PC;
 	PC = savePC;
-	Cycles = saveCycles;
+	_cycles = saveCycles;
 
 	return dPC;
 }
 
-Address_t MOS6502::disassemble(Address_t dPC, uint64_t cnt) {
+Word MOS6502::disassemble(Word dPC, uint64_t cnt) {
 	std::string disassembly;
 
 	if (dPC > MAX_MEM) {

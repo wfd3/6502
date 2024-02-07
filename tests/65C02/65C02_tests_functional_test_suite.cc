@@ -30,7 +30,7 @@
 
 class MOS65C02FunctionalTestSuite : public testing::Test {
 public:	
-	Memory<Address_t, Byte> mem{MOS65C02::MAX_MEM};
+	Memory<Word, Byte> mem{MOS65C02::MAX_MEM};
 	MOS65C02 cpu{mem};
 	bool debug;
 
