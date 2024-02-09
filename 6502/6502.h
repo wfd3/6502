@@ -47,11 +47,15 @@ public:
 	friend class Debugger;
 	
 	// Last addressable byte
-	constexpr static Word LAST_ADDRESS = 0xFFFF;
+	constexpr static Word LAST_ADDRESS     = 0xffff;
 	
 	// CPU initial vectors
-	constexpr static Byte INITIAL_SP   = 0xFF; 
-	constexpr static Word RESET_VECTOR = 0xFFFC;
+	constexpr static Byte INITIAL_SP       = 0xff; 
+
+	// Interrupt/NMI vector
+	constexpr static Word INTERRUPT_VECTOR = 0xfffe;
+	constexpr static Word NMI_VECTOR       = 0xfffa;
+	constexpr static Word RESET_VECTOR     = 0xfffc;
 
 	// CPU Setup & reset
 	MOS6502(Memory<Word, Byte>&);
@@ -60,6 +64,7 @@ public:
 
 	void setInterruptVector(Word);
 	void setResetVector(Word);
+	void setNMIVector(Word);
 
 	void setPendingReset();
 	bool inReset();
@@ -385,7 +390,6 @@ protected:
 	virtual Word getAddress(Byte);
 	virtual Byte getData(Byte);
 
-	
 	// Instruction implementations
 	void ins_adc(Byte);
 	void ins_and(Byte);
@@ -452,13 +456,11 @@ private:
 	//////////
 	// Special addresses/vectors
 	
-	// Interrupt/NMI vector
-	constexpr static Word INTERRUPT_VECTOR = 0xFFFE;
 	// 6502 stack is one page at 01ff, down to 0100.  This is the stack frame for that page.
 	constexpr static Word STACK_FRAME      = 0x0100;
 
 	// Interrupts
-	void interrupt();
+	void interrupt(bool);
 	bool NMI();
 	bool IRQ();
 	uint64_t _IRQCount = 0;

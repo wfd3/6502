@@ -30,6 +30,10 @@ void MOS6502::setInterruptVector(const Word address) {
 	writeWord(INTERRUPT_VECTOR, address);
 }
 
+void MOS6502::setNMIVector(const Word address) {
+	writeWord(NMI_VECTOR, address);
+}
+
 void MOS6502::setPendingReset() {
 		if (!_debugMode)
 			_pendingReset = true;
@@ -150,13 +154,19 @@ void MOS6502::Reset() {
 //////////
 // Interrupts
 
-void MOS6502::interrupt() {
+void MOS6502::interrupt(bool isNMI) {
+	Word vector;
 
 	pushWord(PC);
 	pushPS();
+	
+	if (isNMI) 
+		vector = NMI_VECTOR;
+	else 
+		vector = INTERRUPT_VECTOR;
 
 	Flags.I = 1;
-	PC = readWord(INTERRUPT_VECTOR);
+	PC = readWord(vector);
 	_cycles++;
 }
 
@@ -164,7 +174,7 @@ bool MOS6502::NMI() {
 	if (pendingNMI()) {
 		debugger.addBacktraceInterrupt(PC);
 		_IRQCount++;
-		interrupt();
+		interrupt(true);
 		_pendingNMI = false;
 		return true;
 	}
@@ -176,7 +186,7 @@ bool MOS6502::IRQ() {
 	if (pendingIRQ() && !IRQBlocked()) {
 		debugger.addBacktraceInterrupt(PC);
 		_NMICount++;
-		interrupt();
+		interrupt(false);
 		_pendingIRQ = false;
 		return true;
 	}

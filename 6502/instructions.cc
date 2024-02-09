@@ -226,7 +226,7 @@ void MOS6502::ins_brk([[maybe_unused]] const Byte opcode) {
 	debugger.addBacktrace(PC - 1);
 	PC++;
 	_BRKCount++;
-	interrupt();
+	interrupt(false);
 	Flags.B = 1;
 }
 
