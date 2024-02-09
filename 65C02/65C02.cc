@@ -52,7 +52,7 @@ Word MOS65C02::getAddress(const Byte opcode) {
 		_cycles++;
 		break;
 
-	default:
+	default: // Must be a 6502 addressing mode
 		address = MOS6502::getAddress(opcode);
 		break;
 	}
@@ -67,7 +67,8 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 	Word wordval;
 	std::string out, addr, label;
 
-	// Check for Rockwell 65C02 BBRn or BBSn instructions. 
+	// Check for Rockwell 65C02 BBRn or BBSn instructions. These instruction mnemonics don't conform with the rest 
+	// of the 65C02 & 6502 instructions.
 	if ((ins & 0x0f) == 0x0f || (ins & 0x07) == 0x07) {
 		std::string zplabel, abslabel, zpaddr_str, reladdr_str, absaddr_str;
 		// zpaddr, relative_address
@@ -76,7 +77,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 		Word absaddr = PC + SByte(reladdr);
 
 		zpaddr_str= fmt::format("${:02x}", zpaddr);
-		zplabel = addressLabel(zpaddr);	
+		zplabel = debugger.addressLabel(zpaddr);	
 
 		if (!zplabel.empty()) {
 			disassembly = zplabel;
@@ -87,7 +88,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 		} 
 
 		reladdr_str = fmt::format("${:02x}", reladdr);
-		abslabel = addressLabel(absaddr);
+		abslabel = debugger.addressLabel(absaddr);
 		absaddr_str = fmt::format("{:04x}", absaddr);
 
 		if (!abslabel.empty()) {
@@ -107,7 +108,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 	case AddressingMode::ZeroPageIndirect:
 		byteval = readByteAtPC();
 		wordval = readWord(byteval);
-		label = addressLabelSearch(wordval);
+		label = debugger.addressLabelSearch(wordval);
 		addr = fmt::format("(${:02})", byteval);
 
 		if (!label.empty()) {
@@ -124,7 +125,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 
 	case AddressingMode::AbsoluteIndexedIndirect:
 		wordval = readWordAtPC();
-		label = addressLabelSearch(wordval);
+		label = debugger.addressLabelSearch(wordval);
 		addr = fmt::format("(${:04x}", wordval);
 		if (!label.empty()) {
 			disassembly = label;
@@ -409,6 +410,9 @@ MOS6502::_instructionMap_t MOS65C02::setup65C02Instructions() {
 		// The table below is formatted as follows:
 		// { Opcode,
 		//   {"name", AddressingMode, ByteLength, CyclesUsed, Flags, Function pointer for instruction}}
+		{ Opcodes.BRK_IMM,
+			{ "brk", convertAddressingMode(AddressingMode::Immediate), 1, 7, InstructionFlags::None,
+			std::bind(&MOS65C02::ins_brk, this, std::placeholders::_1)}},
 		{ Opcodes.TSB_ZP,
 			{ "tsb", convertAddressingMode(AddressingMode::ZeroPage), 3, 5, InstructionFlags::None,
 			std::bind(&MOS65C02::ins_tsb, this, std::placeholders::_1)}},
@@ -663,11 +667,6 @@ MOS6502::_instructionMap_t MOS65C02::setup65C02Instructions() {
 		{ Opcodes.SMB7,
 			{ "smb7", convertAddressingMode(AddressingMode::ZeroPage), 3, 5, InstructionFlags::None,
 			std::bind(&MOS65C02::ins_smb, this, std::placeholders::_1)}},
-
-		// 65C02 BRK resets D flag
-		{ Opcodes.BRK_IMM,
-			{ "brk", convertAddressingMode(AddressingMode::Immediate), 1, 7, InstructionFlags::None,
-			std::bind(&MOS65C02::ins_brk, this, std::placeholders::_1)}},
 	};
 
 	// Fold the new instructions into the 6502 instruction map

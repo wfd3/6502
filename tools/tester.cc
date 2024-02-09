@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 
 	mem.loadDataFromFile(testFile, loadAddress);
 	cpu.setResetVector(startAddress);
-	cpu.loopDetection(loopDetection);
+	cpu.enableLoopDetection(loopDetection);
 	cpu.Reset();
 
 	cpu.setDebugMode(startInDebugger);

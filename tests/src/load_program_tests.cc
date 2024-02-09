@@ -121,7 +121,7 @@ TEST_F(testClass, TestLoopDetection)
 {
 	mem.loadData(testLoopDetectionProgram, startAddress);
 	cpu.TestReset(startAddress);
-	cpu.loopDetection(true);
+	cpu.enableLoopDetection(true);
 
 	Word cycles = 1000;
 	while (--cycles && !cpu.loopDetected()) {

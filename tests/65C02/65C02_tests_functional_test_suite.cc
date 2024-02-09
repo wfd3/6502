@@ -79,7 +79,7 @@ TEST_F(testClass, TestLoad65C02ExtendedOpcodesTestSuite)
 	mem.loadDataFromFile(fileName, 0x0000);
 	cpu.setResetVector(startAddress);
 	cpu.setHaltAddress(haltAddress);
-	cpu.loopDetection(true); // Force a halt on 'jmp *'
+	cpu.enableLoopDetection(true); // Force a halt on 'jmp *'
 	cpu.Reset();
 
 	//Then:

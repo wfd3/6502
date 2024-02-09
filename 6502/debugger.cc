@@ -1,5 +1,5 @@
 //
-// Debugger functions for emulated 6502.
+// Debugger functions for emulated CPUs.
 //   Breakpoints, backtrace, address labels, etc.
 // 
 // Copyright (C) 2023 Walt Drummond
@@ -31,47 +31,19 @@
 
 
 //////////
-// Called by MOS6502::CPU() to initialize the debugger
-void MOS6502::initDebugger() {
-	setupConsoleInput();
-	deleteAllBreakpoints();
-}
-
-//////////
 // CPU State information 
 
-void MOS6502::printCPUState() {
-	auto yesno = [](bool b) -> std::string {
-		return b ? "Yes" : "No";
-	};
-	auto fl = [](char c, bool b) -> char {
-		return b ? std::toupper(c) : std::tolower(c);
-	};
-
-	fmt::print("  | PC: {:04x} SP: {:02x}\n", PC, SP );
-	// fmt::print() doesn't like to print out union/bit-field members?
-	fmt::print("  | Flags: {}{}{}{}{}{}{} (PS: {:#x})\n",
-		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D),
-		fl('B', Flags.B), fl('V', Flags.V), fl('N', Flags.N), PS);
-	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print("  | Pending: IRQ - {}, NMI - {}, Reset - {}; inReset? - {}\n",
-		   yesno(pendingIRQ()), yesno(pendingNMI()), yesno(_pendingReset), yesno(_inReset));
-	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n",
-		    _IRQCount, _NMICount, _BRKCount);
-	fmt::print("\n");
-}
-
-void MOS6502::dumpStack() {
-	Byte p = INITIAL_SP;
+void Debugger::dumpStack() {
+	Byte p = _cpu.INITIAL_SP;
 	Word a;
 
-	fmt::print("Stack [SP = {:02x}]\n", SP);
-	if (p == SP)
+	fmt::print("Stack [SP = {:02x}]\n", _cpu.SP);
+	if (p == _cpu.SP)
 		fmt::print("Empty stack\n");
 
-	while (p != SP) {
-		a = STACK_FRAME | p;
-		fmt::print("[{:04x}] {:02x}\n", a, mem.Read(a));
+	while (p != _cpu.SP) {
+		a = _cpu.STACK_FRAME | p;
+		fmt::print("[{:04x}] {:02x}\n", a, _cpu.mem.Read(a));
 		p--;
 	}
 }
@@ -79,7 +51,7 @@ void MOS6502::dumpStack() {
 //////////
 // Breakpoints
 
-void MOS6502::listBreakpoints() {
+void Debugger::listBreakpoints() {
 	fmt::print("Active breakpoints:\n");
 	for (const auto& address : breakpoints) {
 		fmt::print("{:04x}", address);
@@ -90,20 +62,15 @@ void MOS6502::listBreakpoints() {
 	}
 }
 
-bool MOS6502::isPCBreakpoint() { 
-	return isBreakpoint(PC); 
+bool Debugger::isPCBreakpoint() { 
+	return isBreakpoint(_cpu.PC); 
 }
 
-bool MOS6502::isBreakpoint(const Word bp) {
-	if (bp > LAST_ADDRESS) 
-		return false;
+bool Debugger::isBreakpoint(const Word bp) {
 	return breakpoints.find(bp) != breakpoints.end();
 }
 
-void MOS6502::deleteBreakpoint(const Word bp) {
-	if (bp > LAST_ADDRESS) 
-		return;
-	
+void Debugger::deleteBreakpoint(const Word bp) {
 	if (breakpoints.erase(bp) == 0) {
 		fmt::print("No breakpoint at {:04x}\n", bp);
 		return;
@@ -116,12 +83,7 @@ void MOS6502::deleteBreakpoint(const Word bp) {
 	fmt::print("\n");
 }
 
-void MOS6502::addBreakpoint(const Word bp) {
-	if (bp > LAST_ADDRESS) {
-		fmt::print("Error: Breakpoint address outside of available "
-			   "address range\n");
-		return;
-	}
+void Debugger::addBreakpoint(const Word bp) {
 	if (isBreakpoint(bp)) {
 		fmt::print("Breakpoint already set at {:04x}\n", bp);
 		return;
@@ -135,14 +97,14 @@ void MOS6502::addBreakpoint(const Word bp) {
 	fmt::print("\n");
 }
 
-void MOS6502::deleteAllBreakpoints() { 
+void Debugger::deleteAllBreakpoints() { 
 	breakpoints.clear();
 }
 
 //////////
 // Backtrace
 
-void MOS6502::showBacktrace() {
+void Debugger::showBacktrace() {
 	std::vector<std::string>::iterator i = backtrace.begin();
 	unsigned int cnt = 0;
 
@@ -151,20 +113,20 @@ void MOS6502::showBacktrace() {
 		fmt::print("#{:02d}:  {}\n", cnt++, (*i).c_str());
 }
 
-void MOS6502::addBacktrace(const Word backtracePC) {
+void Debugger::addBacktrace(const Word backtracePC) {
 	std::string ins;
-	disassembleAt(backtracePC, ins);
+	_cpu.disassembleAt(backtracePC, ins);
 	backtrace.push_back(ins);
 }
 
-void MOS6502::addBacktraceInterrupt(const Word backtracePC) {
+void Debugger::addBacktraceInterrupt(const Word backtracePC) {
 	std::string ins;
-	disassembleAt(backtracePC, ins);
+	_cpu.disassembleAt(backtracePC, ins);
 	ins += " [IRQ/NMI]";
 	backtrace.push_back(ins);
 }
 
-void MOS6502::removeBacktrace() {
+void Debugger::removeBacktrace() {
 	if (!backtrace.empty())
 		backtrace.pop_back();
 }
@@ -172,7 +134,7 @@ void MOS6502::removeBacktrace() {
 //////////
 // Labels
 
-void MOS6502::showLabels() {
+void Debugger::showLabels() {
 	if (addrToLabel.empty()) {
 		fmt::print("No labels\n");
 		return;
@@ -184,12 +146,12 @@ void MOS6502::showLabels() {
 	}
 }
 
-void MOS6502::addLabel(const Word address, const std::string label) {
+void Debugger::addLabel(const Word address, const std::string label) {
 	addrToLabel[address] = label;
 	labelToAddr[label]   = address;
 }
 
-void MOS6502::removeLabel(const Word address) {
+void Debugger::removeLabel(const Word address) {
 	auto it = addrToLabel.find(address);
 	if (it == addrToLabel.end())
 		return;
@@ -199,7 +161,7 @@ void MOS6502::removeLabel(const Word address) {
 	labelToAddr.erase(label);
 }
 
-std::string MOS6502::addressLabel(const Word address) {
+std::string Debugger::addressLabel(const Word address) {
 	std::string label;
 	
 	auto it = addrToLabel.find(address);
@@ -212,7 +174,7 @@ std::string MOS6502::addressLabel(const Word address) {
 std::unordered_map<Word, std::string> addrToLabel;
 std::list<Word> recentAddresses;  // Cache for recent addresses
 const size_t cacheSize = 10;      // Adjust the cache size as needed
-std::string MOS6502::addressLabelSearch(const Word address, const int8_t searchWidth) {
+std::string Debugger::addressLabelSearch(const Word address, const int8_t searchWidth) {
 	std::string label;
 
     label = addressLabel(address);
@@ -250,7 +212,7 @@ std::string MOS6502::addressLabelSearch(const Word address, const int8_t searchW
     return label;
 }
 
-bool MOS6502::labelAddress(const std::string& label, Word& address) {
+bool Debugger::labelAddress(const std::string& label, Word& address) {
 	auto it = labelToAddr.find(label);
 	if (it == labelToAddr.end()) 
 		return false;
@@ -258,7 +220,7 @@ bool MOS6502::labelAddress(const std::string& label, Word& address) {
 	return true;
 }
 
-bool MOS6502::lookupAddress(const std::string& line, Word& address) {
+bool Debugger::lookupAddress(const std::string& line, Word& address) {
 	if (line.empty()) 
 		return false;
 
@@ -284,7 +246,7 @@ bool MOS6502::lookupAddress(const std::string& line, Word& address) {
 //////////
 // Load and save hex files
 
-bool MOS6502::loadHexFile(const std::string& filename) {
+bool Debugger::loadHexFile(const std::string& filename) {
 	std::ifstream inFile(filename);
 	if (!inFile) {
 		fmt::print("Error opening file: {}", filename);
@@ -300,7 +262,7 @@ bool MOS6502::loadHexFile(const std::string& filename) {
 		
 		uint64_t element;
 		while (lineStream >> std::hex >> element) {
-			mem[address] = static_cast<Byte>(element);
+			_cpu.mem[address] = static_cast<Byte>(element);
 			address++;
 		}
 	}
@@ -308,7 +270,7 @@ bool MOS6502::loadHexFile(const std::string& filename) {
 	return true;
 }
 
-bool MOS6502::saveToHexFile(const std::string& filename, const std::vector<std::pair<Word, Word>>& addressRanges) {
+bool Debugger::saveToHexFile(const std::string& filename, const std::vector<std::pair<Word, Word>>& addressRanges) {
 	std::ofstream outFile(filename);
 	if (!outFile) {
 		fmt::print("Error opening file: {}", filename);
@@ -329,7 +291,7 @@ bool MOS6502::saveToHexFile(const std::string& filename, const std::vector<std::
 		for (Word i = startAddress; i <= endAddress; i += 16) {
 			out = fmt::format("{:0>4X}: ", i);
 			for (Word j = 0; j < 16 && (i + j) <= endAddress; ++j) {
-				Byte element = mem[i+j];
+				Byte element = _cpu.mem[i+j];
 				out += fmt::format("{:02X} ", element);
 			}
 			outFile << out << '\n';
@@ -339,7 +301,7 @@ bool MOS6502::saveToHexFile(const std::string& filename, const std::vector<std::
 	return true;
 }
 
-bool MOS6502::saveToHexFile(const std::string& filename, const Word startAddress, const Word endAddress) {
+bool Debugger::saveToHexFile(const std::string& filename, const Word startAddress, const Word endAddress) {
 	std::vector<std::pair<Word, Word>> range = {{startAddress, endAddress}};
 	return saveToHexFile(filename, range);
 }

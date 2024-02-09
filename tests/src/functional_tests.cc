@@ -32,7 +32,7 @@ TEST_F(testClass, TestLoad6502TestSuite)
 	mem.loadDataFromFile(fileName, 0x0000);
 	cpu.setResetVector(startAddress);
 	cpu.setHaltAddress(haltAddress);
-	cpu.loopDetection(true); // Force a halt on 'jmp *'
+	cpu.enableLoopDetection(true); // Force a halt on 'jmp *'
 	cpu.Reset();
 
 	//Then:
@@ -59,7 +59,7 @@ TEST_F(testClass, TestLoad6502DecimalTestSuite)
 	mem.loadDataFromFile(fileName, 0x0000);
 	cpu.setResetVector(startAddress);
 	cpu.setHaltAddress(haltAddress);
-	cpu.loopDetection(true); // Force a halt on 'jmp *'
+	cpu.enableLoopDetection(true); // Force a halt on 'jmp *'
 	cpu.Reset();
 
 	//Then:

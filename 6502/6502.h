@@ -32,20 +32,20 @@
 #include <cstdint>
 #include <functional>
 
-#include "memory.h"
-
 // Types used by 6502
 using Byte      = uint8_t;
 using SByte     = int8_t;
 using Word      = uint16_t;
 using Cycles_t  = uint8_t;
 
-// GNU Readline forward declaration with extern "C" linkage for later use as a
-// friend in class CPU. 
-extern "C" char **readlineCompletionCallback(const char* text, int start, int end);
+#include "memory.h"
+#include <debugger.h>
 
 class MOS6502 {
 public:
+
+	friend class Debugger;
+	
 	// Last addressable byte
 	constexpr static Word LAST_ADDRESS = 0xFFFF;
 	
@@ -72,11 +72,12 @@ public:
 	void unsetHaltAddress();
 	void setHaltAddress(Word);
 	bool isPCAtHaltAddress();
-	void loopDetection(bool);
+	void enableLoopDetection(bool);
+	bool isLoopDetectionEnabled();
 	bool loopDetected();
 	bool isInDebugMode();
 	void setDebugMode(bool);
-	bool hitCPUException();
+	bool hitException();
 
 	Cycles_t expectedCycles();
 	Cycles_t usedCycles();
@@ -279,6 +280,14 @@ public:
 	OpcodeConstants Opcodes;
 
 protected:
+
+	Debugger debugger;
+
+	// Disassembler
+	Word disassemble(Word, uint64_t);
+	Word disassembleAt(Word dPC, std::string &);
+	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
+
 	Cycles_t _cycles = 0;              // Cycle counter
 	Cycles_t _expectedCyclesToUse = 0; 
 
@@ -346,6 +355,9 @@ protected:
 
 	// CPU functions
 	void exception(const std::string &);
+
+	// Diagnostics
+	void printCPUState();
 	
 	// Flags
 	void setFlagZByValue(Byte);
@@ -373,10 +385,6 @@ protected:
 	virtual Word getAddress(Byte);
 	virtual Byte getData(Byte);
 
-	// Debugger
-	std::string addressLabel(const Word);
-	std::string addressLabelSearch(const Word, const int8_t searchWidth = 3);
-	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
 	
 	// Instruction implementations
 	void ins_adc(Byte);
@@ -439,6 +447,7 @@ protected:
 private:
 
 	Memory<Word, Byte>& mem;  // Moved from protected section
+	bool _debugMode = false;
 
 	//////////
 	// Special addresses/vectors
@@ -470,6 +479,9 @@ private:
 	Word _haltAddress = 0;
 	bool _haltAddressSet = false;
 
+	bool _infiniteLoopDetection = false;
+	bool _loopDetected = false;
+
 	void executeOneInstruction();
 	void exitReset();
 	
@@ -480,103 +492,6 @@ private:
 	void bcdSBC(Byte);
 	void getAorData(Byte&, Byte, Word&);
 	void putAorData(Byte, Byte, Word);
-	////
-	// Built-in Debugger
-	void executeDebug();
-
-	bool _debugMode = false;
-	std::string _lastDebuggerCommand = "";
-	bool _showCPUStatusAtDebugPrompt = false;
-	bool _infiniteLoopDetected = false;
-	bool _loopDetected = false;
-	bool _debugModeOnException = false;
-
-	void initDebugger();
-	bool executeDebuggerCmd(std::string);
-	void dumpStack();
-	void printCPUState();
-	void parseMemCommand(std::string);
-	
-	// Disassembler
-	Word disassemble(Word, uint64_t);
-	Word disassembleAt(Word dPC, std::string &);
-
-	typedef bool (MOS6502::*debugFn_t)(std::string &);
-
-	// Debugger commands
-	struct debugCommand {
-		const char *command;
-		const char *shortcut;
-		const MOS6502::debugFn_t func;
-		const bool doFileCompletion;
-		const std::string helpMsg;
-	};
-	const std::vector<debugCommand> _debugCommands;
-
-	static std::vector<debugCommand> setupDebugCommands();
-	bool matchCommand(const std::string &, debugFn_t &);
-	bool helpCmd(std::string&);
-	bool listCmd(std::string&);
-	bool loadCmd(std::string&);
-	bool stackCmd(std::string&);
-	bool breakpointCmd(std::string&);
-	bool cpustateCmd(std::string&);
-	bool autostateCmd(std::string&);
-	bool resetListPCCmd(std::string&);
-	bool memdumpCmd(std::string&);
-	bool memmapCmd(std::string&);
-	bool setCmd(std::string&);
-	bool resetCmd(std::string&);
-	bool continueCmd(std::string&);
-	bool loopdetectCmd(std::string&);
-	bool backtraceCmd(std::string&);
-	bool labelCmd(std::string&);
-	bool whereCmd(std::string&);
-	bool watchCmd(std::string&);
-	bool quitCmd(std::string&);
-	bool findCmd(std::string&);
-	bool clockCmd(std::string&);
-	bool loadScriptCmd(std::string&);
-	bool savememCmd(std::string&);
-	bool loadhexCmd(std::string&);
-
-	// Hex file
-	bool loadHexFile(const std::string&);
-	bool saveToHexFile(const std::string&, const std::vector<std::pair<Word, Word>>&);
-	bool saveToHexFile(const std::string&, Word startAddress, Word);
-
-	// Breakpoints
-	std::set<Word> breakpoints;
-	void listBreakpoints();
-	bool isBreakpoint(Word);
-	bool isPCBreakpoint();
-	void deleteBreakpoint(Word);
-	void addBreakpoint(Word);
-	void deleteAllBreakpoints();
-
-	// Backtrace
-	std::vector<std::string> backtrace;  // Use ::vector so we can easily iterate
-	void showBacktrace();
-	void addBacktrace(Word);
-	void addBacktraceInterrupt(Word);
-	void removeBacktrace();
-
-	// Labels
-	std::unordered_map<Word, std::string> addrToLabel;
-	std::unordered_map<std::string, Word> labelToAddr;
-	void showLabels();
-	void addLabel(Word, const std::string);
-	bool labelAddress(const std::string&, Word&);
-	void removeLabel(const Word);
-	bool lookupAddress(const std::string&, Word&);
-	bool parseCommandFile(const std::string&);
-	std::string getLabelByte(const uint8_t);
-
-	// GNU readline command completion, used by the debugger, needs access to the
-	// _debugCommands vector.
-	friend char *readlineCommandGenerator(const char*, int);
-	friend char **readlineCompletionCallback(const char*, int, int);
-	void setupConsoleInput();
 
 #ifdef TEST_BUILD	
 	Word _testResetPC = 0;

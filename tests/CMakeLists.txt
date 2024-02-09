@@ -72,6 +72,9 @@ endif()
 add_custom_target(run_memory_tests
   DEPENDS memory_tests
   COMMAND memory_tests)
+add_custom_command(TARGET memory_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:memory_tests>" "${BINDIR}")
 
 ##########
 # Clock tests
@@ -92,18 +95,13 @@ endif()
 add_custom_target(run_clock_tests
   DEPENDS clock_tests
   COMMAND clock_tests)
-
-# Phony targets 
-add_custom_target(tests
-  DEPENDS memory_tests clock_tests 6502_tests 65C02_tests)
-add_custom_target(runtests
-  DEPENDS run_memory_tests run_clock_tests run_6502_tests)
-
-# Copy the test binarys to {builddir}/bin
-add_custom_command(TARGET memory_tests POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
-  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:memory_tests>" "${BINDIR}")
 add_custom_command(TARGET clock_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:clock_tests>" "${BINDIR}")
+
+# Phony targets 
+add_custom_target(tests
+  DEPENDS memory_tests clock_tests 6502_tests 65C02_tests 6502_functional_tests 65C02_functional_tests)
+add_custom_target(runtests
+  DEPENDS run_memory_tests run_clock_tests run_6502_tests run_65C02_tests run_6502_functional_tests run_65C02_functional_tests)
 

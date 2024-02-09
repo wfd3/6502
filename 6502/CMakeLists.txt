@@ -22,8 +22,8 @@ set (SOURCES
   "opcode_map.cc"
   "instructions.cc"
   "disassembler.cc"
-  "debug.cc"
-  "debug_commands.cc"
+  "debugger.cc"
+  "debugger_commands.cc"
   "utils.cc"
 )
 		

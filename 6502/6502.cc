@@ -20,13 +20,7 @@
 
 //////////
 // CPU Setup and reset
-MOS6502::MOS6502(Memory<Word, Byte>& m) : _instructions(setupInstructionMap()),
-										  mem(m),
-				       					  _debugCommands(setupDebugCommands()) {
-	
-	_inReset = true;
-	initDebugger();
-}
+MOS6502::MOS6502(Memory<Word, Byte>& m) : debugger(*this), _instructions(setupInstructionMap()), mem(m), _inReset(true) {}	
 
 void MOS6502::setResetVector(const Word address) {
 	writeWord(RESET_VECTOR, address);
@@ -74,8 +68,12 @@ bool MOS6502::isPCAtHaltAddress() {
 	return _haltAddressSet && (PC == _haltAddress);
 }
 
-void MOS6502::loopDetection(const bool l) {
-	_infiniteLoopDetected = l;
+void MOS6502::enableLoopDetection(const bool l) {
+	_infiniteLoopDetection = l;
+}
+
+bool MOS6502::isLoopDetectionEnabled() { 
+	return _infiniteLoopDetection;
 }
 
 bool MOS6502::loopDetected() { 
@@ -90,7 +88,7 @@ void MOS6502::setDebugMode(const bool m) {
 	_debugMode = m; 
 }
 
-bool MOS6502::hitCPUException() { 
+bool MOS6502::hitException() { 
 	return _hitException; 
 }
 
@@ -116,7 +114,7 @@ void MOS6502::exitReset() {
 #endif
 
 	_debugMode = false;
-	_showCPUStatusAtDebugPrompt = false;
+	debugger.setCPUStatusAtPrompt(false); // TODO: Need a debugger.Reset()? 
 
 	_hitException = false;
 
@@ -126,10 +124,8 @@ void MOS6502::exitReset() {
 	_cycles += 7;		
 }	
 
-// This is only intended for testing, not for emulation.  It
-// allows tests to set specific starting Program Counter and
-// Stack Pointer values, exits reset so that the next call to execute...() 
-// executes code.
+// This is only intended for testing, not for emulation.  It allows tests to set specific starting
+// Program Counter and Stack Pointer values, exits reset so that the next call to execute...() executes code.
 #ifdef TEST_BUILD
 void MOS6502::TestReset(const Word initialPC, const Byte initialSP)  {
 	_inReset = true;
@@ -141,8 +137,7 @@ void MOS6502::TestReset(const Word initialPC, const Byte initialSP)  {
 }
 #endif
 
-// 'Asserts' the Reset line if not asserted, de-asserts the Reset line
-// if asserted. 
+// 'Asserts' the Reset line if not asserted, de-asserts the Reset line if asserted. 
 void MOS6502::Reset() {
 	if (!_inReset) {		// Not in Reset, assert the Reset line
 		_inReset = true;
@@ -167,7 +162,7 @@ void MOS6502::interrupt() {
 
 bool MOS6502::NMI() {
 	if (pendingNMI()) {
-		addBacktraceInterrupt(PC);
+		debugger.addBacktraceInterrupt(PC);
 		_IRQCount++;
 		interrupt();
 		_pendingNMI = false;
@@ -179,7 +174,7 @@ bool MOS6502::NMI() {
 
 bool MOS6502::IRQ() {
 	if (pendingIRQ() && !IRQBlocked()) {
-		addBacktraceInterrupt(PC);
+		debugger.addBacktraceInterrupt(PC);
 		_NMICount++;
 		interrupt();
 		_pendingIRQ = false;
@@ -195,7 +190,7 @@ void MOS6502::exception(const std::string& message) {
 	std::string msg = "CPU Exception: " + message;
 	_hitException = true;
 	
-	if (_debugModeOnException && !_debugMode) 
+	if (debugger.debugModeOnException() && !_debugMode) 
 		_debugMode = true;
 
 	throw std::runtime_error(msg);
@@ -415,7 +410,7 @@ void MOS6502::executeOneInstruction() {
 	Word startPC;
 	struct instruction ins;
 
-	if (hitCPUException()) {
+	if (hitException()) {
 		fmt::print("CPU has hit an exception\n");
 		return;
 	}
@@ -457,7 +452,7 @@ void MOS6502::executeOneInstruction() {
 		if (_loopDetected) 
 			throw std::runtime_error("Recursive loop detected");
 			
-		if (_infiniteLoopDetected) 
+		if (_infiniteLoopDetection) 
 			fmt::print("# Loop detected at {:04x}\n", PC);
 		_loopDetected = true;
 		return;
@@ -471,18 +466,39 @@ void MOS6502::executeOneInstruction() {
 
 void MOS6502::execute() {
 
-	if (isPCBreakpoint() && !_debugMode) {
+	if (debugger.isPCBreakpoint() && !_debugMode) {
 		// Set debug mode and return so the caller can setup the terminal if needed.
 		_debugMode = true;
 		return;
 	}
 
 	if (_debugMode) {
-		executeDebug();
+		debugger.executeDebug();
 		return;
 	}
 
 	executeOneInstruction();
 
 	_debugMode |= loopDetected();
+}
+
+void MOS6502::printCPUState() {
+	auto yesno = [](bool b) -> std::string {
+		return b ? "Yes" : "No";
+	};
+	auto fl = [](char c, bool b) -> char {
+		return b ? std::toupper(c) : std::tolower(c);
+	};
+
+	fmt::print("  | PC: {:04x} SP: {:02x}\n", PC, SP );
+	// fmt::print() doesn't like to print out union/bit-field members?
+	fmt::print("  | Flags: {}{}{}{}{}{}{} (PS: {:#x})\n",
+		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D),
+		fl('B', Flags.B), fl('V', Flags.V), fl('N', Flags.N), PS);
+	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+	fmt::print("  | Pending: IRQ - {}, NMI - {}, Reset - {}; inReset? - {}\n",
+		   yesno(pendingIRQ()), yesno(pendingNMI()), yesno(_pendingReset), yesno(_inReset));
+	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n",
+		    _IRQCount, _NMICount, _BRKCount);
+	fmt::print("\n");
 }

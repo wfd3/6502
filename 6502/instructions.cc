@@ -223,7 +223,7 @@ void MOS6502::ins_bpl(const Byte opcode) {
 void MOS6502::ins_brk([[maybe_unused]] const Byte opcode) {
 	// push PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
-	addBacktrace(PC - 1);
+	debugger.addBacktrace(PC - 1);
 	PC++;
 	_BRKCount++;
 	interrupt();
@@ -391,7 +391,7 @@ void MOS6502::ins_jmp(const Byte opcode) {
 
 // JSR
 void MOS6502::ins_jsr([[maybe_unused]] const Byte opcode) {
-	addBacktrace(PC - 1);
+	debugger.addBacktrace(PC - 1);
 
 	pushWord(PC + 1);
 	PC = readWord(PC);
@@ -523,7 +523,7 @@ void MOS6502::ins_ror(const Byte opcode) {
 
 // RTI
 void MOS6502::ins_rti([[maybe_unused]] const Byte opcode) {
-	removeBacktrace();
+	debugger.removeBacktrace();
 	popPS();
 	PC = popWord();
 	_cycles += 2;
@@ -531,7 +531,7 @@ void MOS6502::ins_rti([[maybe_unused]] const Byte opcode) {
 
 // RTS
 void MOS6502::ins_rts([[maybe_unused]] const Byte opcode) {
-	removeBacktrace();
+	debugger.removeBacktrace();
 	PC = popWord() + 1;
 	_cycles += 3;	       
 }

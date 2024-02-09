@@ -52,7 +52,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 
 	case AddressingMode::ZeroPage:  // $xx
 		byteval = readByteAtPC();
-		label = addressLabelSearch(byteval);
+		label = debugger.addressLabelSearch(byteval);
 		addr = fmt::format("${:02x}", byteval);
 	
 		if (!label.empty()) {
@@ -67,7 +67,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 
 	case AddressingMode::ZeroPageX:  // $xx,X
 		byteval = readByteAtPC();
-		label = addressLabelSearch(byteval);
+		label = debugger.addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
 
 		if (!label.empty()) {
@@ -85,7 +85,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 
 	case AddressingMode::ZeroPageY:  // $xx,Y
 		byteval = readByteAtPC();
-		label = addressLabelSearch(byteval);
+		label = debugger.addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
 		if (!label.empty()) {
 			disassembly = label;
@@ -104,7 +104,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 		rel = readByteAtPC();
 		wordval = PC + SByte(rel);
 		addr = fmt::format("${:04x}", wordval);
-		label = addressLabel(wordval);
+		label = debugger.addressLabel(wordval);
 
 		if (!label.empty()) {
 			disassembly = label;
@@ -118,7 +118,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 
 	case AddressingMode::Absolute:  // $xxxx
 		wordval = readWordAtPC();
-		label = addressLabel(wordval);
+		label = debugger.addressLabel(wordval);
 		addr = fmt::format("${:04x}", wordval);
 
 		if (!label.empty()) {
@@ -133,7 +133,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 
 	case AddressingMode::AbsoluteX:  // $xxxx,X
 		wordval = readWordAtPC();
-		label = addressLabelSearch(wordval);
+		label = debugger.addressLabelSearch(wordval);
 		addr = fmt::format("${:04x}", wordval);
 		if (!label.empty())  {
 			disassembly = label;
@@ -151,7 +151,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 
 	case AddressingMode::AbsoluteY:  // $xxxx,Y
 		wordval = readWordAtPC();
-		label = addressLabelSearch(wordval);
+		label = debugger.addressLabelSearch(wordval);
 		addr = fmt::format("${:04x}", wordval);
 		if (!label.empty()) {
 			disassembly = label;
@@ -170,7 +170,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 	case AddressingMode::Indirect:  // $(xxxx)
 		wordval = readWordAtPC();
 
-		label = addressLabel(wordval);
+		label = debugger.addressLabel(wordval);
 		addr = fmt::format("{:04x}", wordval);
 		if (!label.empty()) {
 			disassembly = "(" + label + ")";
@@ -190,7 +190,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 			wordval -= 0xFF;
 		wordval = readWord(wordval);
 		
-		label = addressLabelSearch(byteval);
+		label = debugger.addressLabelSearch(byteval);
 		addr = fmt::format("${:04x}", byteval);
 		if (!label.empty())  {
 			disassembly = label;
@@ -210,7 +210,7 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 		wordval = readWord(byteval);
 		wordval += Y;
 		
-		label = addressLabel(byteval);
+		label = debugger.addressLabel(byteval);
 		addr = fmt::format("${:04x}", byteval);
 		if (!label.empty()) { 
 			disassembly = label;
@@ -233,13 +233,13 @@ void MOS6502::decodeArgs(const bool atPC, const Byte ins, std::string& disassemb
 Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 	Word savePC = PC;
 	Cycles_t saveCycles = _cycles;
-	std::string ins, bkpoint, args, opcodes, marker, address, computedAddress;
+	std::string ins, brkpoint, args, opcodes, marker, address, computedAddress;
 	bool atPC = (PC == dPC); 
 	bool bytes = false;
 
 	PC = dPC;
-	if (isBreakpoint(PC))
-		bkpoint = "B";
+	if (debugger.isBreakpoint(PC))
+		brkpoint = "B";
 
 	if (atPC) 
 		marker = "*";
@@ -258,12 +258,12 @@ Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 
     //  B*| label^addr  : | 23 56 89 | ins     args | [opt. address]
 	auto addr = fmt::format("{:04x}", dPC);
-	std::string label = addressLabel(dPC);
+	std::string label = debugger.addressLabel(dPC);
 	if (!label.empty()) 
 		 addr += fmt::format(" ({})", label);
 		
 	disassembly = fmt::format("{:1.1}{:1.1}| {:20.20} | {:9.9}| {:<7}", 
-				              marker, bkpoint, addr, opcodes, ins);
+				              marker, brkpoint, addr, opcodes, ins);
 
 	if (!bytes) 
 		disassembly += fmt::format("{:<20} | {:<5.5} | {}", args, address, computedAddress);
