@@ -24,7 +24,7 @@
 // The shift and rotate instructions (ASL, LSR, ROL, ROR) can operate on A implicitly, or on 
 // data in memory.  These helpers make that a bit easier.
 void MOS6502::getAorData(Byte& data, const Byte opcode, Word& address) {
-	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
+	bool accumulator = instructionIsAddressingMode(opcode, AddressingMode::Accumulator);
 
 	if (accumulator)
 		data = A;
@@ -35,7 +35,7 @@ void MOS6502::getAorData(Byte& data, const Byte opcode, Word& address) {
 }
 
 void MOS6502::putAorData(Byte data, const Byte opcode, Word address) {
-	bool accumulator = _instructions.at(opcode).addrmode == AddressingMode::Accumulator;
+	bool accumulator = instructionIsAddressingMode(opcode, AddressingMode::Accumulator);
 
 	if (accumulator)
 		A = data;
@@ -174,7 +174,7 @@ void MOS6502::ins_asl(const Byte opcode) {
 	putAorData(data, opcode, address);
 	
 	_cycles++;
-	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;	
 }
 
@@ -309,7 +309,7 @@ void MOS6502::ins_dec(const Byte opcode) {
 	setFlagZByValue(data);
 	setFlagNByValue(data);
 	_cycles++;
-	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;
 }
 
@@ -351,7 +351,7 @@ void MOS6502::ins_inc(const Byte opcode) {
 	setFlagZByValue(data);
 	setFlagNByValue(data);
 	_cycles++;
-	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;
 }
 
@@ -374,9 +374,8 @@ void MOS6502::ins_iny([[maybe_unused]] const Byte opcode) {
 // JMP
 void MOS6502::ins_jmp(const Byte opcode) {
 	Word address = readWord(PC);
-	bool indirect = _instructions.at(opcode).addrmode == AddressingMode::Indirect;
 	
-	if (indirect) {
+	if (instructionIsAddressingMode(opcode, AddressingMode::Indirect)) {
 		if ((address & 0xff) == 0xff) { // implement the JMP Indirect bug
 			Byte lsb = readByte(address);
 			Byte msb = readByte(address & 0xff00);
@@ -395,7 +394,7 @@ void MOS6502::ins_jsr([[maybe_unused]] const Byte opcode) {
 
 	pushWord(PC + 1);
 	PC = readWord(PC);
-	_cycles++;
+	_cycles += 2;
 }
 
 // LDA
@@ -434,7 +433,7 @@ void MOS6502::ins_lsr(const Byte opcode) {
 	putAorData(data, opcode, address);
 
 	_cycles++;
-	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;	
 }
 
@@ -495,7 +494,7 @@ void MOS6502::ins_rol(const Byte opcode) {
 	putAorData(data, opcode, address);
 
 	_cycles++;
-	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;
 }
 
@@ -508,8 +507,8 @@ void MOS6502::ins_ror(const Byte opcode) {
 
 	newCarryFlag = data & 1;
 	data = data >> 1;
-	if (Flags.C)
-		data |= NegativeBit;
+	if (Flags.C)  // Carry bit becomes bit 7 of the result
+		data |= 1 << 7;
 	setFlagNByValue(data);
 	setFlagZByValue(data);
 	Flags.C = (newCarryFlag == 1);
@@ -517,7 +516,7 @@ void MOS6502::ins_ror(const Byte opcode) {
 	putAorData(data, opcode, address);
 
 	_cycles++;
-	if (_instructions.at(opcode).addrmode == AddressingMode::AbsoluteX)
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;
 }
 

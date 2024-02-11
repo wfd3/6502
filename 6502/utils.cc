@@ -59,6 +59,18 @@ std::string split(std::string& input, const std::string& delim) {
     return part;
 }
 
+std::string removeDuplicateSpaces(const std::string& input) {
+    std::string result = input;
+
+    auto newEnd = std::unique(result.begin(), result.end(), [](char lhs, char rhs) {
+        return (lhs == rhs) && (lhs == ' ');
+    });
+
+    // Erase the "unused" elements at the end
+    result.erase(newEnd, result.end());
+    return result;
+}
+
 std::string wrapText(const std::string& text, int width, int tabLength) {
     std::string result;
     std::string line;
@@ -84,6 +96,14 @@ std::string wrapText(const std::string& text, int width, int tabLength) {
 
     result += line; // Add any remaining text to the result
     return result;
+}
+
+bool containsChar(const std::string& str, const char ch) {
+    return str.find(ch) != std::string::npos;
+}
+
+void upCaseString(std::string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 }
 
 bool isHexDigit(const char ch) {

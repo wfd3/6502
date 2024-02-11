@@ -29,25 +29,6 @@
 #include <6502.h>
 #include <utils.h>
 
-
-//////////
-// CPU State information 
-
-void Debugger::dumpStack() {
-	Byte p = _cpu.INITIAL_SP;
-	Word a;
-
-	fmt::print("Stack [SP = {:02x}]\n", _cpu.SP);
-	if (p == _cpu.SP)
-		fmt::print("Empty stack\n");
-
-	while (p != _cpu.SP) {
-		a = _cpu.STACK_FRAME | p;
-		fmt::print("[{:04x}] {:02x}\n", a, _cpu.mem.Read(a));
-		p--;
-	}
-}
-
 //////////
 // Breakpoints
 

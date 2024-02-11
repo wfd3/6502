@@ -62,6 +62,7 @@ TEST_F(testClass, InlineMaskableInterrupt) {
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
 	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
 	cpu.setHaltAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.raiseIRQ();
@@ -74,7 +75,7 @@ TEST_F(testClass, InlineMaskableInterrupt) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), initialSP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -85,6 +86,7 @@ TEST_F(testClass, InlineMaskableInterruptDoesNotInterruptWhenIFlagSet) {
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
 	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
 	cpu.setHaltAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
 	cpu.setFlagI(true);
@@ -98,7 +100,7 @@ TEST_F(testClass, InlineMaskableInterruptDoesNotInterruptWhenIFlagSet) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x1001);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), initialSP);
 	EXPECT_TRUE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -109,8 +111,10 @@ TEST_F(testClass, MaskableInterrupt) {
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
 	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
 	cpu.setHaltAddress(0x4000);
 	cpu.setInterruptVector(0x4000);
+	cpu.setNMIVector(0x3000);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 
@@ -123,7 +127,7 @@ TEST_F(testClass, MaskableInterrupt) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), initialSP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -134,8 +138,10 @@ TEST_F(testClass, NonMaskableInterrupt) {
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
 	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
 	cpu.setHaltAddress(0x4000);
-	cpu.setInterruptVector(0x4000);
+	cpu.setInterruptVector(0x3000);
+	cpu.setNMIVector(0x4000);
 
 	// When
 	std::thread runProgram(executeFunction(NonMaskableInterrupt), this);
@@ -146,7 +152,7 @@ TEST_F(testClass, NonMaskableInterrupt) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), initialSP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -157,8 +163,9 @@ TEST_F(testClass, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 	//Given:
 	mem.loadData(interruptTestProgram, 0x1000);
 	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
 	cpu.setHaltAddress(0x4000);
-	cpu.setInterruptVector(0x4000);
+	cpu.setNMIVector(0x4000);
 	cpu.setFlagI(true);
 
 	// When
@@ -170,7 +177,7 @@ TEST_F(testClass, NonMaskableInterruptWorksEvenWhenIFlagSet) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x4000);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
+	EXPECT_EQ(cpu.getSP(), initialSP - 3);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_TRUE(cpu.getFlagI());
@@ -191,6 +198,7 @@ TEST_F(testClass, MaskableInterruptFollowedByRTSWorks) {
 	//Given:
 	mem.loadData(thisProgram, 0x1000);
 	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
 	cpu.setHaltAddress(0x1005);
 	cpu.setInterruptVector(0x4000);
 	mem.loadData(rtiProgram, 0x4000);
@@ -202,8 +210,118 @@ TEST_F(testClass, MaskableInterruptFollowedByRTSWorks) {
 
 	// Expect
 	EXPECT_EQ(cpu.getPC(), 0x1005);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), initialSP);
 	EXPECT_FALSE(cpu.pendingIRQ());
 	EXPECT_FALSE(cpu.pendingNMI());
 	EXPECT_FALSE(cpu.getFlagI());
+}
+
+TEST_F(testClass, NonMaskableInterruptFollowedByRTSWorks) {
+
+	// 1000 loop: dex
+	// 1001       cpy #0
+	// 1003       bne loop
+	// 1005       dex
+	std::vector<Byte> thisProgram = { 0xca, 0xc0, 0x00, 0xd0, 0xfb, 0xca };
+
+	// 4000       ldy #0
+	// 4002       rti
+	std::vector<Byte> rtiProgram  = { 0xa0, 0x00, 0x40 };
+
+	//Given:
+	mem.loadData(thisProgram, 0x1000);
+	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
+	cpu.setHaltAddress(0x1005);
+	cpu.setNMIVector(0x4000);
+	mem.loadData(rtiProgram, 0x4000);
+
+	// When
+	cpu.raiseNMI();
+	std::thread runProgram(executeFunction(NonMaskableInterruptFollowedByRTSWorks), this);
+	runProgram.join();
+
+	// Expect
+	EXPECT_EQ(cpu.getPC(), 0x1005);
+	EXPECT_EQ(cpu.getSP(), initialSP);
+	EXPECT_FALSE(cpu.pendingIRQ());
+	EXPECT_FALSE(cpu.pendingNMI());
+	EXPECT_FALSE(cpu.getFlagI());
+}
+
+TEST_F(testClass, SimultaneousNMIandIRQRunsNMIFirst) {
+
+	//Given:
+	mem.loadData(interruptTestProgram, 0x1000);
+	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
+	cpu.setHaltAddress(0x4000);
+	cpu.setInterruptVector(0x4000);
+	cpu.setNMIVector(0x3000);
+	cpu.raiseIRQ();
+	cpu.raiseNMI();
+
+	mem[0x1000] = cpu.Opcodes.NOP_IMP;
+
+	EXPECT_TRUE(cpu.pendingIRQ());
+	EXPECT_FALSE(cpu.getFlagI());
+
+	// When
+	cpu.execute();
+
+	// Expect
+	EXPECT_EQ(cpu.getPC(), 0x3000);
+	EXPECT_EQ(cpu.getSP(), initialSP - 3);
+	EXPECT_TRUE(cpu.pendingIRQ());
+	EXPECT_FALSE(cpu.pendingNMI());
+	EXPECT_TRUE(cpu.getFlagI());
+}
+
+TEST_F(testClass, SimultaneousNMIandIRQRunsNMIFirstAndThenRunsIRQAfterNMICompletes) {
+    
+	// Loop until both X and Y are 0
+	// 1000 loop: cpy #0
+	// 1002       bne loop
+	// 1004       cmp #0
+	// 1006       bne loop
+	// 1008       nop
+	std::vector<Byte> thisProgram = { 0xc0, 0x00, 0xd0, 0xfc, 0xe0, 0x00, 0xd0, 0xf8, 0xea };
+
+	// Set Y to 0
+	// 4000       ldy #0
+	// 4002       rti
+	std::vector<Byte> nmiProgram  = { 0xa0, 0x00, 0x40 };
+
+	// Set X to 0
+	// 4000       ldx #0
+	// 4002       rti
+	std::vector<Byte> irqProgram  = { 0xa2, 0x00, 0x40 };
+
+	//Given:
+	mem.loadData(thisProgram, 0x1000);
+	cpu.TestReset(0x1000);
+	Word initialSP = cpu.getSP();
+	cpu.setHaltAddress(0x1008);
+	cpu.setInterruptVector(0x3000);
+	mem.loadData(irqProgram, 0x3000);
+	cpu.setNMIVector(0x4000);
+	mem.loadData(nmiProgram, 0x4000);
+	cpu.setY(0xff);
+	cpu.setX(0xff);
+
+	// When
+	cpu.raiseNMI();
+	cpu.raiseIRQ();
+	std::thread runProgram(executeFunction(NonMaskableInterruptFollowedByRTSWorks), this);
+	runProgram.join();
+
+	// Expect
+	EXPECT_EQ(cpu.getPC(), 0x1008);
+	EXPECT_EQ(cpu.getSP(), initialSP);
+	EXPECT_EQ(cpu.getY(), 0); // NMI ran
+	EXPECT_EQ(cpu.getX(), 0); // IRQ ran
+	EXPECT_FALSE(cpu.pendingIRQ());
+	EXPECT_FALSE(cpu.pendingNMI());
+	EXPECT_FALSE(cpu.getFlagI());
+
 }

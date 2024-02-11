@@ -34,4 +34,4 @@ public:
 };
 
 #define testClass MOS65C02BRKTests
-#include "brk_tests.cc"
+#include "cmp_tests.cc"

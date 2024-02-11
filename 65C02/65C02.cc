@@ -21,7 +21,7 @@ MOS6502::AddressingMode MOS65C02::convertAddressingMode(const AddressingMode mod
 	return static_cast<MOS6502::AddressingMode>(mode);
 }
 
-bool MOS65C02::isAddrMode(const Byte opcode, const AddressingMode addrmode) {
+bool MOS65C02::instructionIsAddressingMode(const Byte opcode, const AddressingMode addrmode) {
 	return static_cast<MOS65C02::AddressingMode>(_instructions.at(opcode).addrmode) == addrmode;
 }
 
@@ -61,7 +61,7 @@ Word MOS65C02::getAddress(const Byte opcode) {
 }
 
 // Argument decoding for 65C02/R65C02
-void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassembly, std::string& opcodes, 
+void MOS65C02::decodeArgs(Word& dPC, const bool atPC, const Byte ins, std::string& disassembly, std::string& opcodes, 
 						  std::string& address, std::string& computedAddr) {
 	Byte byteval;
 	Word wordval;
@@ -72,8 +72,8 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 	if ((ins & 0x0f) == 0x0f || (ins & 0x07) == 0x07) {
 		std::string zplabel, abslabel, zpaddr_str, reladdr_str, absaddr_str;
 		// zpaddr, relative_address
-		auto zpaddr  = readByteAtPC();
-		auto reladdr = readByteAtPC();
+		auto zpaddr  = readByte(dPC++);
+		auto reladdr = readByte(dPC++);
 		Word absaddr = PC + SByte(reladdr);
 
 		zpaddr_str= fmt::format("${:02x}", zpaddr);
@@ -106,7 +106,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 	auto addressMode = static_cast<MOS65C02::AddressingMode>(_instructions.at(ins).addrmode);
 	switch (addressMode) {
 	case AddressingMode::ZeroPageIndirect:
-		byteval = readByteAtPC();
+		byteval = readByte(dPC++);
 		wordval = readWord(byteval);
 		label = debugger.addressLabelSearch(wordval);
 		addr = fmt::format("(${:02})", byteval);
@@ -124,7 +124,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 		break;
 
 	case AddressingMode::AbsoluteIndexedIndirect:
-		wordval = readWordAtPC();
+		wordval = readWord(dPC++);
 		label = debugger.addressLabelSearch(wordval);
 		addr = fmt::format("(${:04x}", wordval);
 		if (!label.empty()) {
@@ -142,7 +142,7 @@ void MOS65C02::decodeArgs(const bool atPC, const Byte ins, std::string& disassem
 		break;
 
 	default:
-		MOS6502::decodeArgs(atPC, ins, disassembly, opcodes, address, computedAddr);
+		MOS6502::decodeArgs(dPC, atPC, ins, disassembly, opcodes, address, computedAddr);
 		break;
 	}
 }
@@ -168,7 +168,7 @@ void MOS65C02::ins_stz(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, 0);
 
-	if (isAddrMode(opcode, AddressingMode::AbsoluteX))
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
 		_cycles++;
 }
 
@@ -234,14 +234,14 @@ void MOS65C02::ins_adc(const Byte opcode) {
 void MOS65C02::ins_bit(const Byte opcode) {
 	bool V, N;
 	
-	if (isAddrMode(opcode, AddressingMode::Immediate)) {
+	if (instructionIsAddressingMode(opcode, AddressingMode::Immediate)) {
 		V = Flags.V;
 		N = Flags.N;
 	}
 
 	MOS6502::ins_bit(opcode);
 	
-	if (isAddrMode(opcode, AddressingMode::Immediate)) {
+	if (instructionIsAddressingMode(opcode, AddressingMode::Immediate)) {
 		Flags.V = V;
 		Flags.N = N;
 	}
@@ -255,7 +255,7 @@ void MOS65C02::ins_brk(const Byte opcode) {
 
 // DEC
 void MOS65C02::ins_dec(const Byte opcode) {
-	bool accumulator = isAddrMode(opcode, AddressingMode::Accumulator);
+	bool accumulator = instructionIsAddressingMode(opcode, AddressingMode::Accumulator);
 	if (accumulator) {
 		A--;
 		_cycles++;
@@ -268,7 +268,7 @@ void MOS65C02::ins_dec(const Byte opcode) {
 
 // INC
 void MOS65C02::ins_inc(const Byte opcode) {
-	bool accumulator = isAddrMode(opcode, AddressingMode::Accumulator);
+	bool accumulator = instructionIsAddressingMode(opcode, AddressingMode::Accumulator);
 	if (accumulator) {
 		A++;
 		_cycles++;
@@ -284,8 +284,8 @@ void MOS65C02::ins_inc(const Byte opcode) {
 void MOS65C02::ins_jmp(const Byte opcode) {
 	Word address = readWord(PC);
 	
-	bool indirect = isAddrMode(opcode, AddressingMode::Indirect);
-	bool absIndexedIndirect = isAddrMode(opcode, AddressingMode::AbsoluteIndexedIndirect);
+	bool indirect = instructionIsAddressingMode(opcode, AddressingMode::Indirect);
+	bool absIndexedIndirect = instructionIsAddressingMode(opcode, AddressingMode::AbsoluteIndexedIndirect);
 
 	if (absIndexedIndirect) {
 		address += X;

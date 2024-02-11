@@ -24,10 +24,15 @@ TEST_F(testClass, BRKImplied) {
 	
 	Byte ins = cpu.Opcodes.BRK_IMP;
 	Word pushed_PC = MOS6502::RESET_VECTOR + 2;
-	constexpr Word STACK_FRAME = 0x0100 | MOS6502::INITIAL_SP;
+	constexpr Word STACK_FRAME = 0x0100;
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
+	
+	Word initialSP = cpu.getSP();
+	Word initialStackAddr = STACK_FRAME | initialSP;
+	fmt::print("SP = {:02x}, stkaddr = {:04x}\n", initialSP, initialStackAddr);
+
 	mem[0xFFFC] = ins;
 	mem[0xFFFE] = 0x00;
 	mem[0xFFFF] = 0x60;
@@ -37,9 +42,9 @@ TEST_F(testClass, BRKImplied) {
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x6000);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 3);
-	EXPECT_EQ(mem[STACK_FRAME-1], pushed_PC & 0xff);
-	EXPECT_EQ(mem[STACK_FRAME], pushed_PC >> 8);
+	EXPECT_EQ(cpu.getSP(), initialSP - 3);
+	EXPECT_EQ(mem[initialStackAddr-1], pushed_PC & 0xff);
+	EXPECT_EQ(mem[initialStackAddr], pushed_PC >> 8);
 	EXPECT_TRUE(cpu.getFlagB());
 	EXPECT_TRUE(cpu.getFlagI());
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 

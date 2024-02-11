@@ -329,7 +329,7 @@ bool Debugger::savememCmd([[maybe_unused]] std::string& line) {
 }
 
 bool Debugger::stackCmd([[maybe_unused]] std::string& line) {
-	dumpStack();
+	_cpu.Stack();
 	return true;
 }
 
@@ -493,90 +493,71 @@ bool Debugger::setCmd(std::string& line) {
 	uint64_t value;
 	bool flipFlag = false;
 
-	// TODO:  make 'set x 5' and 'set x=5' work.
-	v = stripSpaces(line);
-	reg = split(v, "=");
+	if (containsChar(line, '=')) {  // "set x=5"
+		v = stripSpaces(line);	
+		reg = split(v, "=");
+	} else {                        // "set x 5" or "set d"
+		v = stripLeadingSpaces(line);
+		v = stripTrailingSpaces(v);
+		v = removeDuplicateSpaces(v);
+		reg = split(v, " ");
+	}
+
 	if (reg.empty()) {
-		fmt::print("Parse Error: register or flag required for set "
-			   "command\n");
+		fmt::print("Parse Error: register or flag required for set command\n");
 		return false;
 	}
 
-	// reg contains the register, s is the value.
-	std::transform(reg.begin(), reg.end(), reg.begin(), ::toupper);
+	// reg contains the register, v is the value.
+	upCaseString(reg);
+	
 	try {
 		value = std::stoul(v, nullptr, 16);
 		if ((reg != "PC" && value > 0xff) ||
 		    (reg == "PC" && value > 0xffff)) {
-			fmt::print("Error: value would overflow register {}\n",
-				   reg);
+			fmt::print("Error: value would overflow register {}\n", reg);
 			return false;
 		}
 	}
 	catch(...) {
 		std::string flagChars = "CZIDBVN";
-		bool containsFlagCharacter =
-			std::any_of(flagChars.begin(), flagChars.end(),
-				 [&reg](char c) {
+		bool containsFlagCharacter = std::any_of(flagChars.begin(), flagChars.end(), [&reg](char c) {
 				    return reg.find(c) != std::string::npos;
-				 }
-			      );
+		});
 		if (containsFlagCharacter)
 			flipFlag = true;
 		else {
-			fmt::print("Parse Error: '{}' is not a valid value for "
-				   "set\n", v);
+			fmt::print("Parse Error: '{}' is not a valid value for set\n", reg);
 			return false;
 		}
 	}
 
-	if (reg == "A") 
-		_cpu.A = (Byte) value & 0xff;
+	if      (reg == "A") 
+		_cpu.A = static_cast<Byte>(value);
 	else if (reg == "Y")
-		_cpu.Y = (Byte) value & 0xff;
+		_cpu.Y = static_cast<Byte>(value);
 	else if (reg == "X")
-		_cpu.X = (Byte) value & 0xff;
+		_cpu.X = static_cast<Byte>(value);
 	else if (reg == "PC")
-		_cpu.PC = (Word) value & 0xffff;
+		_cpu.PC = static_cast<Word>(value);
 	else if (reg == "SP")
-		_cpu.SP = (Byte) value & 0xff;
+		_cpu.SP = static_cast<Byte>(value);
 	else if (reg == "PS")
-		_cpu.PS = (Byte) value & 0xff;
+		_cpu.PS = static_cast<Byte>(value);
 	else if (reg == "C")
-		if (flipFlag)
-			_cpu.Flags.C = !_cpu.Flags.C;
-		else
-			_cpu.Flags.C = (bool) value;
+		_cpu.Flags.C = flipFlag ? !_cpu.Flags.C : static_cast<bool>(value);
 	else if (reg == "Z")
-		if (flipFlag)
-			_cpu.Flags.Z = !_cpu.Flags.Z;
-		else
-			_cpu.Flags.Z = (bool) value;
+		_cpu.Flags.Z = flipFlag ? !_cpu.Flags.Z : static_cast<bool>(value);
 	else if (reg == "I")
-		if (flipFlag)
-			_cpu.Flags.I = !_cpu.Flags.I;
-		else
-			_cpu.Flags.I = (bool) value;
+		_cpu.Flags.I = flipFlag ? !_cpu.Flags.I : static_cast<bool>(value);
 	else if (reg == "D")
-		if (flipFlag)
-			_cpu.Flags.D = !_cpu.Flags.D;
-		else
-			_cpu.Flags.D = (bool) value;
+		_cpu.Flags.D = flipFlag ? !_cpu.Flags.D : static_cast<bool>(value);
 	else if (reg == "B")
-		if (flipFlag)
-			_cpu.Flags.B = !_cpu.Flags.B;
-		else
-			_cpu.Flags.B = (bool) value;
+		_cpu.Flags.B = flipFlag ? !_cpu.Flags.B : static_cast<bool>(value);
 	else if (reg == "V")
-		if (flipFlag)
-			_cpu.Flags.V = !_cpu.Flags.V;
-		else
-			_cpu.Flags.V = (bool) value;
+		_cpu.Flags.V = flipFlag ? !_cpu.Flags.V : static_cast<bool>(value);
 	else if (reg == "N")
-		if (flipFlag)
-			_cpu.Flags.N = !_cpu.Flags.N;
-		else
-			_cpu.Flags.N = (bool) value;
+		_cpu.Flags.N = flipFlag ? !_cpu.Flags.N : static_cast<bool>(value);
 	else {
 		fmt::print("No register or status flag '{}'\n", reg);
 		return false;

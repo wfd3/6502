@@ -20,12 +20,14 @@
 # error "Macro 'testClass' not defined"
 #endif
 
+constexpr Byte START_SP_ADDRESS = 0xff;
+
 TEST_F(testClass, RtsImplied) {
 	
 	Byte ins = cpu.Opcodes.RTS_IMP;
 
 	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 2);
+	cpu.TestReset(MOS6502::RESET_VECTOR, START_SP_ADDRESS - 2);
 	mem[0x01FF] = 0x20;
 	mem[0x01FE] = 0x00;
 
@@ -36,6 +38,6 @@ TEST_F(testClass, RtsImplied) {
 
 	// Then:
 	EXPECT_EQ(cpu.getPC(), 0x2000 + 1);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

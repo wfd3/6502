@@ -169,9 +169,9 @@ private:
 	};
 	
 	MOS6502::AddressingMode convertAddressingMode(AddressingMode);
-	bool isAddrMode(Byte, AddressingMode);
+	bool instructionIsAddressingMode(Byte, AddressingMode);
 	Word getAddress(Byte);
-	void decodeArgs(bool, Byte, std::string&, std::string&, std::string&, std::string&);
+	void decodeArgs(Word&, const bool, const Byte, std::string&, std::string&, std::string&, std::string&);
 
 	// 65C02 specific instructions
 	void ins_bra(Byte);

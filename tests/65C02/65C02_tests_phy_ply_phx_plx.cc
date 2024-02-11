@@ -19,6 +19,8 @@
 #include <gtest/gtest.h>
 #include <65C02.h>
 
+constexpr Byte START_SP_ADDRESS = 0xff;
+
 class MOS65C02pushpopTests : public testing::Test {
 public:
 
@@ -39,7 +41,6 @@ TEST_F(MOS65C02pushpopTests, PHYImplied) {
 
 	//Given:
 	cpu.TestReset(MOS6502::RESET_VECTOR);
-	
 	mem[0xFFFC] = ins;
 	cpu.setY(0x52);
 
@@ -48,7 +49,7 @@ TEST_F(MOS65C02pushpopTests, PHYImplied) {
 
 	// Then:
 	EXPECT_EQ(mem[0x01ff], 0x52);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS - 1);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
@@ -57,7 +58,7 @@ TEST_F(MOS65C02pushpopTests, PLYImplied) {
 	Byte ins = cpu.Opcodes.PLY_IMP;
 
 	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
+	cpu.TestReset(MOS6502::RESET_VECTOR, START_SP_ADDRESS - 1);
 	
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -68,7 +69,7 @@ TEST_F(MOS65C02pushpopTests, PLYImplied) {
 
 	// Then:
 	EXPECT_EQ(cpu.getY(), 0x52);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
@@ -89,7 +90,7 @@ TEST_F(MOS65C02pushpopTests, PHXImplied) {
 
 	// Then:
 	EXPECT_EQ(mem[0x01ff], 0x52);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS - 1);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
@@ -98,7 +99,7 @@ TEST_F(MOS65C02pushpopTests, PLXImplied) {
 	Byte ins = cpu.Opcodes.PLX_IMP;
 
 	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
+	cpu.TestReset(MOS6502::RESET_VECTOR, START_SP_ADDRESS - 1);
 	
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -109,7 +110,7 @@ TEST_F(MOS65C02pushpopTests, PLXImplied) {
 
 	// Then:
 	EXPECT_EQ(cpu.getX(), 0x52);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 

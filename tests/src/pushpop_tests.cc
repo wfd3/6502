@@ -20,6 +20,9 @@
 # error "Macro 'testClass' not defined"
 #endif
 
+// These tests have to know the starting value of the SP.  Set it here
+constexpr Byte START_SP_ADDRESS = 0xff;
+
 TEST_F(testClass, PhaImmediate) {
 	
 	Byte ins = cpu.Opcodes.PHA_IMP;
@@ -35,7 +38,7 @@ TEST_F(testClass, PhaImmediate) {
 
 	// Then:
 	EXPECT_EQ(mem[0X01FF], 0x52);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS - 1);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
@@ -44,7 +47,7 @@ TEST_F(testClass, PlaImmediate) {
 	Byte ins = cpu.Opcodes.PLA_IMP;
 
 	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
+	cpu.TestReset(MOS6502::RESET_VECTOR, START_SP_ADDRESS - 1);
 	
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0x52;
@@ -55,7 +58,7 @@ TEST_F(testClass, PlaImmediate) {
 
 	// Then:
 	EXPECT_EQ(cpu.getA(), 0x52);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS);
 	EXPECT_FALSE(cpu.getFlagZ());
 	EXPECT_FALSE(cpu.getFlagN());
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
@@ -77,7 +80,7 @@ TEST_F(testClass, PhpImmediate) {
 
 	// Then:
 	EXPECT_EQ(mem[0x01FF], 0b01110101);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP - 1);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS - 1);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 
@@ -86,7 +89,7 @@ TEST_F(testClass, PlpImmediate) {
 	Byte ins = cpu.Opcodes.PLP_IMP;
 
 	//Given:
-	cpu.TestReset(MOS6502::RESET_VECTOR, MOS6502::INITIAL_SP - 1);
+	cpu.TestReset(MOS6502::RESET_VECTOR, START_SP_ADDRESS - 1);
 
 	mem[0xFFFC] = ins;
 	mem[0x01FF] = 0b01010101;;
@@ -97,6 +100,6 @@ TEST_F(testClass, PlpImmediate) {
 
 	// Then:
 	EXPECT_EQ(cpu.getPS(), 0b01000101);
-	EXPECT_EQ(cpu.getSP(), MOS6502::INITIAL_SP);
+	EXPECT_EQ(cpu.getSP(), START_SP_ADDRESS);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }

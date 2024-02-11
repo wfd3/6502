@@ -34,4 +34,4 @@ public:
 };
 
 #define testClass MOS6502CMPTests
-#include "brk_tests.cc"
+#include "cmp_tests.cc"

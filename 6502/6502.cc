@@ -34,11 +34,6 @@ void MOS6502::setNMIVector(const Word address) {
 	writeWord(NMI_VECTOR, address);
 }
 
-void MOS6502::setPendingReset() {
-		if (!_debugMode)
-			_pendingReset = true;
-	}
-
 bool MOS6502::inReset() { 
 	return _inReset; 
 }
@@ -159,7 +154,7 @@ void MOS6502::interrupt(bool isNMI) {
 
 	pushWord(PC);
 	pushPS();
-	
+
 	if (isNMI) 
 		vector = NMI_VECTOR;
 	else 
@@ -167,7 +162,7 @@ void MOS6502::interrupt(bool isNMI) {
 
 	Flags.I = 1;
 	PC = readWord(vector);
-	_cycles++;
+	_cycles += 2;
 }
 
 bool MOS6502::NMI() {
@@ -209,6 +204,8 @@ void MOS6502::exception(const std::string& message) {
 //////////
 // Flags
 bool MOS6502::isNegative(const Byte val) {
+	constexpr Byte NegativeBit = 1 << 7;
+
 	return (val & NegativeBit);
 }
 
@@ -259,6 +256,40 @@ Byte MOS6502::readByteAtPC() {
 }
 
 //////////
+// Instructions
+bool MOS6502::validInstruction(const Byte opcode) {
+	return _instructions.count(opcode) != 0;
+	       
+}
+
+const char* MOS6502::instructionName(const Byte opcode) {
+	if (validInstruction(opcode)) 
+		return _instructions.at(opcode).name;
+	return nullptr;
+}
+
+bool MOS6502::decodeInstruction(const Byte opcode, struct instruction& ins) {
+	if (validInstruction(opcode)) {
+		ins = _instructions.at(opcode);
+		return true;
+	}
+
+	return false;
+}
+
+bool MOS6502::instructionIsAddressingMode(const Byte opcode, const AddressingMode addrMode) {
+	return validInstruction(opcode) && _instructions.at(opcode).addrmode == addrMode;
+}
+
+bool MOS6502::instructionHasFlags(const Byte opcode, const Byte flags) {
+	return validInstruction(opcode) && ((_instructions.at(opcode).flags & flags) != 0);
+}
+
+MOS6502::AddressingMode MOS6502::getInstructionAddressingMode(const Byte opcode) {
+	return _instructions.at(opcode).addrmode;
+}
+
+//////////
 // Stack operations
 void MOS6502::push(const Byte value) {
 	Word SPAddress = STACK_FRAME + SP;
@@ -287,6 +318,9 @@ Word MOS6502::popWord() {
 void MOS6502::pushPS() {
 	// PHP silently sets the Unused flag (bit 5) and the Break
 	// flag (bit 4)
+	constexpr Byte BreakBit  = 1 << 4;
+	constexpr Byte UnusedBit = 1 << 5;
+
 	push(PS | UnusedBit | BreakBit);
 }
 
@@ -304,14 +338,13 @@ Word MOS6502::getAddress(const Byte opcode) {
 
 	// Add a cycle if a page boundary is crossed
 	auto updateCycles = [&](Byte reg) {
-		if (( _instructions.at(opcode).flags & InstructionFlags::PageBoundary) &&
-		    ((address + reg) >> 8) != (address >> 8)) {
+		if (instructionHasFlags(opcode, InstructionFlags::PageBoundary) && ((address + reg) >> 8) != (address >> 8)) {
 			_expectedCyclesToUse++;
 			_cycles++;
 		}
 	};
 
-	auto addressMode = _instructions.at(opcode).addrmode;
+	auto addressMode = getInstructionAddressingMode(opcode); 
 	
 	switch(addressMode) {
 
@@ -389,7 +422,7 @@ Byte MOS6502::getData(const Byte opcode) {
 	Byte data = 0;
 	Word address;
 
-	auto addressMode = _instructions.at(opcode).addrmode;
+	auto addressMode = getInstructionAddressingMode(opcode);
 	
 	switch(addressMode) {
 
@@ -440,14 +473,16 @@ void MOS6502::executeOneInstruction() {
 		return;
 	}
 
+	// Check for a pending Non-maskable interrupt and a pending interrupt request.  
+	if (NMI() || IRQ()) 
+		return;
+
 	// Saving the PC has to happen before readByteAtPC(), which consumes clock cycles and increments the PC
 	startPC = PC;
 
 	opcode = readByteAtPC();
-	try {
-		ins = _instructions.at(opcode);
-	} 
-	catch (...) {
+	auto validOpcode = decodeInstruction(opcode, ins);
+	if (!validOpcode) {
 		PC = startPC;
 		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}", opcode, PC);
 		exception(s);
@@ -455,7 +490,7 @@ void MOS6502::executeOneInstruction() {
 	}
 
 	_expectedCyclesToUse = ins.cycles;
-	
+
 	ins.opfn(opcode);
 
 	if ( startPC == PC) {
@@ -467,11 +502,6 @@ void MOS6502::executeOneInstruction() {
 		_loopDetected = true;
 		return;
 	}
-
-	// Check for a pending Non-maskable interrupt.  If none then
-	// check for a pending interrupt request.  
-	if (!NMI())
-		IRQ();
 }
 
 void MOS6502::execute() {
@@ -492,6 +522,9 @@ void MOS6502::execute() {
 	_debugMode |= loopDetected();
 }
 
+//////////
+// CPU State information 
+
 void MOS6502::printCPUState() {
 	auto yesno = [](bool b) -> std::string {
 		return b ? "Yes" : "No";
@@ -511,4 +544,19 @@ void MOS6502::printCPUState() {
 	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n",
 		    _IRQCount, _NMICount, _BRKCount);
 	fmt::print("\n");
+}
+
+void MOS6502::Stack() {
+	Byte p = MOS6502::INITIAL_SP;
+	Word a;
+
+	fmt::print("Stack [SP = {:02x}]\n", SP);
+	if (p == SP)
+		fmt::print("Empty stack\n");
+
+	while (p != SP) {
+		a = STACK_FRAME | p;
+		fmt::print("[{:04x}] {:02x}\n", a, mem.Read(a));
+		p--;
+	}
 }

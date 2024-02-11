@@ -43,14 +43,9 @@ using Cycles_t  = uint8_t;
 
 class MOS6502 {
 public:
-
-	friend class Debugger;
 	
-	// Last addressable byte
+	// Last possible addressable byte
 	constexpr static Word LAST_ADDRESS     = 0xffff;
-	
-	// CPU initial vectors
-	constexpr static Byte INITIAL_SP       = 0xff; 
 
 	// Interrupt/NMI vector
 	constexpr static Word INTERRUPT_VECTOR = 0xfffe;
@@ -66,7 +61,6 @@ public:
 	void setResetVector(Word);
 	void setNMIVector(Word);
 
-	void setPendingReset();
 	bool inReset();
 
 	void raiseIRQ();
@@ -285,13 +279,15 @@ public:
 	OpcodeConstants Opcodes;
 
 protected:
+	// Let the debugger access all our internals.
+	friend class Debugger;
 
 	Debugger debugger;
 
 	// Disassembler
 	Word disassemble(Word, uint64_t);
-	Word disassembleAt(Word dPC, std::string &);
-	virtual void decodeArgs(bool, Byte, std::string &, std::string&, std::string&, std::string&);
+	Word disassembleAt(Word, std::string&);
+	virtual void decodeArgs(Word&, const bool, const Byte, std::string &, std::string&, std::string&, std::string&);
 
 	Cycles_t _cycles = 0;              // Cycle counter
 	Cycles_t _expectedCyclesToUse = 0; 
@@ -358,11 +354,20 @@ protected:
 
 	const _instructionMap_t setupInstructionMap();
 
+	// Instructions
+	bool validInstruction(const Byte);
+	const char* instructionName(const Byte);
+	bool decodeInstruction(const Byte, struct instruction&);
+	MOS6502::AddressingMode getInstructionAddressingMode(const Byte);
+	virtual bool instructionIsAddressingMode(const Byte, const AddressingMode);
+	bool instructionHasFlags(const Byte, const Byte);
+
 	// CPU functions
 	void exception(const std::string &);
 
 	// Diagnostics
 	void printCPUState();
+	void Stack();
 	
 	// Flags
 	void setFlagZByValue(Byte);
@@ -450,14 +455,15 @@ protected:
 
 private:
 
-	Memory<Word, Byte>& mem;  // Moved from protected section
+	Memory<Word, Byte>& mem;
 	bool _debugMode = false;
 
 	//////////
 	// Special addresses/vectors
 	
-	// 6502 stack is one page at 01ff, down to 0100.  This is the stack frame for that page.
+	// 6502 stack is one page at 01ff, down to 0100
 	constexpr static Word STACK_FRAME      = 0x0100;
+	constexpr static Byte INITIAL_SP       = 0xff; 
 
 	// Interrupts
 	void interrupt(bool);
@@ -466,11 +472,6 @@ private:
 	uint64_t _IRQCount = 0;
 	uint64_t _NMICount = 0;
 	uint64_t _BRKCount = 0;
-
-	// Bits for PS byte
-	constexpr static Byte BreakBit    = 1 << 4;
-	constexpr static Byte UnusedBit   = 1 << 5;
-	constexpr static Byte NegativeBit = 1 << 7;
 
 	bool _inReset      = false;      // CPU is held in reset
 	bool _pendingReset = false;
