@@ -20,9 +20,11 @@
 
 // The instructions.  Flags field provides information about any special
 // handling the instruction requires.  For the 6502, the flags are:
-//  - InstructionFlags::Branch: Add a cycle if conditional branch is taken (all conditional branches).
-//  - InstructionFlags::PageBoundary : Add two cycles if an instruction causes a read from
-//                  an address on an adjacent page, specifically indexed addressing modes.
+//  - InstructionFlags::Branch: Add a cycle if conditional branch is taken (all conditional branches).  This flag is
+//                              implicit; the code doesn't use it as applies to all conditional branches.
+//
+//  - InstructionFlags::PageBoundary: Add two cycles if an instruction causes a read from
+//                                    an address on an adjacent page, specifically indexed addressing modes.
 //
 // See http://www.6502.org/users/obelisk/6502/addressing.html for more
 // information.
