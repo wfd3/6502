@@ -31,7 +31,6 @@ TEST_F(testClass, BRKImplied) {
 	
 	Word initialSP = cpu.getSP();
 	Word initialStackAddr = STACK_FRAME | initialSP;
-	fmt::print("SP = {:02x}, stkaddr = {:04x}\n", initialSP, initialStackAddr);
 
 	mem[0xFFFC] = ins;
 	mem[0xFFFE] = 0x00;
