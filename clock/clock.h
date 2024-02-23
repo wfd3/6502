@@ -29,6 +29,7 @@ public:
 	BusClock_t(freq_t MHz) : _emulateTiming(true) {
 		
 		_MHz = _boundMHz(MHz);
+		_calibrate();
 
 		_nsPerCycle = _nsInCycleAt1MHz / _MHz;
 		if (_nsPerCycle < _resolutionFloor) 
@@ -47,7 +48,7 @@ public:
 		if (_emulateTiming) {
 
 			auto start = std::chrono::high_resolution_clock::now();
-			auto end = start + (_nsPerCycle * cycles);
+			auto end = start + (_nsPerCycle * cycles) - _calibration;
 
 			while (std::chrono::high_resolution_clock::now() < end) 
 				;
@@ -59,6 +60,7 @@ public:
 private:
 	bool _emulateTiming;
 	freq_t _MHz;
+	std::chrono::duration<uint64_t, std::nano> _calibration;
 	static constexpr std::chrono::nanoseconds _nsInCycleAt1MHz = 1000ns;
 	static constexpr std::chrono::nanoseconds _resolutionFloor = 250ns;
 	std::chrono::duration<uint64_t, std::nano> _nsPerCycle;
@@ -70,5 +72,11 @@ private:
 			MHz = 1000;
 
 		return MHz;
+	}
+
+	void _calibrate() {
+		auto start = std::chrono::high_resolution_clock::now();
+		auto end = std::chrono::high_resolution_clock::now();
+		_calibration = end - start;
 	}
 };

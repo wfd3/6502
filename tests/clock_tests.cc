@@ -19,16 +19,30 @@
 #include <gtest/gtest.h>
 #include <clock.h>
 
+void calibrate();
+
 class ClockTests : public testing::Test {
 public:
-	virtual void SetUp() {}
+	virtual void SetUp() {
+        calibrate();
+    }
 	
 	virtual void TearDown()	{}
 };
 
-static constexpr bool VERBOSE          = false;
+static constexpr bool VERBOSE          = true;
 static constexpr int variance          = 200;
 static constexpr int minimumResolution = 200;
+std::chrono::duration<uint64_t, std::nano> calibration;
+
+void calibrate() {
+
+    auto calibrateStart = std::chrono::high_resolution_clock::now();
+    auto calibrateStop = std::chrono::high_resolution_clock::now();
+    calibration = calibrateStop - calibrateStart;
+    std::cout << "  -- calibration: " << calibration << " ns" << std::endl;
+
+}
 
 void runClockTest(uint64_t MHz, int cycles = 1) {
     uint64_t nsPerCycle = 1000 / MHz;
@@ -49,7 +63,7 @@ void runClockTest(uint64_t MHz, int cycles = 1) {
     clock.delay(cycles);
     auto stop = std::chrono::high_resolution_clock::now();
 
-    auto duration = (stop - start); 
+    auto duration = (stop - start) - calibration; 
 
     EXPECT_GE(duration, lowerBound);
     EXPECT_LE(duration, upperBound);
@@ -72,6 +86,10 @@ TEST_F(ClockTests, TestDelayAt1MHz) {
     runClockTest(1);    
 }
 
+TEST_F(ClockTests, TestDelayFor2CyclesAt1MHz) {
+    runClockTest(1, 2);
+}
+
 TEST_F(ClockTests, TestDelayFor50CyclesAt1MHz) {
     runClockTest(1, 50);    
 }
@@ -87,6 +105,8 @@ TEST_F(ClockTests, TestDelayFor4CyclesAt1MHz) {
 TEST_F(ClockTests, TestDelayAt2MHz) {
     runClockTest(2);
 }
+
+// TODO: Fix these for Windows
 
 TEST_F(ClockTests, TestDelayAt3MHz) {
     runClockTest(3);

@@ -466,7 +466,7 @@ private:
 	constexpr static Byte INITIAL_SP       = 0xff; 
 
 	// Interrupts
-	void interrupt(bool);
+	void interrupt(Word);
 	bool NMI();
 	bool IRQ();
 	uint64_t _IRQCount = 0;

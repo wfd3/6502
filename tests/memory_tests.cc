@@ -221,7 +221,7 @@ public:
 	testdev(std::initializer_list<Address> addresses) : MemMappedDevice<Address, Cell>() {
 		for (const auto& a : addresses) {
 			this->_ioPorts.insert(a);
-			_t[a] = 'Z';
+			_t[a] = static_cast<Cell>('Z');
 		}
 	}
 

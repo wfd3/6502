@@ -149,16 +149,9 @@ void MOS6502::Reset() {
 //////////
 // Interrupts
 
-void MOS6502::interrupt(bool isNMI) {
-	Word vector;
-
+void MOS6502::interrupt(Word vector) {
 	pushWord(PC);
 	pushPS();
-
-	if (isNMI) 
-		vector = NMI_VECTOR;
-	else 
-		vector = INTERRUPT_VECTOR;
 
 	Flags.I = 1;
 	PC = readWord(vector);
@@ -168,8 +161,8 @@ void MOS6502::interrupt(bool isNMI) {
 bool MOS6502::NMI() {
 	if (pendingNMI()) {
 		debugger.addBacktraceInterrupt(PC);
-		_IRQCount++;
-		interrupt(true);
+		_NMICount++;
+		interrupt(NMI_VECTOR);
 		_pendingNMI = false;
 		return true;
 	}
@@ -180,8 +173,8 @@ bool MOS6502::NMI() {
 bool MOS6502::IRQ() {
 	if (pendingIRQ() && !IRQBlocked()) {
 		debugger.addBacktraceInterrupt(PC);
-		_NMICount++;
-		interrupt(false);
+		_IRQCount++;
+		interrupt(INTERRUPT_VECTOR);
 		_pendingIRQ = false;
 		return true;
 	}
@@ -305,8 +298,8 @@ Byte MOS6502::pop() {
 }
 
 void MOS6502::pushWord(const Word value) {
-	push((Byte) (value >> 8)); // value high
-	push((Byte) value & 0xff); // value low
+	push(static_cast<Byte>(value >> 8)); // value high
+	push(static_cast<Byte>(value & 0xff)); // value low
 }
 
 Word MOS6502::popWord() {
@@ -367,8 +360,8 @@ Word MOS6502::getAddress(const Byte opcode) {
 
 	// Relative
 	case AddressingMode::Relative:
-		rel = SByte(readByteAtPC());
-		address = (Word) (PC + rel);
+		rel = static_cast<SByte>(readByteAtPC());
+		address = static_cast<Word>(PC + rel);
 		break;
 
 	// Absolute

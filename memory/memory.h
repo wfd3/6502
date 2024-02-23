@@ -51,8 +51,7 @@ public:
 		return 0; 
 	}
 	
-	virtual void Write([[maybe_unused]] const Address address,
-		[[maybe_unused]] const Cell b) { 
+	virtual void Write([[maybe_unused]] const Address address, [[maybe_unused]] const Cell b) { 
 			return;
 	};
 
@@ -104,9 +103,7 @@ public:
 		return _cell;
 	}
 
-	void Write([[maybe_unused]] const Address address,
-		[[maybe_unused]] const Cell  b) override {
-		;
+	void Write([[maybe_unused]] const Address address, [[maybe_unused]] const Cell  b) override {
 	}
 
 	std::string type() const override {
@@ -134,8 +131,7 @@ public:
 		_writefn = writefn;
 	}
 
-	void Write([[maybe_unused]] const Address address,
-		const Cell b) override {
+	void Write([[maybe_unused]] const Address address, const Cell b) override {
 		if (_writefn) 
 			_writefn(b);
 	}
@@ -223,7 +219,7 @@ protected:
 	std::set<uint8_t> _ioPorts;			// I/O ports that will be mapped into memory at _baseAddress
 
 	uint8_t decodeAddress(Address address) {
-		return address - _baseAddress;
+		return static_cast<uint8_t>(address - _baseAddress);
 	}
 };
 
@@ -301,9 +297,7 @@ public:
 		uint64_t _size = _endAddress + 1;
 
 		if (_size > _mem.max_size()) {
-			auto s = fmt::format("End address {:0{}x} exceeds host "
-					     "system memory limits",
-					     endAddress, AddressWidth);
+			auto s = fmt::format("End address {:0{}x} exceeds host system memory limits", endAddress, AddressWidth);
 			exception(s);
 		}
 		_unmapped = std::make_shared<::Element<Address, Cell>>();
@@ -357,9 +351,7 @@ public:
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
 		if (_watch[address]) {
-			fmt::print("mem[{:0{}x}] {:0{}x} -> {:0{}x}\n",
-				   address, AddressWidth, _mem.at(address)->Read(address), 
-				   CellWidth, l, CellWidth);
+			fmt::print("mem[{:0{}x}] {:0{}x} -> {:0{}x}\n", address, AddressWidth, _mem.at(address)->Read(address), CellWidth, l, CellWidth);
 		}
 
 		_mem.at(address)->Write(address, l);
@@ -378,9 +370,7 @@ public:
 	bool mapRAM(const Address start, const Address end) {
 		boundsCheck(end);
 		if (addressRangeOverlapsExistingMap(start, end)) {
-			auto s = fmt::format("Address range {:0{}x}:{:0{}x} overlaps "
-					     "with existing map",
-					     start, AddressWidth, end, AddressWidth);
+			auto s = fmt::format("Address range {:0{}x}:{:0{}x} overlaps with existing map", start, AddressWidth, end, AddressWidth);
 			exception(s);
 			return false;
 		}
@@ -428,16 +418,13 @@ public:
 		return mapROM(start, v, overwriteExistingElements);
 	}
 	
-	bool mapMIO(const Address address,
-		    const typename ::MIO<Address,Cell>::readfn_t readfn,
-		    const typename ::MIO<Address,Cell>::writefn_t writefn,
+	bool mapMIO(const Address address, const typename ::MIO<Address,Cell>::readfn_t readfn, const typename ::MIO<Address,Cell>::writefn_t writefn,
 		    const bool overwriteExistingElements = true) {
 
 		boundsCheck(address);
 		if (!overwriteExistingElements &&
 		    addressRangeOverlapsExistingMap(address, address)) {
-			auto s = fmt::format("Address {:0{}x} overlaps with existing map", 
-				address, AddressWidth);
+			auto s = fmt::format("Address {:0{}x} overlaps with existing map", address, AddressWidth);
 			exception(s);
 			return false;
 		}
@@ -446,15 +433,13 @@ public:
 		return true;
 	}
 
-	bool mapDevice(std::shared_ptr<MemMappedDevice<Address,Cell>> device, Address base, 
-		const bool overwriteExistingElements = true) {
+	bool mapDevice(std::shared_ptr<MemMappedDevice<Address,Cell>> device, Address base, const bool overwriteExistingElements = true) {
 		
 		device->setBaseAddress(base);
 		for (const auto& addr : device->getAddressSet()) {
 			boundsCheck(addr);
 			if (!overwriteExistingElements && isAddressMapped(addr)) {
-				auto s = fmt::format("Address {:0{}x} overlaps with existing map", 
-				addr, AddressWidth); 
+				auto s = fmt::format("Address {:0{}x} overlaps with existing map", addr, AddressWidth); 
 				exception(s);
 				return false;
 			}
@@ -462,23 +447,6 @@ public:
 		}
 		return true;
 	}
-#if 0
-	bool mapDevice(std::shared_ptr<MemMappedDevice<Address,Cell>> device, 
-		const bool overwriteExistingElements = true) {
-
-		for (const auto& a : device->getAddressSet()) {
-			boundsCheck(a);
-			if (!overwriteExistingElements && isAddressMapped(a)) {
-				auto s = fmt::format("Address {:0{}x} overlaps with existing map", 
-					a, AddressWidth); 
-				exception(s);
-				return false;
-			}
-			_mem[a] = device;
-		}
-		return true;
-	}
-#endif
 
 	bool isAddressMapped(const Address address) const {
 		return isAddressMapped(_mem[address]);
@@ -499,8 +467,7 @@ public:
 			return;
 		}
 
-		fmt::print("Memory {:0{}x}:{:0{}x}", 
-			start, AddressWidth, end, AddressWidth, valueExpression); 
+		fmt::print("Memory {:0{}x}:{:0{}x}", start, AddressWidth, end, AddressWidth, valueExpression); 
 
 		if (!valueExpression.empty()) 
 			fmt::print(" with expression '{}'", valueExpression);
@@ -541,8 +508,7 @@ public:
 					ascii += '.';
 			}
 			
-			// Print the accumulated line if we're at the end of the line or
-			// the end of the memory range.
+			// Print the accumulated line if we're at the end of the line or the end of the memory range.
 			cnt++;
 			if (cnt == lineEnd || it == stop) {
 				cnt = 0;
@@ -567,8 +533,7 @@ public:
 				mappedBytes++;
 
 			auto next_it = std::next(it);
-			bool endOfRange = (next_it == _mem.end()) ||
-			  ((*next_it)->type() != (*range_start)->type());
+			bool endOfRange = (next_it == _mem.end()) || ((*next_it)->type() != (*range_start)->type());
 			
 			if (endOfRange) {
 				Address bytes = 1 + static_cast<Address>(std::distance(range_start, it));
@@ -577,8 +542,7 @@ public:
 				auto type = (*it)->type();
 				sizeByType[type] += bytes;
 
-				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n",
-					   start, AddressWidth, end, AddressWidth, type, bytes);
+				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n", start, AddressWidth, end, AddressWidth, type, bytes);
 
 				range_start = next_it;
 			}
@@ -598,7 +562,6 @@ public:
 	// Loading data into memory
 
 	void loadDataFromFile(const char *filename, Address start) {
-
 		auto vec = _loadDataFromFile(filename);
 		loadData(vec, start);
 	}
@@ -613,17 +576,13 @@ public:
 	}
 
 	void loadData(const std::vector<Cell> &data, const Address startAddress) {
-
 		if (startAddress > _endAddress) {
-			auto s = fmt::format("Data load address is not a valid "
-					     "address: {:0{}x}", startAddress, AddressWidth);
+			auto s = fmt::format("Data load address is not a valid address: {:0{}x}", startAddress, AddressWidth);
 			exception(s);
 		}
 		if (startAddress + data.size() - 1 > _endAddress) {
-			auto s = fmt::format("Data will not fit into memory at "
-					     "start address {:0{}x} (data "
-					     "length {} bytes)",
-					     startAddress, AddressWidth, data.size());
+			auto s = fmt::format("Data will not fit into memory at start address {:0{}x} (data length {} bytes)",
+								  startAddress, AddressWidth, data.size());
 			exception(s);
 		}
 
@@ -697,8 +656,7 @@ private:
 
 	void boundsCheck(const Address address) {
 		if (!boundsCheckNoThrow(address)) {
-			auto s = fmt::format("Address {:0{}x} out of range",
-					     address, AddressWidth);
+			auto s = fmt::format("Address {:0{}x} out of range", address, AddressWidth);
 			exception(s);
 		}
 	}

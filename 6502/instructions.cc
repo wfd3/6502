@@ -71,7 +71,7 @@ void MOS6502::bcdADC(Byte operand) {
 	carry = Flags.C;
 
 	// Low nibble first
-	a_low = (Byte) ((addend & 0x0f) + (operand & 0x0f) + carry);
+	a_low = static_cast<Byte>((addend & 0x0f) + (operand & 0x0f) + carry);
 	if (a_low >= 0x0a) 
 		a_low = ((a_low + 0x06) & 0x0f) + 0x10;
 
@@ -85,7 +85,7 @@ void MOS6502::bcdADC(Byte operand) {
 	if (answer >= 0xa0) 
 		answer += 0x60;
 	
-	A = (Word) (answer & 0xff);
+	A = static_cast<Word>(answer & 0xff);
 	
 	setFlagNByValue(A);
 	setFlagZByValue(A);
@@ -102,7 +102,7 @@ void MOS6502::bcdSBC(Byte subtrahend) {
 	carry = (Flags.C == 0);
 
 	// Low nibble first
-	op_l = (SByte) ((operand & 0x0f) - (subtrahend & 0x0f) - carry);
+	op_l = static_cast<SByte>((operand & 0x0f) - (subtrahend & 0x0f) - carry);
 	if (op_l < 0) 
 		op_l = ((op_l - 0x06) & 0x0f) - 0x10;
 					
@@ -116,7 +116,7 @@ void MOS6502::bcdSBC(Byte subtrahend) {
 	if (operand < 0) 
 		operand -= 0x60;
 
-	A = (Byte) operand & 0xff;
+	A = static_cast<Byte>(operand & 0xff);
 
 	setFlagZByValue(A);
 	setFlagNByValue(A);
@@ -221,12 +221,12 @@ void MOS6502::ins_bpl(const Byte opcode) {
 
 // BRK
 void MOS6502::ins_brk([[maybe_unused]] const Byte opcode) {
+	debugger.addBacktrace(PC - 1);
+	_BRKCount++;
 	// push PC + 1 to the stack. See:
 	// https://retrocomputing.stackexchange.com/questions/12291/what-are-uses-of-the-byte-after-brk-instruction-on-6502
-	debugger.addBacktrace(PC - 1);
 	PC++;
-	_BRKCount++;
-	interrupt(false);
+	interrupt(INTERRUPT_VECTOR);
 	Flags.B = 1;
 }
 
@@ -425,7 +425,7 @@ void MOS6502::ins_lsr(const Byte opcode) {
 
 	getAorData(data, opcode, address);
 	
-	Flags.C = (data & 1);
+	Flags.C = (data & 1); // Bit 1 of data becomes Carry
 	data = data >> 1;
 	setFlagZByValue(data);
 	setFlagNByValue(data);
@@ -439,8 +439,7 @@ void MOS6502::ins_lsr(const Byte opcode) {
 
 // NOP
 void MOS6502::ins_nop([[maybe_unused]] const Byte opcode) {
-	// NOP, like all single byte instructions, takes
-	// two cycles.
+	// NOP, like all single byte instructions, takes two cycles.
 	_cycles++;
 }
 
@@ -486,7 +485,7 @@ void MOS6502::ins_rol(const Byte opcode) {
 	oldCarryFlag = Flags.C;
 	Flags.C = isNegative(data);
 
-	data = (data << 1) | oldCarryFlag;
+	data = (data << 1) | oldCarryFlag; // Carry becomes bit 1 of result
 
 	setFlagZByValue(data);
 	setFlagNByValue(data);
@@ -507,8 +506,7 @@ void MOS6502::ins_ror(const Byte opcode) {
 
 	newCarryFlag = data & 1;
 	data = data >> 1;
-	if (Flags.C)  // Carry bit becomes bit 7 of the result
-		data |= 1 << 7;
+	data |=  Flags.C << 7;  // Carry bit becomes bit 7 of the result
 	setFlagNByValue(data);
 	setFlagZByValue(data);
 	Flags.C = (newCarryFlag == 1);

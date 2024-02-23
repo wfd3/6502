@@ -676,4 +676,3 @@ MOS6502::_instructionMap_t MOS65C02::setup65C02Instructions() {
 	}
 	return instructions;
 }	
-	
