@@ -23,103 +23,45 @@ void calibrate();
 
 class ClockTests : public testing::Test {
 public:
-	virtual void SetUp() {
-        calibrate();
-    }
+	virtual void SetUp() { }
 	
 	virtual void TearDown()	{}
 };
 
-static constexpr bool VERBOSE          = true;
-static constexpr int variance          = 200;
-static constexpr int minimumResolution = 200;
-std::chrono::duration<uint64_t, std::nano> calibration;
-
-void calibrate() {
-
-    auto calibrateStart = std::chrono::high_resolution_clock::now();
-    auto calibrateStop = std::chrono::high_resolution_clock::now();
-    calibration = calibrateStop - calibrateStart;
-    std::cout << "  -- calibration: " << calibration << " ns" << std::endl;
-
-}
-
-void runClockTest(uint64_t MHz, int cycles = 1) {
-    uint64_t nsPerCycle = 1000 / MHz;
-
-    // This delay method bottoms out at about 220ns, so to keep the tests passing as the 
-    // clock frequency increases we just floor the lowerBound at minimumResolution.
-    int64_t lb = (nsPerCycle - variance) * cycles;
-    if (lb < minimumResolution) 
-        lb = minimumResolution;
-
-    std::chrono::duration<uint64_t, std::nano> lowerBound(lb);
-    std::chrono::duration<uint64_t, std::nano> upperBound((nsPerCycle + variance) * cycles);
-
-    BusClock_t clock(MHz);
+TEST_F(ClockTests, BelowThresholdTakesNoTime) {
+    uint64_t count = 100;
+    BusClock_t clock(1);
     clock.enableTimingEmulation();
-    
-    auto start = std::chrono::high_resolution_clock::now();
-    clock.delay(cycles);
-    auto stop = std::chrono::high_resolution_clock::now();
 
-    auto duration = (stop - start) - calibration; 
-
-    EXPECT_GE(duration, lowerBound);
-    EXPECT_LE(duration, upperBound);
-
-    if (VERBOSE || 
-        ::testing::UnitTest::GetInstance()->current_test_info()->result()->Failed()) {
-        std::cout << "clock.delay(" << cycles << ") at " << MHz << "MHz expected a " <<
-            nsPerCycle * cycles << "ns delay, actually delayed " << duration << std::endl;
+    while(count--) {
+        clock.delay(1);
     }
 }
 
-TEST_F(ClockTests, CanGetClockFreqency) {
+TEST_F(ClockTests, CanGetClockFrequency) {
     static constexpr uint16_t _MHz = 4;
 
     BusClock_t clock(_MHz);
     EXPECT_EQ(clock.getFrequencyMHz(), _MHz);
 }
 
-TEST_F(ClockTests, TestDelayAt1MHz) {
-    runClockTest(1);    
+TEST_F(ClockTests, CanGetAccumulatedClockCycles) {
+    static constexpr uint16_t _MHz = 4;
+
+    BusClock_t clock(_MHz);
+
+    clock.delay(10000);
+
+    EXPECT_EQ(clock.getAccumulatedCycles(), 10000);
 }
 
-TEST_F(ClockTests, TestDelayFor2CyclesAt1MHz) {
-    runClockTest(1, 2);
-}
+TEST_F(ClockTests, DelayConsumesAccumulatedCycles) {
+    static constexpr uint16_t _MHz = 4;
+    BusClock_t clock(_MHz);
+    uint64_t cycles = clock.getCyclesInDelayTime();
+    static constexpr uint64_t constant = 1500;
 
-TEST_F(ClockTests, TestDelayFor50CyclesAt1MHz) {
-    runClockTest(1, 50);    
-}
+    clock.delay(cycles + constant);
 
-TEST_F(ClockTests, TestDelayFor50000CyclesAt1MHz) {
-    runClockTest(1, 50000);    
-}
-
-TEST_F(ClockTests, TestDelayFor4CyclesAt1MHz) {
-    runClockTest(1, 4);    
-}
-
-TEST_F(ClockTests, TestDelayAt2MHz) {
-    runClockTest(2);
-}
-
-// TODO: Fix these for Windows
-
-TEST_F(ClockTests, TestDelayAt3MHz) {
-    runClockTest(3);
-}
-
-TEST_F(ClockTests, TestDelayAt4MHz) {
-    runClockTest(4);
-}
-
-TEST_F(ClockTests, TestDelayAt5MHz) {
-    runClockTest(5);
-}
-
-TEST_F(ClockTests, TestDelayAt6MHz) {
-    runClockTest(6);
+    EXPECT_EQ(clock.getAccumulatedCycles(), constant);
 }

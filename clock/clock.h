@@ -19,7 +19,8 @@
 
 #include <cstdint>
 #include <chrono>
-#include <iostream>
+#include <algorithm>
+#include <thread>
 
 using namespace std::chrono_literals;
 using freq_t = uint16_t;
@@ -27,56 +28,49 @@ using freq_t = uint16_t;
 class BusClock_t {
 public:
 	BusClock_t(freq_t MHz) : _emulateTiming(true) {
-		
-		_MHz = _boundMHz(MHz);
-		_calibrate();
-
-		_nsPerCycle = _nsInCycleAt1MHz / _MHz;
-		if (_nsPerCycle < _resolutionFloor) 
-			_nsPerCycle = _resolutionFloor;
+		_MHz = std::clamp(MHz, _MIN_MHz, _MAX_MHz);
+		_cyclesInDelayTime = _delayMs.count() * _MHz * _cyclesPerMsAt1MHz;
+		_accumulatedCycles = 0;
 	 } 
 
 	void enableTimingEmulation() {
 		_emulateTiming = true;
+		_accumulatedCycles = 0;
 	}
 	
 	void disableTimingEmulation() {
 		_emulateTiming = false;
+		_accumulatedCycles = 0;
 	}
 
-	void delay(uint64_t cycles = 1) {
-		if (_emulateTiming) {
+	uint64_t delay(const uint64_t cycles = 1) {
+		_accumulatedCycles += cycles;
 
-			auto start = std::chrono::high_resolution_clock::now();
-			auto end = start + (_nsPerCycle * cycles) - _calibration;
+		if (_accumulatedCycles > _cyclesInDelayTime) {
+			_accumulatedCycles -= _cyclesInDelayTime;
+			if (_emulateTiming)
+				std::this_thread::sleep_for(_delayMs);
+		} 
 
-			while (std::chrono::high_resolution_clock::now() < end) 
-				;
-		}
+		return _accumulatedCycles; 
 	}
 
 	freq_t getFrequencyMHz() { return _MHz; }
 
+	uint64_t getAccumulatedCycles() { return _accumulatedCycles; }
+
+	std::chrono::milliseconds minimumDelayTime() { return _delayMs; }
+
+	uint64_t getCyclesInDelayTime() { return _cyclesInDelayTime; }
+
 private:
 	bool _emulateTiming;
 	freq_t _MHz;
-	std::chrono::duration<uint64_t, std::nano> _calibration;
-	static constexpr std::chrono::nanoseconds _nsInCycleAt1MHz = 1000ns;
-	static constexpr std::chrono::nanoseconds _resolutionFloor = 250ns;
-	std::chrono::duration<uint64_t, std::nano> _nsPerCycle;
+	uint64_t _accumulatedCycles = 0;
+	uint64_t _cyclesInDelayTime;
 
-	freq_t _boundMHz(freq_t MHz) {
-		if (MHz < 1)
-			MHz = 1;
-		else if (MHz >= 1000) 
-			MHz = 1000;
-
-		return MHz;
-	}
-
-	void _calibrate() {
-		auto start = std::chrono::high_resolution_clock::now();
-		auto end = std::chrono::high_resolution_clock::now();
-		_calibration = end - start;
-	}
+	static constexpr freq_t _MIN_MHz = 1;
+	static constexpr freq_t _MAX_MHz = 1000;
+	static constexpr uint64_t _cyclesPerMsAt1MHz = 1000;	
+	static constexpr std::chrono::milliseconds _delayMs = 15ms; // needs to be large enough so that ::sleep_for() is reasonably precise 
 };
