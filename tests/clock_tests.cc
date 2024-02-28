@@ -19,8 +19,6 @@
 #include <gtest/gtest.h>
 #include <clock.h>
 
-void calibrate();
-
 class ClockTests : public testing::Test {
 public:
 	virtual void SetUp() { }
