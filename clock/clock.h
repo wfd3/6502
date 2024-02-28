@@ -43,16 +43,18 @@ public:
 		_accumulatedCycles = 0;
 	}
 
-	uint64_t delay(const uint64_t cycles = 1) {
+	bool delay(const uint64_t cycles = 1) {
 		_accumulatedCycles += cycles;
 
-		if (_accumulatedCycles > _cyclesInDelayTime) {
+		if (_accumulatedCycles >= _cyclesInDelayTime) {
 			_accumulatedCycles -= _cyclesInDelayTime;
-			if (_emulateTiming)
+			if (_emulateTiming) {
 				std::this_thread::sleep_for(_delayMs);
+				return true;
+			}
 		} 
 
-		return _accumulatedCycles; 
+		return false;
 	}
 
 	freq_t getFrequencyMHz() { return _MHz; }

@@ -26,26 +26,71 @@ public:
 	virtual void TearDown()	{}
 };
 
-TEST_F(ClockTests, BelowThresholdTakesNoTime) {
+TEST_F(ClockTests, BelowThresholdDoesNotDelay) {
     uint64_t count = 100;
     BusClock_t clock(1);
+    bool didDelay = false;
+
     clock.enableTimingEmulation();
 
     while(count--) {
-        clock.delay(1);
+        didDelay |= clock.delay(1);
     }
+
+    EXPECT_FALSE(didDelay);
+}
+
+TEST_F(ClockTests, AboveThresholdDelays) {
+    BusClock_t clock(1);
+    uint64_t count = clock.getCyclesInDelayTime();
+    bool didDelay = false;
+
+    clock.enableTimingEmulation();
+
+    while(count--) {
+        didDelay |= clock.delay(1);
+    }
+
+    EXPECT_TRUE(didDelay);
+}
+
+TEST_F(ClockTests, BelowThresholdDoesNotDelayAt4MHz) {
+    uint64_t count = 100;
+    BusClock_t clock(4);
+    bool didDelay = false;
+
+    clock.enableTimingEmulation();
+
+    while(count--) {
+        didDelay |= clock.delay(1);
+    }
+
+    EXPECT_FALSE(didDelay);
+}
+
+TEST_F(ClockTests, AboveThresholdDelaysAt4MHz) {
+    BusClock_t clock(4);
+    uint64_t count = clock.getCyclesInDelayTime();
+    bool didDelay = false;
+
+    clock.enableTimingEmulation();
+
+    while(count--) {
+        didDelay |= clock.delay(1);
+    }
+
+    EXPECT_TRUE(didDelay);
 }
 
 TEST_F(ClockTests, CanGetClockFrequency) {
     static constexpr uint16_t _MHz = 4;
-
     BusClock_t clock(_MHz);
+
     EXPECT_EQ(clock.getFrequencyMHz(), _MHz);
 }
 
 TEST_F(ClockTests, CanGetAccumulatedClockCycles) {
     static constexpr uint16_t _MHz = 4;
-
     BusClock_t clock(_MHz);
 
     clock.delay(10000);
@@ -62,4 +107,14 @@ TEST_F(ClockTests, DelayConsumesAccumulatedCycles) {
     clock.delay(cycles + constant);
 
     EXPECT_EQ(clock.getAccumulatedCycles(), constant);
+}
+
+TEST_F(ClockTests, CantSetLowMHz) {
+    BusClock_t clock(0);
+    EXPECT_EQ(clock.getFrequencyMHz(), 1);
+}
+
+TEST_F(ClockTests, CantSetHighMHz) {
+    BusClock_t clock(1001);
+    EXPECT_EQ(clock.getFrequencyMHz(), 1000);
 }
