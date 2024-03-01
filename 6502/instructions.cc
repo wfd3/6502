@@ -34,7 +34,7 @@ void MOS6502::getAorData(Byte& data, const Byte opcode, Word& address) {
 	}
 }
 
-void MOS6502::putAorData(Byte data, const Byte opcode, Word address) {
+void MOS6502::putAorData(const Byte data, const Byte opcode, Word address) {
 	bool accumulator = instructionIsAddressingMode(opcode, AddressingMode::Accumulator);
 
 	if (accumulator)
@@ -44,7 +44,7 @@ void MOS6502::putAorData(Byte data, const Byte opcode, Word address) {
 }
 
 // Set PC to @address if @condition is true
-void MOS6502::doBranch(bool condition, const Byte opcode) {
+void MOS6502::doBranch(const bool condition, const Byte opcode) {
 	Word address = getAddress(opcode);
 
 	if (condition) {
@@ -63,7 +63,7 @@ void MOS6502::doBranch(bool condition, const Byte opcode) {
 // BCD addition and subtraction functions.
 // See:
 // https://www.electrical4u.com/bcd-or-binary-coded-decimal-bcd-conversion-addition-subtraction/
-void MOS6502::bcdADC(Byte operand) {
+void MOS6502::bcdADC(const Byte operand) {
 	Byte addend, carry, a_low;
 	int answer;
 
@@ -93,7 +93,7 @@ void MOS6502::bcdADC(Byte operand) {
 	Flags.V = (answer < -128) || (answer > 127);
 }
 
-void MOS6502::bcdSBC(Byte subtrahend) {
+void MOS6502::bcdSBC(const Byte subtrahend) {
 	SByte op_l;
 	int operand;
 	Byte carry;
@@ -124,7 +124,7 @@ void MOS6502::bcdSBC(Byte subtrahend) {
 }
 
 // A = A + operand + Flags.C
-void MOS6502::doADC(Byte operand) {
+void MOS6502::doADC(const Byte operand) {
 	Word result;
 	bool same_sign;
 
@@ -566,6 +566,10 @@ void MOS6502::ins_sei([[maybe_unused]] const Byte opcode) {
 void MOS6502::ins_sta(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, A);
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX) || 
+		instructionIsAddressingMode(opcode, AddressingMode::AbsoluteY) ||
+		instructionIsAddressingMode(opcode, AddressingMode::IndirectY)) 
+		_cycles++;
 }
 
 // STX

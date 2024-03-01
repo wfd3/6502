@@ -87,6 +87,7 @@ private:
 
 	// Command handling functions
 	bool helpCmd(std::string&);
+	bool exceptionCmd(std::string&);
 	bool listCmd(std::string&);
 	bool loadCmd(std::string&);
 	bool stackCmd(std::string&);

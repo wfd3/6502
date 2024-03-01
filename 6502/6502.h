@@ -474,7 +474,6 @@ private:
 	uint64_t _BRKCount = 0;
 
 	bool _inReset      = false;      // CPU is held in reset
-	bool _pendingReset = false;
 	bool _pendingIRQ   = false;
 	bool _pendingNMI   = false;
 	bool _hitException = false;

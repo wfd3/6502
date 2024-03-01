@@ -214,10 +214,19 @@ std::vector<Debugger::debugCommand> Debugger::setupDebugCommands() {
 		{ "find",      "f",  &Debugger::findCmd, false, 
 		  "Find a string sequence in memory, with optional filter"
 		},
-		{ "quit",      "q",   &Debugger::quitCmd, false, 
+		{ "exception", "",   &Debugger::exceptionCmd, false, 
+		  "Enter debugger on CPU exception"
+		},
+		{ "quit",      "q",  &Debugger::quitCmd, false, 
 		  "Quit the emulator"
 		}
 	};
+}
+
+bool Debugger::exceptionCmd([[maybe_unused]] std::string& line) {
+	setDebugModeOnException(!debugModeOnException());
+	fmt::print("Debugger on exception: {}\n", debugModeOnException() ? "Yes" : "No");
+	return true;
 }
 
 bool Debugger::helpCmd([[maybe_unused]] std::string& line) {
@@ -442,6 +451,8 @@ bool Debugger::memdumpCmd(std::string& line) {
 		
 		return true;
 	};
+
+	line = stripSpaces(line);
 
     if (std::regex_match(line, matches, labelWithOptionalOffsetR) && matches.size() > 1) {
 		if (calculateAddress(matches, addr1, addr2, false) && rangeCheckAddr(addr1)) {

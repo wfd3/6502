@@ -100,7 +100,7 @@ TEST_F(testClass, TestLoadAProgramAndTrace)
 	constexpr unsigned long loops = 2;
 
 	// When:
-
+ 
 	mem.loadData(testProgram, startAddress);
 	cpu.TestReset(startAddress);
 
@@ -123,13 +123,26 @@ TEST_F(testClass, TestLoopDetection)
 	cpu.TestReset(startAddress);
 	cpu.enableLoopDetection(true);
 
+	bool caughtRuntimeException = false;
+	bool caughtOtherException = false;
+
 	Word cycles = 1000;
 	while (--cycles && !cpu.loopDetected()) {
-		cpu.execute();
+		try {
+			cpu.execute();
+		}
+		catch ([[maybe_unused]] const std::runtime_error& e) {
+			caughtRuntimeException = true;
+		}
+		catch (...) {
+			caughtOtherException = true;
+		}
 		EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 		EXPECT_EQ(cpu.getPC(), startAddress);
 	}
 	EXPECT_TRUE(cpu.loopDetected());
+	EXPECT_TRUE(caughtRuntimeException);
+	EXPECT_FALSE(caughtOtherException);
 	EXPECT_EQ(cpu.getPC(), startAddress);
 	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles());
 }

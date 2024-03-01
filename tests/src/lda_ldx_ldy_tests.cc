@@ -54,6 +54,7 @@ void testClass::TestST(Byte ins, Word addr, Registers r) {
 	//Then:
 	reg = getReg(r);
 	EXPECT_EQ(mem[addr], reg);
+	EXPECT_EQ(cpu.usedCycles(), cpu.expectedCycles()); 
 }
 	 
 // LDA

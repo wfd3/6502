@@ -157,7 +157,7 @@ TEST_F(testClass, AslZeroPageX) {
 
 TEST_F(testClass, AslAbsolute) {
 	
-	Byte ins = cpu.Opcodes.ASL_ABX;
+	Byte ins = cpu.Opcodes.ASL_ABS;
 	Byte data = 0b01010101;
 
 	//Given:

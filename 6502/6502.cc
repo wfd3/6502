@@ -118,17 +118,15 @@ void MOS6502::exitReset() {
 	_hitException = false;
 
 	_inReset = false;
-	_pendingReset = false;
 
 	_cycles += 7;		
 }	
 
 // This is only intended for testing, not for emulation.  It allows tests to set specific starting
-// Program Counter and Stack Pointer values, exits reset so that the next call to execute...() executes code.
+// Program Counter and Stack Pointer values, exits reset so that the next call to execute() executes code.
 #ifdef TEST_BUILD
 void MOS6502::TestReset(const Word initialPC, const Byte initialSP)  {
 	_inReset = true;
-	_pendingReset = true;
 	_testReset = true;
 	_testResetPC = initialPC;
 	_testResetSP = initialSP;
@@ -149,7 +147,7 @@ void MOS6502::Reset() {
 //////////
 // Interrupts
 
-void MOS6502::interrupt(Word vector) {
+void MOS6502::interrupt(const Word vector) {
 	pushWord(PC);
 	pushPS();
 
@@ -188,10 +186,12 @@ void MOS6502::exception(const std::string& message) {
 	std::string msg = "CPU Exception: " + message;
 	_hitException = true;
 	
-	if (debugger.debugModeOnException() && !_debugMode) 
+	if (debugger.debugModeOnException() || _debugMode) {
 		_debugMode = true;
-
-	throw std::runtime_error(msg);
+		fmt::print("\n{}\n", msg);
+	} else {
+		throw std::runtime_error(msg);
+	}
 }
 
 //////////
@@ -400,7 +400,7 @@ Word MOS6502::getAddress(const Byte opcode) {
 	case AddressingMode::Accumulator:
 	case AddressingMode::Immediate:
 	case AddressingMode::Indirect:
-		exception("Decoded address for Accumulator, Immediate or Indirect opcode");
+		exception("Can't decoded address for Accumulator, Immediate or Indirect opcode");
 		break;
 
 	default:
@@ -412,28 +412,13 @@ Word MOS6502::getAddress(const Byte opcode) {
 }
 
 Byte MOS6502::getData(const Byte opcode) {
-	Byte data = 0;
-	Word address;
+	Byte data;
 
-	auto addressMode = getInstructionAddressingMode(opcode);
-	
-	switch(addressMode) {
-
-	// Implied and Accumulator
-	case AddressingMode::Implied:
-	case AddressingMode::Accumulator:
-		exception("Tried to fetch address or data for Implicit or Accumulator addressing mode");
-		break;
-
-	// Immediate mode
-	case AddressingMode::Immediate:
+	if (instructionIsAddressingMode(opcode, AddressingMode::Immediate)) {
 		data = readByteAtPC();
-		break;
-
-	default:
-		address = getAddress(opcode);
+	} else {
+		Word address = getAddress(opcode);
 		data = readByte(address);
-		break;
 	}
 
 	return data;
@@ -454,12 +439,8 @@ void MOS6502::executeOneInstruction() {
  	if (_inReset)
 		return;
 
-	// Reset cycle count before checking if we need to exit reset.
+	// Reset cycle count before executing each instruction.
 	_cycles = 0; 
-
-	if (_pendingReset) {
-		exitReset();
-	}
 
 	if (isPCAtHaltAddress()) {
 		fmt::print("At halt address {:04x}\n", PC);
@@ -477,7 +458,7 @@ void MOS6502::executeOneInstruction() {
 	auto validOpcode = decodeInstruction(opcode, ins);
 	if (!validOpcode) {
 		PC = startPC;
-		auto s = fmt::format("Invalid opcode {:04x} at PC {:04x}", opcode, PC);
+		auto s = fmt::format("Invalid opcode {:02x} at PC {:04x}", opcode, PC);
 		exception(s);
 		return;
 	}
@@ -487,13 +468,17 @@ void MOS6502::executeOneInstruction() {
 	ins.opfn(opcode);
 
 	if ( startPC == PC) {
-		if (_loopDetected) 
-			throw std::runtime_error("Recursive loop detected");
-			
-		if (_infiniteLoopDetection) 
-			fmt::print("# Loop detected at {:04x}\n", PC);
+		if (_loopDetected) {
+			auto s = fmt::format("Recursive loop detected");
+			exception(s);
+		}
+
 		_loopDetected = true;
-		return;
+
+		if (_infiniteLoopDetection)  {
+			auto s = fmt::format("# Loop detected at {:04x}", PC);
+			exception(s);
+		}
 	}
 }
 
@@ -511,12 +496,10 @@ void MOS6502::execute() {
 	}
 
 	executeOneInstruction();
-
-	_debugMode |= loopDetected();
 }
 
 //////////
-// CPU State information 
+// CPU information 
 
 void MOS6502::printCPUState() {
 	auto yesno = [](bool b) -> std::string {
@@ -529,13 +512,11 @@ void MOS6502::printCPUState() {
 	fmt::print("  | PC: {:04x} SP: {:02x}\n", PC, SP );
 	// fmt::print() doesn't like to print out union/bit-field members?
 	fmt::print("  | Flags: {}{}{}{}{}{}{} (PS: {:#x})\n",
-		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D),
-		fl('B', Flags.B), fl('V', Flags.V), fl('N', Flags.N), PS);
+		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D), fl('B', Flags.B), fl('V', Flags.V), 
+		fl('N', Flags.N), PS);
 	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
-	fmt::print("  | Pending: IRQ - {}, NMI - {}, Reset - {}; inReset? - {}\n",
-		   yesno(pendingIRQ()), yesno(pendingNMI()), yesno(_pendingReset), yesno(_inReset));
-	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n",
-		    _IRQCount, _NMICount, _BRKCount);
+	fmt::print("  | Pending: IRQ - {}, NMI - {}, inReset? - {}\n", yesno(pendingIRQ()), yesno(pendingNMI()), yesno(_inReset));
+	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n", _IRQCount, _NMICount, _BRKCount);
 	fmt::print("\n");
 }
 
