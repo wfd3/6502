@@ -172,6 +172,8 @@ private:
 	bool instructionIsAddressingMode(Byte, AddressingMode);
 	Word getAddress(Byte);
 	void decodeArgs(Word&, const bool, const Byte, std::string&, std::string&, std::string&, std::string&);
+	void decodeRockwellArgs(Word&, std::string&, std::string&, std::string&);
+
 
 	// 65C02 specific instructions
 	void ins_bra(Byte);

@@ -174,8 +174,6 @@ void MOS6502::ins_asl(const Byte opcode) {
 	putAorData(data, opcode, address);
 	
 	_cycles++;
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;	
 }
 
 // BCC
@@ -309,8 +307,6 @@ void MOS6502::ins_dec(const Byte opcode) {
 	setFlagZByValue(data);
 	setFlagNByValue(data);
 	_cycles++;
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;
 }
 
 // DEX
@@ -351,8 +347,6 @@ void MOS6502::ins_inc(const Byte opcode) {
 	setFlagZByValue(data);
 	setFlagNByValue(data);
 	_cycles++;
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;
 }
 
 // INX
@@ -433,8 +427,6 @@ void MOS6502::ins_lsr(const Byte opcode) {
 	putAorData(data, opcode, address);
 
 	_cycles++;
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;	
 }
 
 // NOP
@@ -493,8 +485,6 @@ void MOS6502::ins_rol(const Byte opcode) {
 	putAorData(data, opcode, address);
 
 	_cycles++;
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;
 }
 
 // ROR
@@ -514,8 +504,6 @@ void MOS6502::ins_ror(const Byte opcode) {
 	putAorData(data, opcode, address);
 
 	_cycles++;
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;
 }
 
 // RTI
@@ -566,9 +554,10 @@ void MOS6502::ins_sei([[maybe_unused]] const Byte opcode) {
 void MOS6502::ins_sta(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, A);
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX) || 
-		instructionIsAddressingMode(opcode, AddressingMode::AbsoluteY) ||
-		instructionIsAddressingMode(opcode, AddressingMode::IndirectY)) 
+	
+	// All other instances of (Indirect),Y are N cycles, plus 1 if the address calculation crosses a 
+	// page boundary.  STA (Indirect),Y is 6 cycles regardless of page boundaries.  Handle this special case here.
+	if (instructionIsAddressingMode(opcode, AddressingMode::IndirectY)) 
 		_cycles++;
 }
 

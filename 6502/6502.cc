@@ -331,10 +331,13 @@ Word MOS6502::getAddress(const Byte opcode) {
 
 	// Add a cycle if a page boundary is crossed
 	auto updateCycles = [&](Byte reg) {
-		if (instructionHasFlags(opcode, InstructionFlags::PageBoundary) && ((address + reg) >> 8) != (address >> 8)) {
-			_expectedCyclesToUse++;
+		if (instructionHasFlags(opcode, InstructionFlags::PageBoundary)) {
+			if (((address + reg) >> 8) != (address >> 8)) {
+				_expectedCyclesToUse++;
+				_cycles++;
+			}
+		} else 
 			_cycles++;
-		}
 	};
 
 	auto addressMode = getInstructionAddressingMode(opcode); 

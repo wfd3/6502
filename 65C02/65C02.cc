@@ -60,6 +60,43 @@ Word MOS65C02::getAddress(const Byte opcode) {
 	return address;
 }
 
+// Argument decoding for Rockwell R65C02 specific instructions (BBRn abd BBSn).  These instruction mnemonics don't 
+// conform with the rest of the 65C02 & 6502 instructions.
+void MOS65C02::decodeRockwellArgs(Word& dPC, std::string& disassembly, std::string& opcodes, std::string& address) {
+
+	std::string zplabel, abslabel, zpaddr_str, reladdr_str, absaddr_str;
+	auto zpaddr  = readByte(dPC++);
+	auto reladdr = readByte(dPC++);
+	Word absaddr = PC + SByte(reladdr);
+
+	zpaddr_str= fmt::format("${:02x}", zpaddr);
+	zplabel = debugger.addressLabel(zpaddr);	
+
+	if (!zplabel.empty()) {
+		disassembly = zplabel;
+		address = zpaddr;
+	} else { 
+		disassembly = zpaddr_str;
+		address = "";
+	} 
+
+	reladdr_str = fmt::format("${:02x}", reladdr);
+	abslabel = debugger.addressLabel(absaddr);
+	absaddr_str = fmt::format("{:04x}", absaddr);
+
+	if (!abslabel.empty()) {
+		disassembly =+ "," + zplabel;
+		address += "," + abslabel;
+	} else { 
+		disassembly += "," + reladdr_str;
+		address = absaddr_str;
+	} 
+
+	opcodes += fmt::format("{:02x} {:02x} ", zpaddr, reladdr);
+	return;
+}
+
+
 // Argument decoding for 65C02/R65C02
 void MOS65C02::decodeArgs(Word& dPC, const bool atPC, const Byte ins, std::string& disassembly, std::string& opcodes, 
 						  std::string& address, std::string& computedAddr) {
@@ -67,39 +104,12 @@ void MOS65C02::decodeArgs(Word& dPC, const bool atPC, const Byte ins, std::strin
 	Word wordval;
 	std::string out, addr, label;
 
-	// Check for Rockwell 65C02 BBRn or BBSn instructions. These instruction mnemonics don't conform with the rest 
-	// of the 65C02 & 6502 instructions.
-	if ((ins & 0x0f) == 0x0f || (ins & 0x07) == 0x07) {
-		std::string zplabel, abslabel, zpaddr_str, reladdr_str, absaddr_str;
-		// zpaddr, relative_address
-		auto zpaddr  = readByte(dPC++);
-		auto reladdr = readByte(dPC++);
-		Word absaddr = PC + SByte(reladdr);
-
-		zpaddr_str= fmt::format("${:02x}", zpaddr);
-		zplabel = debugger.addressLabel(zpaddr);	
-
-		if (!zplabel.empty()) {
-			disassembly = zplabel;
-			address = zpaddr;
-		} else { 
-			disassembly = zpaddr_str;
-			address = "";
-		} 
-
-		reladdr_str = fmt::format("${:02x}", reladdr);
-		abslabel = debugger.addressLabel(absaddr);
-		absaddr_str = fmt::format("{:04x}", absaddr);
-
-		if (!abslabel.empty()) {
-			disassembly =+ "," + zplabel;
-			address += "," + abslabel;
-		} else { 
-			disassembly += "," + reladdr_str;
-			address = absaddr_str;
-		} 
-
-		opcodes += fmt::format("{:02x} {:02x} ", zpaddr, reladdr);
+	// Check for Rockwell 65C02 BBRn or BBSn instructions. 
+	auto BBR_ins = (ins & 0x0f) == 0x0f;
+	auto BBS_ins = (ins & 0x07) == 0x07;
+	
+	if (BBR_ins || BBS_ins) {
+		decodeRockwellArgs(dPC, disassembly, opcodes, address);
 		return;
 	}
 
@@ -167,9 +177,6 @@ void MOS65C02::ins_bra(const Byte opcode) {
 void MOS65C02::ins_stz(const Byte opcode) {
 	Word address = getAddress(opcode);
 	writeByte(address, 0);
-
-	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
-		_cycles++;
 }
 
 // TRB
@@ -218,6 +225,15 @@ void MOS65C02::ins_ply([[maybe_unused]] const Byte opcode) {
 	_cycles += 2;
 }
 
+// SBC
+void MOS65C02::ins_sbc(const Byte opcode) {
+	MOS6502::ins_sbc(opcode);
+	if (Flags.D) {
+		_cycles++;
+		_expectedCyclesToUse++;
+	}
+}
+
 //////////
 // 6502 instructions with new addressing modes or behaviors on 65C02
 
@@ -245,6 +261,11 @@ void MOS65C02::ins_bit(const Byte opcode) {
 		Flags.V = V;
 		Flags.N = N;
 	}
+
+	// Unlike all other Absolute,X instruction modes, this instruction doesn't consume one cycle more than Absolute.  
+	// Handle that quirk here.
+	if (instructionIsAddressingMode(opcode, AddressingMode::AbsoluteX))
+		_cycles--;
 }
 
 // BRK
@@ -339,15 +360,6 @@ void MOS65C02::ins_ora(const Byte opcode) {
 // ROR
 void MOS65C02::ins_ror(const Byte opcode) {
 	MOS6502::ins_ror(opcode);
-}
-
-// SBC
-void MOS65C02::ins_sbc(const Byte opcode) {
-	MOS6502::ins_sbc(opcode);
-	if (Flags.D) {
-		_cycles++;
-		_expectedCyclesToUse++;
-	}
 }
 
 // STA
