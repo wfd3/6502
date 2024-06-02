@@ -242,7 +242,8 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 	std::string insname, brkpoint, args, opcodes, marker, address, computedAddress;
 	struct instruction ins;
-	const bool atPC = (PC == dPC); 
+	const bool atPC = (PC == dPC);
+	Word _pc = dPC; 
 
 	if (debugger.isBreakpoint(dPC))
 		brkpoint = "B";
@@ -250,13 +251,13 @@ Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 	if (atPC) 
 		marker = "*";
 
-	Byte opcode = readByte(dPC++);
+	Byte opcode = readByte(_pc++);
 	opcodes = fmt::format("{:02x} ", opcode);
 
 	auto validOpcode = decodeInstruction(opcode, ins);
 	if (validOpcode) {
 		insname = ins.name;
-		decodeArgs(dPC, atPC, opcode, args, opcodes, address, computedAddress);
+		decodeArgs(_pc, atPC, opcode, args, opcodes, address, computedAddress);
 	} else {
 		insname = fmt::format(".byte ${:02x}", opcode);
 	}
@@ -274,7 +275,7 @@ Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 
 	_cycles = 0;
 
-	return dPC;
+	return _pc;
 }
 
 Word MOS6502::disassemble(Word dPC, uint64_t cnt = 1) {
