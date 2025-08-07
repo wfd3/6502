@@ -85,7 +85,7 @@ void MOS65C02::decodeRockwellArgs(Word& dPC, std::string& disassembly, std::stri
 	absaddr_str = fmt::format("{:04x}", absaddr);
 
 	if (!abslabel.empty()) {
-		disassembly =+ "," + zplabel;
+		disassembly += "," + zplabel;
 		address += "," + abslabel;
 	} else { 
 		disassembly += "," + reladdr_str;
