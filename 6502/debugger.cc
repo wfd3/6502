@@ -44,7 +44,7 @@ void Debugger::listBreakpoints() {
 }
 
 bool Debugger::isPCBreakpoint() { 
-	return isBreakpoint(_cpu.PC); 
+	return isBreakpoint(_cpu._ctx.PC); 
 }
 
 bool Debugger::isBreakpoint(const Word bp) {

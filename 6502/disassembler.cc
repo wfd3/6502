@@ -83,7 +83,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		disassembly += ",X";
 		opcodes += fmt::format("{:02x} ", byteval);
 		if (atPC) 
-			computedAddr = fmt::format("${:04x}", byteval + X);
+			computedAddr = fmt::format("${:04x}", byteval + _ctx.X);
 		break;
 
 	case AddressingMode::ZeroPageY:  // $xx,Y
@@ -100,7 +100,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		disassembly += ",Y";
 		opcodes += fmt::format("{:02x} ", byteval);
 		if (atPC) 
-			computedAddr = fmt::format("${:04x}", byteval + Y);
+			computedAddr = fmt::format("${:04x}", byteval + _ctx.Y);
 		break;
 
 	case AddressingMode::Relative:
@@ -150,7 +150,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		disassembly += ",X";
 		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
 		if (atPC) 
-			computedAddr = fmt::format("${:04x}", wordval + X);
+			computedAddr = fmt::format("${:04x}", wordval + _ctx.X);
 	
 		break;		
 
@@ -170,7 +170,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		disassembly += ",Y";
 		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
 		if (atPC) 
-			computedAddr = fmt::format("${:04x}", wordval + Y);
+			computedAddr = fmt::format("${:04x}", wordval + _ctx.Y);
 		break;
 		
 	case AddressingMode::Indirect:  // $(xxxx)
@@ -204,7 +204,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		disassembly = "(" + disassembly + "),X";
 		opcodes += fmt::format("{:02x}", byteval);
 		if (atPC) {
-			wordval = byteval + X;
+			wordval = byteval + _ctx.X;
 			if (wordval > 0xFF)
 				wordval -= 0xFF;
 			wordval = readWord(wordval);
@@ -229,7 +229,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		opcodes += fmt::format("{:02x}", byteval);
 		if (atPC) {
 			wordval = readWord(byteval);
-			wordval += Y;
+			wordval += _ctx.Y;
 			computedAddr = fmt::format("${:04x}", wordval);
 		}
 		break;
@@ -242,7 +242,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
 	std::string insname, brkpoint, args, opcodes, marker, address, computedAddress;
 	struct instruction ins;
-	const bool atPC = (PC == dPC);
+	const bool atPC = (_ctx.PC == dPC);
 	Word _pc = dPC; 
 
 	if (debugger.isBreakpoint(dPC))
@@ -297,7 +297,7 @@ Word MOS6502::disassemble(Word dPC, uint64_t cnt = 1) {
 #ifdef TEST_BUILD
 // This is used for basic disassembler testing
 void MOS6502::traceOneInstruction() {
-	disassemble(PC, 1);
+	disassemble(_ctx.PC, 1);
 	executeOneInstruction();
 }
 #endif

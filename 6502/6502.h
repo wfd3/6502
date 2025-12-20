@@ -25,6 +25,7 @@
 #include <map>
 #include <unordered_map>
 #include <string>
+#include <string_view>
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -54,6 +55,7 @@ public:
 
 	// CPU Setup & reset
 	MOS6502(Memory<Word, Byte>&);
+	virtual ~MOS6502() = default;
 
 	void Reset();
 
@@ -84,39 +86,40 @@ public:
 	// Execution
 	void execute();
 
+	// CPU state accessors - used by all code (internal and test)
+	Word getPC() const { return _ctx.PC; }
+	Byte getSP() const { return _ctx.SP; }
+	Byte getA()  const { return _ctx.A; }
+	Byte getX()  const { return _ctx.X; }
+	Byte getY()  const { return _ctx.Y; }
+	Byte getPS() const { return _ctx.PS; }
+
+	bool getFlagC() const { return _ctx.Flags.C; }
+	bool getFlagZ() const { return _ctx.Flags.Z; }
+	bool getFlagI() const { return _ctx.Flags.I; }
+	bool getFlagD() const { return _ctx.Flags.D; }
+	bool getFlagB() const { return _ctx.Flags.B; }
+	bool getFlagV() const { return _ctx.Flags.V; }
+	bool getFlagN() const { return _ctx.Flags.N; }
+
+	void setPC(Word _PC) { _ctx.PC = _PC; }
+	void setSP(Byte _SP) { _ctx.SP = _SP; }
+	void setA(Byte _A)   { _ctx.A = _A; }
+	void setX(Byte _X)   { _ctx.X = _X; }
+	void setY(Byte _Y)   { _ctx.Y = _Y; }
+	void setPS(Byte _PS) { _ctx.PS = _PS; }
+
+	void setFlagC(bool _v) { _ctx.Flags.C = _v ? 1 : 0; }
+	void setFlagZ(bool _v) { _ctx.Flags.Z = _v ? 1 : 0; }
+	void setFlagI(bool _v) { _ctx.Flags.I = _v ? 1 : 0; }
+	void setFlagD(bool _v) { _ctx.Flags.D = _v ? 1 : 0; }
+	void setFlagB(bool _v) { _ctx.Flags.B = _v ? 1 : 0; }
+	void setFlagV(bool _v) { _ctx.Flags.V = _v ? 1 : 0; }
+	void setFlagN(bool _v) { _ctx.Flags.N = _v ? 1 : 0; }
+
 #ifdef TEST_BUILD
 	void TestReset(Word initialPC = RESET_VECTOR, Byte initialSP = INITIAL_SP);
 	void traceOneInstruction();
-
-	Word getPC() { return PC; }
-	Byte getSP() { return SP; } 
-	Byte getA()  { return A;  }
-	Byte getX()  { return X;  }
-	Byte getY()  { return Y;  }
-	Byte getPS() { return PS; }
-
-	bool getFlagC() { return Flags.C; }
-	bool getFlagZ() { return Flags.Z; }
-	bool getFlagI() { return Flags.I; }
-	bool getFlagD() { return Flags.D; }
-	bool getFlagB() { return Flags.B; }
-	bool getFlagV() { return Flags.V; }
-	bool getFlagN() { return Flags.N; }
-
-	void setPC(Word _PC) { PC = _PC; }
-	void setSP(Byte _SP) { SP = _SP; }
-	void setA(Byte _A)   { A = _A; }
-	void setX(Byte _X)   { X = _X; }
-	void setY(Byte _Y)   { Y = _Y; }
-	void setPS(Byte _PS) { PS = _PS; }
-	
-	void setFlagC(bool _v) { Flags.C = _v ? 1 : 0; }
-	void setFlagZ(bool _v) { Flags.Z = _v ? 1 : 0; }
-	void setFlagI(bool _v) { Flags.I = _v ? 1 : 0; }
-	void setFlagD(bool _v) { Flags.D = _v ? 1 : 0; }
-	void setFlagB(bool _v) { Flags.B = _v ? 1 : 0; }
-	void setFlagV(bool _v) { Flags.V = _v ? 1 : 0; }
-	void setFlagN(bool _v) { Flags.N = _v ? 1 : 0; }
 #endif
 
 	// 6502 Opcode definitions
@@ -282,6 +285,57 @@ protected:
 	// Let the debugger access all our internals.
 	friend class Debugger;
 
+	// ProcessorStatusBits definition (needed by ExecutionContext)
+	struct ProcessorStatusBits {
+		Byte C:1;        // Carry (bit 0)
+		Byte Z:1;        // Zero (bit 1)
+		Byte I:1;        // Interrupt disable (bit 2)
+		Byte D:1;        // Decimal mode (bit 3)
+		Byte B:1;        // Break (bit 4)
+		Byte _unused:1;  // Unused (bit 5)
+		Byte V:1;        // Overflow (bit 6)
+		Byte N:1;        // Negative (bit 7)
+	};
+
+	// Execution context manages CPU state directly
+	struct ExecutionContext {
+		// CPU Registers - the actual state, not a copy
+		Word PC = 0;     // Program counter
+		Byte SP = 0;     // Stack pointer
+		Byte A  = 0;     // Accumulator
+		Byte X  = 0;     // X Register
+		Byte Y  = 0;     // Y Register
+
+		// Processor status - union allows both byte and bitfield access
+		union {
+			Byte PS = 0;
+			struct ProcessorStatusBits Flags;
+		};
+
+		// Execution tracking (what happened during current instruction)
+		bool branchTaken = false;      // True if branch was taken
+		bool pagesCrossed = false;     // True if page boundary was crossed
+		bool decimalMode = false;      // True if decimal mode active (cached from Flags.D)
+		Byte extraCycles = 0;          // Fixed overhead cycles (for JSR, RTS, etc)
+
+		// Create a snapshot of current state
+		ExecutionContext snapshot() const {
+			return *this;
+		}
+
+		// Reset execution tracking fields (called before each instruction)
+		void resetTracking() {
+			branchTaken = false;
+			pagesCrossed = false;
+			decimalMode = Flags.D;  // Cache decimal mode flag
+			extraCycles = 0;
+		}
+
+		void checkPageBoundary(Word base, Byte index) {
+			pagesCrossed = ((base >> 8) != ((base + index) >> 8));
+		}
+	};
+
 	Debugger debugger;
 
 	// Disassembler
@@ -290,28 +344,8 @@ protected:
 	virtual void decodeArgs(Word&, const bool, const Byte, std::string &, std::string&, std::string&, std::string&);
 
 	Cycles_t _cycles = 0;              // Cycle counter
-	Cycles_t _expectedCyclesToUse = 0; 
-
-	Word PC = 0;		 // Program counter
-	Byte SP = 0;		 // Stack pointer
-	Byte A  = 0;		 // Accumulator 
-	Byte X  = 0;		 // X Register
-	Byte Y  = 0;		 // Y Register
-	
-	struct ProcessorStatusBits {
-		Byte C:1; 	     // Carry (bit 0)
-		Byte Z:1;	     // Zero (bit 1)
-		Byte I:1;	     // Interrupt disable (bit 2)
-		Byte D:1;	     // Decimal mode (bit 3)
-		Byte B:1;	     // Break (bit 4)
-		Byte _unused:1;	 // Unused (bit 5)
-		Byte V:1;	     // Overflow (bit 6)
-		Byte N:1;	     // Negative (bit 7)
-	};
-	union {
-		Byte PS = 0;
-		struct ProcessorStatusBits Flags;
-	};
+	Cycles_t _expectedCyclesToUse = 0;
+	ExecutionContext _ctx;             // Execution context - manages CPU state directly
 
 	// Addressing modes
 	enum AddressingMode {
@@ -330,22 +364,23 @@ protected:
 		Accumulator
 	};
 	
-    // Some instructions add to the cycle count if they branch or when instructions fetch data across page 
+    // Some instructions add to the cycle count if they branch or when instructions fetch data across page
 	// boundaries.  These flags tell us what to do.
 	class InstructionFlags {
 	public:
 		static constexpr uint8_t None           = 0;
-		static constexpr uint8_t Branch         = 1;
-		static constexpr uint8_t PageBoundary   = 2;
+		static constexpr uint8_t Branch         = (1 << 0);  // Bit 0
+		static constexpr uint8_t PageBoundary   = (1 << 1);  // Bit 1
 	};
-	
+
 	// Instruction map
 	using opfn_t = std::function<void(Byte)>;
 	struct instruction {
-		const char *name;
+		std::string_view name;
 	    AddressingMode addrmode;
 		Byte bytes;
-		Byte cycles;
+		Byte minCycles;     // Minimum cycles (best case)
+		Byte maxCycles;     // Maximum cycles (worst case)
 		uint8_t flags;
 		opfn_t opfn;
 	};
@@ -391,6 +426,9 @@ protected:
 	Byte readByte(Word);
 	void writeWord(Word, Word);
 	Word readWord(Word);
+
+	// Cycle computation
+	Cycles_t computeInstructionCycles(const instruction&, const ExecutionContext&);
 
 	// Address decoding
 	virtual Word getAddress(Byte);

@@ -17,6 +17,7 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <6502.h>
+#include <cstring>
 
 //////////
 // CPU Setup and reset
@@ -64,7 +65,7 @@ void MOS6502::setHaltAddress(const Word _pc) {
 }
 
 bool MOS6502::isPCAtHaltAddress() {
-	return _haltAddressSet && (PC == _haltAddress);
+	return _haltAddressSet && (_ctx.PC == _haltAddress);
 }
 
 void MOS6502::enableLoopDetection(const bool l) {
@@ -100,14 +101,14 @@ Cycles_t MOS6502::usedCycles() {
 }
 
 void MOS6502::exitReset() {
-	PC = readWord(RESET_VECTOR);
-	SP = INITIAL_SP;
+_ctx.PC = readWord(RESET_VECTOR);
+_ctx.SP = INITIAL_SP;
 
 #ifdef TEST_BUILD
 	// If we're here via TestReset() clobber the PC and SP with test values
 	if (_testReset) {
-		SP = _testResetSP;
-		PC = _testResetPC;
+		_ctx.SP = _testResetSP;
+_ctx.PC = _testResetPC;
 	}
 	_testReset = false;
 #endif
@@ -148,17 +149,17 @@ void MOS6502::Reset() {
 // Interrupts
 
 void MOS6502::interrupt(const Word vector) {
-	pushWord(PC);
+	pushWord(_ctx.PC);
 	pushPS();
 
-	Flags.I = 1;
-	PC = readWord(vector);
+	_ctx.Flags.I = 1;
+	_ctx.PC = readWord(vector);
 	_cycles += 2;
 }
 
 bool MOS6502::NMI() {
 	if (pendingNMI()) {
-		debugger.addBacktraceInterrupt(PC);
+		debugger.addBacktraceInterrupt(_ctx.PC);
 		_NMICount++;
 		interrupt(NMI_VECTOR);
 		_pendingNMI = false;
@@ -170,7 +171,7 @@ bool MOS6502::NMI() {
 
 bool MOS6502::IRQ() {
 	if (pendingIRQ() && !IRQBlocked()) {
-		debugger.addBacktraceInterrupt(PC);
+		debugger.addBacktraceInterrupt(_ctx.PC);
 		_IRQCount++;
 		interrupt(INTERRUPT_VECTOR);
 		_pendingIRQ = false;
@@ -203,28 +204,26 @@ bool MOS6502::isNegative(const Byte val) {
 }
 
 void MOS6502::setFlagNByValue(const Byte val) {
-	Flags.N = isNegative(val);
+	_ctx.Flags.N = isNegative(val);
 }
 
 void MOS6502::setFlagZByValue(const Byte val) {
-	Flags.Z = (val == 0);
+	_ctx.Flags.Z = (val == 0);
 }
 
 bool MOS6502::IRQBlocked() {
-	return Flags.I == 1;
+	return _ctx.Flags.I == 1;
 }
 
 //////////
 // Memory access
 Byte MOS6502::readByte(const Word address) {
 	Byte data = mem.Read(address);
-	_cycles++;
 	return data;
 }
 
 void MOS6502::writeByte(const Word address, const Byte value) {
 	mem.Write(address, value);
-	_cycles++;
 }
 
 Word MOS6502::readWord(const Word address) {
@@ -243,8 +242,8 @@ Word MOS6502::readWordAtPC() {
 }
 
 Byte MOS6502::readByteAtPC() {
-	Byte opcode = readByte(PC);
-	PC++;
+	Byte opcode = readByte(_ctx.PC);
+	_ctx.PC++;
 	return opcode;
 }
 
@@ -256,8 +255,8 @@ bool MOS6502::validInstruction(const Byte opcode) {
 }
 
 const char* MOS6502::instructionName(const Byte opcode) {
-	if (validInstruction(opcode)) 
-		return _instructions.at(opcode).name;
+	if (validInstruction(opcode))
+		return _instructions.at(opcode).name.data();
 	return nullptr;
 }
 
@@ -285,15 +284,15 @@ MOS6502::AddressingMode MOS6502::getInstructionAddressingMode(const Byte opcode)
 //////////
 // Stack operations
 void MOS6502::push(const Byte value) {
-	Word SPAddress = STACK_FRAME + SP;
+	Word SPAddress = STACK_FRAME + _ctx.SP;
 	writeByte(SPAddress, value);
-	SP--;
+	_ctx.SP--;
 }
 
 Byte MOS6502::pop() {
 	Word SPAddress;
-	SP++;
-	SPAddress = STACK_FRAME + SP;
+	_ctx.SP++;
+	SPAddress = STACK_FRAME + _ctx.SP;
 	return readByte(SPAddress);
 }
 
@@ -314,13 +313,13 @@ void MOS6502::pushPS() {
 	constexpr Byte BreakBit  = 1 << 4;
 	constexpr Byte UnusedBit = 1 << 5;
 
-	push(PS | UnusedBit | BreakBit);
+	push(_ctx.PS | UnusedBit | BreakBit);
 }
 
 void MOS6502::popPS() {
-	PS = pop();
-	Flags.B = false;
-	Flags._unused = false;
+	_ctx.PS = pop();
+	_ctx.Flags.B = false;
+	_ctx.Flags._unused = false;
 }
 
 //////////
@@ -329,19 +328,8 @@ Word MOS6502::getAddress(const Byte opcode) {
 	Word address;
 	SByte rel;
 
-	// Add a cycle if a page boundary is crossed
-	auto updateCycles = [&](Byte reg) {
-		if (instructionHasFlags(opcode, InstructionFlags::PageBoundary)) {
-			if (((address + reg) >> 8) != (address >> 8)) {
-				_expectedCyclesToUse++;
-				_cycles++;
-			}
-		} else 
-			_cycles++;
-	};
+	auto addressMode = getInstructionAddressingMode(opcode);
 
-	auto addressMode = getInstructionAddressingMode(opcode); 
-	
 	switch(addressMode) {
 
     // ZeroPage mode
@@ -351,20 +339,19 @@ Word MOS6502::getAddress(const Byte opcode) {
 
 	// ZeroPage,X (with zero page wrap around)
 	case AddressingMode::ZeroPageX:
-		address = static_cast<Byte>(readByteAtPC() + X);
-		_cycles++;
+		address = static_cast<Byte>(readByteAtPC() + _ctx.X);
 		break;
 
 	// ZeroPage,Y (with zero page wrap around)
 	case AddressingMode::ZeroPageY:
-		address = static_cast<Byte>(readByteAtPC() + Y);
-		_cycles++;
+		address = static_cast<Byte>(readByteAtPC() + _ctx.Y);
 		break;
 
 	// Relative
 	case AddressingMode::Relative:
 		rel = static_cast<SByte>(readByteAtPC());
-		address = static_cast<Word>(PC + rel);
+		address = static_cast<Word>(_ctx.PC + rel);
+		_ctx.checkPageBoundary(_ctx.PC, static_cast<Byte>(rel));
 		break;
 
 	// Absolute
@@ -372,31 +359,32 @@ Word MOS6502::getAddress(const Byte opcode) {
 		address = readWordAtPC();
 		break;
 
-	// Absolute,X 
+	// Absolute,X
 	case AddressingMode::AbsoluteX:
 		address = readWordAtPC();
-		updateCycles(X);
-		address += X;
+		_ctx.checkPageBoundary(address, _ctx.X);
+		address += _ctx.X;
 		break;
 
-	// Absolute,Y 
+	// Absolute,Y
 	case AddressingMode::AbsoluteY:
 		address = readWordAtPC();
-		updateCycles(Y);
-		address += Y;
+		_ctx.checkPageBoundary(address, _ctx.Y);
+		address += _ctx.Y;
 		break;
 
     // (Indirect,X) or Indexed Indirect (with zero page wrap around)
-	case AddressingMode::IndirectX:	
-		address = static_cast<Byte>(readByteAtPC() + X);
+	case AddressingMode::IndirectX:
+		address = static_cast<Byte>(readByteAtPC() + _ctx.X);
 		address = readWord(address);
-		_cycles++;
 		break;
 
 	// (Indirect),Y or Indirect Indexed
 	case AddressingMode::IndirectY:
 		address = readByteAtPC();
-		address = readWord(address) + Y;
+		address = readWord(address);
+		_ctx.checkPageBoundary(address, _ctx.Y);
+		address += _ctx.Y;
 		break;
 
 	case AddressingMode::Implied:
@@ -410,7 +398,7 @@ Word MOS6502::getAddress(const Byte opcode) {
 		exception("Invalid addressing mode");
 		break;
 	}
-	
+
 	return address;
 }
 
@@ -427,50 +415,77 @@ Byte MOS6502::getData(const Byte opcode) {
 	return data;
 }
 
+Cycles_t MOS6502::computeInstructionCycles(const instruction& ins, const ExecutionContext& ctx) {
+	// Start with the base cycle count from the instruction map
+	Cycles_t cycles = ins.minCycles;
+
+	// Add conditional cycles based on what actually happened
+
+	// Page boundary crossing for read instructions
+	if (ctx.pagesCrossed && (ins.flags & InstructionFlags::PageBoundary)) {
+		cycles++;
+	}
+
+	// Branch instructions
+	if (ins.flags & InstructionFlags::Branch) {
+		if (ctx.branchTaken) {
+			cycles++;  // Branch taken adds 1 cycle
+			if (ctx.pagesCrossed) {
+				cycles += 2;  // Page crossing adds 2 more cycles
+			}
+		}
+	}
+
+	// Add any extra cycles set by specific instructions
+	cycles += ctx.extraCycles;
+
+	return cycles;
+}
+
 //////////
 // Instruction execution
 void MOS6502::executeOneInstruction() {
 	Byte opcode;
-	Word startPC;
 	struct instruction ins;
 
 	if (hitException()) {
 		fmt::print("CPU has hit an exception\n");
 		return;
 	}
-	
+
  	if (_inReset)
 		return;
 
-	// Reset cycle count before executing each instruction.
-	_cycles = 0; 
-
 	if (isPCAtHaltAddress()) {
-		fmt::print("At halt address {:04x}\n", PC);
+		fmt::print("At halt address {:04x}\n", _ctx.PC);
 		return;
 	}
 
-	// Check for a pending Non-maskable interrupt and a pending interrupt request.  
-	if (NMI() || IRQ()) 
+	// Check for a pending Non-maskable interrupt and a pending interrupt request.
+	if (NMI() || IRQ())
 		return;
 
-	// Saving the PC has to happen before readByteAtPC(), which consumes clock cycles and increments the PC
-	startPC = PC;
+	// Capture state before instruction execution for comparison
+	auto beforeState = _ctx.snapshot();
+
+	// Reset execution tracking flags
+	_ctx.resetTracking();
 
 	opcode = readByteAtPC();
 	auto validOpcode = decodeInstruction(opcode, ins);
 	if (!validOpcode) {
-		PC = startPC;
-		auto s = fmt::format("Invalid opcode {:02x} at PC {:04x}", opcode, PC);
+		_ctx.PC = beforeState.PC;
+		auto s = fmt::format("Invalid opcode {:02x} at PC {:04x}", opcode, _ctx.PC);
 		exception(s);
 		return;
 	}
 
-	_expectedCyclesToUse = ins.cycles;
-
 	ins.opfn(opcode);
 
-	if ( startPC == PC) {
+	// Compute cycles based on what happened during execution
+	_cycles = _expectedCyclesToUse = computeInstructionCycles(ins, _ctx);
+
+	if (beforeState.PC == _ctx.PC) {
 		if (_loopDetected) {
 			auto s = fmt::format("Recursive loop detected");
 			exception(s);
@@ -479,7 +494,7 @@ void MOS6502::executeOneInstruction() {
 		_loopDetected = true;
 
 		if (_infiniteLoopDetection)  {
-			auto s = fmt::format("# Loop detected at {:04x}", PC);
+			auto s = fmt::format("# Loop detected at {:04x}", _ctx.PC);
 			exception(s);
 		}
 	}
@@ -514,12 +529,12 @@ void MOS6502::printCPUState() {
 		return b ? std::toupper(c) : std::tolower(c);
 	};
 
-	fmt::print("  | PC: {:04x} SP: {:02x}\n", PC, SP );
+	fmt::print("  | PC: {:04x} SP: {:02x}\n", _ctx.PC, _ctx.SP );
 	// fmt::print() doesn't like to print out union/bit-field members?
 	fmt::print("  | Flags: {}{}{}{}{}{}{} (PS: {:#x})\n",
-		fl('C', Flags.C), fl('Z', Flags.Z), fl('I', Flags.I), fl('D', Flags.D), fl('B', Flags.B), fl('V', Flags.V), 
-		fl('N', Flags.N), PS);
-	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
+		fl('C', _ctx.Flags.C), fl('Z', _ctx.Flags.Z), fl('I', _ctx.Flags.I), fl('D', _ctx.Flags.D), fl('B', _ctx.Flags.B), fl('V', _ctx.Flags.V), 
+		fl('N', _ctx.Flags.N), _ctx.PS);
+	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", _ctx.A, _ctx.X, _ctx.Y );
 	fmt::print("  | Pending: IRQ - {}, NMI - {}, inReset? - {}\n", yesno(pendingIRQ()), yesno(pendingNMI()), yesno(_inReset));
 	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n", _IRQCount, _NMICount, _BRKCount);
 	printCPUStateExtras();
@@ -530,11 +545,11 @@ void MOS6502::Stack() {
 	Byte p = MOS6502::INITIAL_SP;
 	Word a;
 
-	fmt::print("Stack [SP = {:02x}]\n", SP);
-	if (p == SP)
+	fmt::print("Stack [SP = {:02x}]\n", _ctx.SP);
+	if (p == _ctx.SP)
 		fmt::print("Empty stack\n");
 
-	while (p != SP) {
+	while (p != _ctx.SP) {
 		a = STACK_FRAME | p;
 		fmt::print("[{:04x}] {:02x}\n", a, mem.Read(a));
 		p--;

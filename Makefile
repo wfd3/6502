@@ -56,6 +56,11 @@ tests: configure
 runtests: configure
 	cd $(BUILDDIR) && make runtests
 
+# Target to build and run all tests
+.PHONY: run_tests
+run_tests: configure
+	cd $(BUILDDIR) && make runtests
+
 # Target to run the 'run_memory_tests' target
 .PHONY: run_memory_tests
 run_memory_tests: configure

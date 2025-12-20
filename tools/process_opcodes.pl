@@ -42,7 +42,7 @@ sub addFlags {
 	my ($flags_ref, %flg) = @_;
 	$added = 0;
 	foreach my $key (keys %flg) {
-		$$flags_ref .= " & " if ($$flags_ref ne "");
+		$$flags_ref .= " | " if ($$flags_ref ne "");
 		$$flags_ref .= $key;
 		$added++;
 	}
@@ -142,7 +142,8 @@ while (<>) {
 
 			$i{$key}{"cycle_flags"}{"InstructionFlags::PageBoundary"}++ if ($flg eq "CYCLE_CROSS_PAGE");
 			$i{$key}{"cycle_flags"}{"InstructionFlags::Branch"}++ if ($flg eq "CYCLE_BRANCH");
-			$i{$key}{"cycle_flags"}{"InstructionFlags::BranchMinusCycle"}++ if ($flg eq "65C02_SUBTRACT_CYCLE");
+			$i{$key}{"cycle_flags"}{"InstructionFlags::NoBoundaryCrossed"}++ if ($flg eq "65C02_SUBTRACT_CYCLE");
+			$i{$key}{"cycle_flags"}{"InstructionFlags::DecimalMode"}++ if ($flg eq "65C02_CYCLE_DECIMAL_MODE");
 		}
 		if ($DEBUG) {
 			printf("-- new flags = ");
@@ -220,7 +221,7 @@ printf("std::map<Byte, MOS6502::instruction> MOS6502::setupInstructionMap() {\n"
 printf("\treturn  {\n");
 printf("\t\t// The table below is formatted as follows:\n");
 printf("\t\t// { Opcode,\n");
-printf("\t\t//   {\"name\", AddressingMode, ByteLength, CyclesUsed, Flags,\n");
+printf("\t\t//   {\"name\", AddressingMode, ByteLength, MinCycles, MaxCycles, Flags,\n");
 printf("\t\t//     std::bind(&MOS6502::ins_op, this, std::placeholders::_1, std::placeholders::_2)}}\n");
 
 foreach my $key (@sorted_ops) {
@@ -253,8 +254,19 @@ foreach my $key (@sorted_ops) {
 		$addrm = "convertAddressingMode(" . $addrm . ")";
 	}
 
+	# Calculate minCycles and maxCycles based on flags
+	$minCycles = $cycles;
+	$maxCycles = $cycles;
+	if (exists($i{$key}{"cycle_flags"}{"InstructionFlags::PageBoundary"})) {
+		$maxCycles = $cycles + 1;
+	}
+	if (exists($i{$key}{"cycle_flags"}{"InstructionFlags::NoBoundaryCrossed"})) {
+		# For 65C02 RMW instructions: base cycles is max, subtract 1 for min
+		$minCycles = $cycles - 1;
+	}
+
 	printf("\t\t{ " . $Class . "Opcodes.%s,\n", $const);
-	printf("\t\t  { \"%s\", %s, %d, %d, %s,\n",	$ins, $addrm, $bytes, $cycles, $flags);
+	printf("\t\t  { \"%s\", %s, %d, %d, %d, %s,\n",	$ins, $addrm, $bytes, $minCycles, $maxCycles, $flags);
 	printf("\t\t    %s}},\n", $fn);
 }
 printf("\t};\n");

@@ -28,13 +28,8 @@
 
 #if defined(__linux__) || defined(__MACH__)
 #include <unistd.h>
-# ifdef __linux__
-#  include <termio.h>
-# endif
-# ifdef __MACH__
-#  include <termios.h>
-#  include <sys/ioctl.h>
-# endif
+#include <termios.h>
+#include <sys/ioctl.h>
 #elif defined(_WIN64)
 # include <conio.h>
 # include <windows.h>

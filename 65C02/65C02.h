@@ -156,7 +156,8 @@ private:
 
     class InstructionFlags : public MOS6502::InstructionFlags {
 	public:
-        static constexpr uint8_t NoBoundaryCrossed = 4;
+        static constexpr uint8_t NoBoundaryCrossed = (1 << 2);  // Bit 2
+        static constexpr uint8_t DecimalMode       = (1 << 3);  // Bit 3 (+1 cycle if Flags.D == 1)
 	};
 
 	enum AddressingMode {
@@ -230,4 +231,5 @@ private:
 
 protected:
 	void printCPUStateExtras();
+	Cycles_t computeInstructionCycles(const instruction&, const ExecutionContext&);
 }; // class 65C02

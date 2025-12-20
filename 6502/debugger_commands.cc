@@ -399,7 +399,7 @@ bool Debugger::resetListPCCmd(std::string& line) {
 		listPC = i;
 	}
 	catch (...) {
-		listPC = _cpu.PC;
+		listPC = _cpu._ctx.PC;
 	}
 
 	fmt::print("List reset to PC {:04x}\n", listPC);
@@ -544,31 +544,31 @@ bool Debugger::setCmd(std::string& line) {
 	}
 
 	if      (reg == "A") 
-		_cpu.A = static_cast<Byte>(value);
+		_cpu._ctx.A = static_cast<Byte>(value);
 	else if (reg == "Y")
-		_cpu.Y = static_cast<Byte>(value);
+		_cpu._ctx.Y = static_cast<Byte>(value);
 	else if (reg == "X")
-		_cpu.X = static_cast<Byte>(value);
+		_cpu._ctx.X = static_cast<Byte>(value);
 	else if (reg == "PC")
-		_cpu.PC = static_cast<Word>(value);
+		_cpu._ctx.PC = static_cast<Word>(value);
 	else if (reg == "SP")
-		_cpu.SP = static_cast<Byte>(value);
+		_cpu._ctx.SP = static_cast<Byte>(value);
 	else if (reg == "PS")
-		_cpu.PS = static_cast<Byte>(value);
+		_cpu._ctx.PS = static_cast<Byte>(value);
 	else if (reg == "C")
-		_cpu.Flags.C = flipFlag ? !_cpu.Flags.C : static_cast<bool>(value);
+		_cpu._ctx.Flags.C = flipFlag ? !_cpu._ctx.Flags.C : static_cast<bool>(value);
 	else if (reg == "Z")
-		_cpu.Flags.Z = flipFlag ? !_cpu.Flags.Z : static_cast<bool>(value);
+		_cpu._ctx.Flags.Z = flipFlag ? !_cpu._ctx.Flags.Z : static_cast<bool>(value);
 	else if (reg == "I")
-		_cpu.Flags.I = flipFlag ? !_cpu.Flags.I : static_cast<bool>(value);
+		_cpu._ctx.Flags.I = flipFlag ? !_cpu._ctx.Flags.I : static_cast<bool>(value);
 	else if (reg == "D")
-		_cpu.Flags.D = flipFlag ? !_cpu.Flags.D : static_cast<bool>(value);
+		_cpu._ctx.Flags.D = flipFlag ? !_cpu._ctx.Flags.D : static_cast<bool>(value);
 	else if (reg == "B")
-		_cpu.Flags.B = flipFlag ? !_cpu.Flags.B : static_cast<bool>(value);
+		_cpu._ctx.Flags.B = flipFlag ? !_cpu._ctx.Flags.B : static_cast<bool>(value);
 	else if (reg == "V")
-		_cpu.Flags.V = flipFlag ? !_cpu.Flags.V : static_cast<bool>(value);
+		_cpu._ctx.Flags.V = flipFlag ? !_cpu._ctx.Flags.V : static_cast<bool>(value);
 	else if (reg == "N")
-		_cpu.Flags.N = flipFlag ? !_cpu.Flags.N : static_cast<bool>(value);
+		_cpu._ctx.Flags.N = flipFlag ? !_cpu._ctx.Flags.N : static_cast<bool>(value);
 	else {
 		fmt::print("No register or status flag '{}'\n", reg);
 		return false;
@@ -610,7 +610,7 @@ bool Debugger::backtraceCmd([[maybe_unused]] std::string& line) {
 }
 
 bool Debugger::whereCmd([[maybe_unused]] std::string& line) {
-	_cpu.disassemble(_cpu.PC, 1);
+	_cpu.disassemble(_cpu._ctx.PC, 1);
 	return true;
 }
 
@@ -776,7 +776,7 @@ bool Debugger::executeDebuggerCmd(std::string line) {
 			_cpu.executeOneInstruction();
 			if (_showCPUStatusAtDebugPrompt) 
 				_cpu.printCPUState();
-			_cpu.disassemble(_cpu.PC, 1);
+			_cpu.disassemble(_cpu._ctx.PC, 1);
 		}
 		return true;
 	}
@@ -806,12 +806,12 @@ void Debugger::executeDebug() {
 	static bool header = false;
 
 	if (!header) {
-		listPC = _cpu.PC;
+		listPC = _cpu._ctx.PC;
 		header = true;
 
-		fmt::print("\nDebugger starting at PC {:#06x}\n", _cpu.PC);
+		fmt::print("\nDebugger starting at PC {:#06x}\n", _cpu._ctx.PC);
 		_cpu.printCPUState();
-		_cpu.disassemble(_cpu.PC, 1);
+		_cpu.disassemble(_cpu._ctx.PC, 1);
 	}
 
 	std::string line;
