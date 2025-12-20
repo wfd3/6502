@@ -25,6 +25,33 @@ bool MOS65C02::instructionIsAddressingMode(const Byte opcode, const AddressingMo
 	return static_cast<MOS65C02::AddressingMode>(_instructions.at(opcode).addrmode) == addrmode;
 }
 
+void MOS65C02::execute(void) {
+	_cycles = 0;
+	if (_inWAI) 
+		return;
+
+	MOS6502::execute();
+}
+
+void MOS65C02::Reset(void) {
+	_inWAI = false;
+	MOS6502::Reset();
+}
+
+void MOS65C02::raiseIRQ() {
+	_inWAI = false;
+	MOS6502::raiseIRQ();
+}
+
+void MOS65C02::raiseNMI() {
+	_inWAI = false;
+	MOS6502::raiseNMI();
+}
+
+void MOS65C02::printCPUStateExtras() {
+	fmt::print("  | WAI: {}\n", _inWAI ? "Yes" : "No");
+}
+
 // 65C02 addressing modes.
 Word MOS65C02::getAddress(const Byte opcode) {
 	Word address;
@@ -232,6 +259,12 @@ void MOS65C02::ins_sbc(const Byte opcode) {
 		_cycles++;
 		_expectedCyclesToUse++;
 	}
+}
+
+// WAI
+void MOS65C02::ins_wai([[maybe_unused]] const Byte opcode) {
+	_inWAI = true;
+	_cycles += 2;
 }
 
 //////////
@@ -578,6 +611,9 @@ MOS6502::_instructionMap_t MOS65C02::setup65C02Instructions() {
 		{ Opcodes.INC_ABX,
 			{ "inc", convertAddressingMode(AddressingMode::AbsoluteX), 3, 7, InstructionFlags::NoBoundaryCrossed,
 			std::bind(&MOS65C02::ins_inc, this, std::placeholders::_1)}},
+		{ Opcodes.WAI_IMP,
+			{ "wai", convertAddressingMode(AddressingMode::Implied), 1, 3, InstructionFlags::None,
+			std::bind(&MOS65C02::ins_wai, this, std::placeholders::_1)}},
 
 		// R65C02 instructions
 		{ Opcodes.BBR0,

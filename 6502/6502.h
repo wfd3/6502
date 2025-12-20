@@ -367,6 +367,7 @@ protected:
 
 	// Diagnostics
 	void printCPUState();
+	virtual void printCPUStateExtras();
 	void Stack();
 	
 	// Flags

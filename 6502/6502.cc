@@ -504,6 +504,8 @@ void MOS6502::execute() {
 //////////
 // CPU information 
 
+void MOS6502::printCPUStateExtras(void) { }
+
 void MOS6502::printCPUState() {
 	auto yesno = [](bool b) -> std::string {
 		return b ? "Yes" : "No";
@@ -520,6 +522,7 @@ void MOS6502::printCPUState() {
 	fmt::print("  | A: {:02x} X: {:02x} Y: {:02x}\n", A, X, Y );
 	fmt::print("  | Pending: IRQ - {}, NMI - {}, inReset? - {}\n", yesno(pendingIRQ()), yesno(pendingNMI()), yesno(_inReset));
 	fmt::print("  | IRQs: {}, NMIs: {}, BRKs: {}\n", _IRQCount, _NMICount, _BRKCount);
+	printCPUStateExtras();
 	fmt::print("\n");
 }
 

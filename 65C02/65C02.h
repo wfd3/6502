@@ -23,6 +23,11 @@ public:
 		_instructions = setup65C02Instructions();
 	}
 
+	void execute();
+	void Reset();
+	void raiseIRQ();
+	void raiseNMI();
+
 	// Must be public so the tests can access
     class OpcodeConstants : public MOS6502::OpcodeConstants {
     public:
@@ -102,6 +107,8 @@ public:
         static constexpr Byte TSB_ABS = 0x0c;
        	static constexpr Byte TSB_ZP  = 0x04;
 
+		static constexpr Byte WAI_IMP = 0xcb;
+
 		// R65C02 opcodes
 		static constexpr Byte BBR0    = 0x0f;
 		static constexpr Byte BBR1    = 0x1f;
@@ -141,6 +148,10 @@ public:
     };
 	OpcodeConstants Opcodes;
 
+#ifdef TEST_BUILD
+	bool isInWAI() const { return _inWAI; }
+#endif
+
 private:
 
     class InstructionFlags : public MOS6502::InstructionFlags {
@@ -168,12 +179,16 @@ private:
 		AbsoluteIndexedIndirect
 	};
 	
+	bool _inWAI = false;
+
 	MOS6502::AddressingMode convertAddressingMode(AddressingMode);
-	bool instructionIsAddressingMode(Byte, AddressingMode);
+
+	using MOS6502::instructionIsAddressingMode;                                                             
+	bool instructionIsAddressingMode(const Byte, const AddressingMode);
+
 	Word getAddress(Byte);
 	void decodeArgs(Word&, const bool, const Byte, std::string&, std::string&, std::string&, std::string&);
 	void decodeRockwellArgs(Word&, std::string&, std::string&, std::string&);
-
 
 	// 65C02 specific instructions
 	void ins_bra(Byte);
@@ -184,6 +199,7 @@ private:
 	void ins_phy(Byte);
 	void ins_plx(Byte);
 	void ins_ply(Byte);
+	void ins_wai(Byte);
 	
 	// 6502 instructions with new modes/flags on 65C02
 	void ins_adc(Byte);
@@ -211,4 +227,7 @@ private:
 	void ins_smb(Byte);
 
 	MOS6502::_instructionMap_t setup65C02Instructions(); 
+
+protected:
+	void printCPUStateExtras();
 }; // class 65C02

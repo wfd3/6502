@@ -61,10 +61,15 @@ runtests: configure
 run_memory_tests: configure
 	cd $(BUILDDIR) && make run_memory_tests
 
-# Target to run the 'run_memory_tests' target
+# Target to run the 'run_6502_tests' target
 .PHONY: run_6502_tests
 run_6502_tests: configure
 	cd $(BUILDDIR) && make run_6502_tests
+
+# Target to run the 'run_65C02_tests' target
+.PHONY: run_65C02_tests
+run_65C02_tests: configure
+	cd $(BUILDDIR) && make run_65C02_tests
 
 # Target to build the 'lib' target
 .PHONY: lib
