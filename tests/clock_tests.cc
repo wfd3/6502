@@ -118,3 +118,56 @@ TEST_F(ClockTests, CantSetHighMHz) {
     BusClock_t clock(1001);
     EXPECT_EQ(clock.getFrequencyMHz(), 1000);
 }
+
+// Additional tests for more coverage
+TEST_F(ClockTests, TimingEmulationOffDisablesDelay) {
+    BusClock_t clock(1);
+    uint64_t count = clock.getCyclesInDelayTime();
+    bool didDelay = false;
+
+    clock.disableTimingEmulation();
+
+    while(count--) {
+        didDelay |= clock.delay(1);
+    }
+    EXPECT_FALSE(didDelay);
+}
+
+TEST_F(ClockTests, CustomDelayChangesThreshold) {
+    constexpr std::chrono::milliseconds customDelay(50);
+    BusClock_t clock(2, customDelay);
+
+    EXPECT_EQ(clock.minimumDelayTime(), customDelay);
+    EXPECT_EQ(clock.getCyclesInDelayTime(), static_cast<uint64_t>(customDelay.count()) * 2 * 1000);
+}
+
+TEST_F(ClockTests, BurstCyclesTriggersDelay) {
+    BusClock_t clock(4);
+    uint64_t burstCycles = clock.getCyclesInDelayTime() * 2 + 123;
+    clock.enableTimingEmulation();
+
+    bool didDelay = clock.delay(burstCycles);
+    EXPECT_TRUE(didDelay);
+    EXPECT_EQ(clock.getAccumulatedCycles(), burstCycles % clock.getCyclesInDelayTime());
+}
+
+TEST_F(ClockTests, ZeroCyclesNoDelay) {
+    BusClock_t clock(1);
+    clock.enableTimingEmulation();
+
+    bool didDelay = clock.delay(0);
+    EXPECT_FALSE(didDelay);
+    EXPECT_EQ(clock.getAccumulatedCycles(), 0);
+}
+
+TEST_F(ClockTests, ToggleEmulationState) {
+    BusClock_t clock(4);
+    clock.enableTimingEmulation();
+    clock.delay(100);
+    clock.disableTimingEmulation();
+    EXPECT_EQ(clock.getAccumulatedCycles(), 0);
+    bool didDelay = clock.delay(clock.getCyclesInDelayTime()*2);
+    EXPECT_FALSE(didDelay);
+    clock.enableTimingEmulation();
+    EXPECT_EQ(clock.getAccumulatedCycles(), 0);
+}

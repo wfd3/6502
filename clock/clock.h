@@ -22,16 +22,15 @@
 #include <algorithm>
 #include <thread>
 
-using namespace std::chrono_literals;
 using freq_t = uint16_t;
 
 class BusClock_t {
 public:
-	BusClock_t(freq_t MHz) : _emulateTiming(true) {
-		_MHz = std::clamp(MHz, _MIN_MHz, _MAX_MHz);
-		_cyclesInDelayTime = _delayMs.count() * _MHz * _cyclesPerMsAt1MHz;
-		_accumulatedCycles = 0;
-	 } 
+    BusClock_t(freq_t MHz, std::chrono::milliseconds delayMs = std::chrono::milliseconds(15)) : _emulateTiming(true), _delayMs(delayMs) {
+        _MHz = std::clamp(MHz, _MIN_MHz, _MAX_MHz);
+        _cyclesInDelayTime = _delayMs.count() * _MHz * _cyclesPerMsAt1MHz;
+        _accumulatedCycles = 0;
+    } 
 
 	void enableTimingEmulation() {
 		_emulateTiming = true;
@@ -47,7 +46,7 @@ public:
 		_accumulatedCycles += cycles;
 
 		if (_accumulatedCycles >= _cyclesInDelayTime) {
-			_accumulatedCycles -= _cyclesInDelayTime;
+			_accumulatedCycles %= _cyclesInDelayTime;
 			if (_emulateTiming) {
 				std::this_thread::sleep_for(_delayMs);
 				return true;
@@ -57,22 +56,22 @@ public:
 		return false;
 	}
 
-	freq_t getFrequencyMHz() { return _MHz; }
+	freq_t getFrequencyMHz() const { return _MHz; }
 
-	uint64_t getAccumulatedCycles() { return _accumulatedCycles; }
+	uint64_t getAccumulatedCycles() const { return _accumulatedCycles; }
 
-	std::chrono::milliseconds minimumDelayTime() { return _delayMs; }
+	std::chrono::milliseconds minimumDelayTime() const { return _delayMs; }
 
-	uint64_t getCyclesInDelayTime() { return _cyclesInDelayTime; }
+	uint64_t getCyclesInDelayTime() const { return _cyclesInDelayTime; }
 
 private:
 	bool _emulateTiming;
 	freq_t _MHz;
 	uint64_t _accumulatedCycles = 0;
 	uint64_t _cyclesInDelayTime;
+	std::chrono::milliseconds _delayMs;
 
 	static constexpr freq_t _MIN_MHz = 1;
 	static constexpr freq_t _MAX_MHz = 1000;
-	static constexpr uint64_t _cyclesPerMsAt1MHz = 1000;	
-	static constexpr std::chrono::milliseconds _delayMs = 15ms; // needs to be large enough so that ::sleep_for() is reasonably precise 
+	static constexpr uint64_t _cyclesPerMsAt1MHz = 1000;
 };
