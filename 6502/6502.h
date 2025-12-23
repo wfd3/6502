@@ -78,6 +78,7 @@ public:
 	bool loopDetected();
 	bool isInDebugMode();
 	void setDebugMode(bool);
+	void setDebugModeOnException(bool);
 	bool hitException();
 
 	Cycles_t expectedCycles();
@@ -339,9 +340,10 @@ protected:
 	Debugger debugger;
 
 	// Disassembler
-	Word disassemble(Word, uint64_t);
+	Word disassemble(Word, uint64_t = 1);
 	Word disassembleAt(Word, std::string&);
 	virtual void decodeArgs(Word&, const bool, const Byte, std::string &, std::string&, std::string&, std::string&);
+	void formatAddressWithLabel(Word, const std::string&, std::string&, std::string&, bool);
 
 	Cycles_t _cycles = 0;              // Cycle counter
 	Cycles_t _expectedCyclesToUse = 0;

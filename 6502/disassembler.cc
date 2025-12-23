@@ -25,9 +25,36 @@
 #include <6502.h>
 #include <utils.h>
 
-// Don't use read{Byte,Word}AtPC() in the disassembler, as that increments the Program Counter.  
+// Don't use read{Byte,Word}AtPC() in the disassembler, as that increments the Program Counter.
 
-void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::string& disassembly, 
+// Disassembly output formatting constants
+namespace {
+	constexpr int MARKER_WIDTH = 1;
+	constexpr int BREAKPOINT_WIDTH = 1;
+	constexpr int ADDRESS_WIDTH = 20;
+	constexpr int OPCODES_WIDTH = 9;
+	constexpr int INSNAME_WIDTH = 7;
+	constexpr int ARGS_WIDTH = 20;
+	constexpr int OPTIONAL_ADDR_WIDTH = 5;
+}
+
+// Helper function to format an address with optional label
+void MOS6502::formatAddressWithLabel(Word value, const std::string& formatStr,
+                                     std::string& disasm, std::string& addr,
+                                     bool useSearch) {
+	std::string label = useSearch ?
+		debugger.addressLabelSearch(value) :
+		debugger.addressLabel(value);
+	addr = fmt::vformat(formatStr, fmt::make_format_args(value));
+	if (!label.empty()) {
+		disasm = label;
+	} else {
+		disasm = addr;
+		addr = "";
+	}
+}
+
+void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::string& disassembly,
 					     std::string& opcodes, std::string& address, std::string& computedAddr) {
 	auto mode = getInstructionAddressingMode(opcode);
 	Byte byteval;
@@ -55,176 +82,92 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 
 	case AddressingMode::ZeroPage:  // $xx
 		byteval = readByte(dPC++);
-		label = debugger.addressLabelSearch(byteval);
-		addr = fmt::format("${:02x}", byteval);
-	
-		if (!label.empty()) {
-			disassembly = label;
-			address = addr;
-		} else {
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(byteval, "${:02x}", disassembly, address, true);
 		opcodes += fmt::format("{:02x} ", byteval);
 		break;
 
 	case AddressingMode::ZeroPageX:  // $xx,X
 		byteval = readByte(dPC++);
-		label = debugger.addressLabelSearch(byteval);
-		addr = fmt::format("${:04x}", byteval);
-
-		if (!label.empty()) {
-			disassembly = label;
-			address = addr;
-		} else {
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(byteval, "${:04x}", disassembly, address, true);
 		disassembly += ",X";
 		opcodes += fmt::format("{:02x} ", byteval);
-		if (atPC) 
+		if (atPC)
 			computedAddr = fmt::format("${:04x}", byteval + _ctx.X);
 		break;
 
 	case AddressingMode::ZeroPageY:  // $xx,Y
 		byteval = readByte(dPC++);
-		label = debugger.addressLabelSearch(byteval);
-		addr = fmt::format("${:04x}", byteval);
-		if (!label.empty()) {
-			disassembly = label;
-			address = addr;
-		} else {
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(byteval, "${:04x}", disassembly, address, true);
 		disassembly += ",Y";
 		opcodes += fmt::format("{:02x} ", byteval);
-		if (atPC) 
+		if (atPC)
 			computedAddr = fmt::format("${:04x}", byteval + _ctx.Y);
 		break;
 
 	case AddressingMode::Relative:
 		rel = readByte(dPC++);
 		wordval = dPC + SByte(rel);
-		addr = fmt::format("${:04x}", wordval);
-		label = debugger.addressLabel(wordval);
-
-		if (!label.empty()) {
-			disassembly = label;
-			address = addr;
-		} else { 
+		formatAddressWithLabel(wordval, "${:04x}", disassembly, address, false);
+		// If no label found, show relative offset instead
+		if (address.empty())
 			disassembly = fmt::format("#${:02x}", rel);
-			address = addr;
-		} 
+		else
+			address = fmt::format("${:04x}", wordval);
 		opcodes += fmt::format("{:02x} ", rel);
 		break;
 
 	case AddressingMode::Absolute:  // $xxxx
 		wordval = readWord(dPC);
 		dPC += 2;
-		label = debugger.addressLabel(wordval);
-		addr = fmt::format("${:04x}", wordval);
-
-		if (!label.empty()) {
-			disassembly = label;
-			address = address;
-		} else {
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(wordval, "${:04x}", disassembly, address, false);
 		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
 	case AddressingMode::AbsoluteX:  // $xxxx,X
 		wordval = readWord(dPC);
 		dPC += 2;
-		label = debugger.addressLabelSearch(wordval);
-		addr = fmt::format("${:04x}", wordval);
-		if (!label.empty())  {
-			disassembly = label;
-			address = addr;
-		} else { 
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(wordval, "${:04x}", disassembly, address, true);
 		disassembly += ",X";
 		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
-		if (atPC) 
+		if (atPC)
 			computedAddr = fmt::format("${:04x}", wordval + _ctx.X);
-	
 		break;		
 
 	case AddressingMode::AbsoluteY:  // $xxxx,Y
-		fmt::print("ABS,Y\n");
 		wordval = readWord(dPC);
 		dPC += 2;
-		label = debugger.addressLabelSearch(wordval);
-		addr = fmt::format("${:04x}", wordval);
-		if (!label.empty()) {
-			disassembly = label;
-			address = addr;
-		} else {
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(wordval, "${:04x}", disassembly, address, true);
 		disassembly += ",Y";
 		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
-		if (atPC) 
+		if (atPC)
 			computedAddr = fmt::format("${:04x}", wordval + _ctx.Y);
 		break;
 		
 	case AddressingMode::Indirect:  // $(xxxx)
 		wordval = readWord(dPC);
 		dPC += 2;
-
-		label = debugger.addressLabel(wordval);
-		addr = fmt::format("{:04x}", wordval);
-		if (!label.empty()) {
-			disassembly = "(" + label + ")";
-			address = addr;
-		} else {
-			disassembly = "(" + addr + ")";
-			address = "";
-		}
+		formatAddressWithLabel(wordval, "${:04x}", disassembly, address, false);
+		disassembly = "(" + disassembly + ")";
 		opcodes += fmt::format("{:02x} {:02x}", wordval & 0xff, (wordval >> 8) & 0xff);
 		break;
 
 	case AddressingMode::IndirectX: // ($xx,X)
 		byteval = readByte(dPC++);
-
-		label = debugger.addressLabelSearch(byteval);
-		addr = fmt::format("${:04x}", byteval);
-		if (!label.empty())  {
-			disassembly = label;
-			address = addr;
-		} else { 
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(byteval, "${:04x}", disassembly, address, true);
 		disassembly = "(" + disassembly + "),X";
 		opcodes += fmt::format("{:02x}", byteval);
 		if (atPC) {
 			wordval = byteval + _ctx.X;
 			if (wordval > 0xFF)
-				wordval -= 0xFF;
+				wordval &= 0xFF;
 			wordval = readWord(wordval);
-		
 			computedAddr = fmt::format("${:04x}", wordval);
 		}
 		break;
 		
 	case AddressingMode::IndirectY:  // ($xx),Y
 		byteval = readByte(dPC++);
-		
-		label = debugger.addressLabel(byteval);
-		addr = fmt::format("${:04x}", byteval);
-		if (!label.empty()) { 
-			disassembly = label;
-			address = addr; 
-		} else {
-			disassembly = addr;
-			address = "";
-		}
+		formatAddressWithLabel(byteval, "${:04x}", disassembly, address, false);
 		disassembly = "(" + disassembly + "),Y";
 		opcodes += fmt::format("{:02x}", byteval);
 		if (atPC) {
@@ -235,7 +178,7 @@ void MOS6502::decodeArgs(Word& dPC, const bool atPC, const Byte opcode, std::str
 		break;
 	
 	default:
-		disassembly += fmt::format("[Invalid addressing mode]");
+		disassembly = fmt::format("[Invalid addressing mode]");
 	}
 }
 
@@ -265,20 +208,28 @@ Word MOS6502::disassembleAt(Word dPC, std::string& disassembly) {
     //  B*| label^addr  : | 23 56 89 | ins     args | [opt. address] | [computed indexed address (if registers are valid)]
 	auto addr = fmt::format("{:04x}", dPC);
 	std::string label = debugger.addressLabel(dPC);
-	if (!label.empty()) 
+	if (!label.empty())
 		 addr += fmt::format(" ({})", label);
-		
-	disassembly = fmt::format("{:1.1}{:1.1}| {:20.20} | {:9.9}| {:<7}", marker, brkpoint, addr, opcodes, insname);
 
-	if (validOpcode) 
-		disassembly += fmt::format("{:<20} | {:<5.5} | {}", args, address, computedAddress);
+	disassembly = fmt::format("{:{}}{:{}}| {:{}}.{} | {:{}}.{}| {:<{}}",
+		marker, MARKER_WIDTH,
+		brkpoint, BREAKPOINT_WIDTH,
+		addr, ADDRESS_WIDTH, ADDRESS_WIDTH,
+		opcodes, OPCODES_WIDTH, OPCODES_WIDTH,
+		insname, INSNAME_WIDTH);
+
+	if (validOpcode)
+		disassembly += fmt::format("{:<{}} | {:<{}}.{} | {}",
+			args, ARGS_WIDTH,
+			address, OPTIONAL_ADDR_WIDTH, OPTIONAL_ADDR_WIDTH,
+			computedAddress);
 
 	_cycles = 0;
 
 	return _pc;
 }
 
-Word MOS6502::disassemble(Word dPC, uint64_t cnt = 1) {
+Word MOS6502::disassemble(Word dPC, uint64_t cnt) {
 	std::string disassembly;
 
 	if (dPC > LAST_ADDRESS) {

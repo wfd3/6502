@@ -84,12 +84,16 @@ bool MOS6502::isInDebugMode() {
 	return _debugMode; 
 }
 
-void MOS6502::setDebugMode(const bool m) { 
-	_debugMode = m; 
+void MOS6502::setDebugMode(const bool m) {
+	_debugMode = m;
 }
 
-bool MOS6502::hitException() { 
-	return _hitException; 
+void MOS6502::setDebugModeOnException(const bool b) {
+	debugger.setDebugModeOnException(b);
+}
+
+bool MOS6502::hitException() {
+	return _hitException;
 }
 
 Cycles_t MOS6502::expectedCycles() {
