@@ -55,10 +55,21 @@ else()
 endif()
 
 add_definitions(-DBINFILE_PATH=\"${CMAKE_SOURCE_DIR}/binfiles\")
-include_directories(${CMAKE_SOURCE_DIR}/clock ${CMAKE_SOURCE_DIR}/memory ${CMAKE_SOURCE_DIR}/6502 
+include_directories(${CMAKE_SOURCE_DIR}/clock ${CMAKE_SOURCE_DIR}/memory ${CMAKE_SOURCE_DIR}/6502
   ${CMAKE_SOURCE_DIR}/65C02 ${CMAKE_SOURCE_DIR}/tests/src)
 
 set(BINDIR "${CMAKE_BINARY_DIR}/bin")
+
+# SDL2 support (optional for graphical display)
+find_package(SDL2 QUIET)
+if(SDL2_FOUND)
+  message(STATUS "SDL2 found - building with graphical display support")
+  set(HAVE_SDL2 TRUE)
+  add_definitions(-DHAVE_SDL2)
+else()
+  message(STATUS "SDL2 not found - building terminal-only version")
+  set(HAVE_SDL2 FALSE)
+endif()
 
 add_subdirectory(6502)
 add_subdirectory(65C02)

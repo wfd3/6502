@@ -25,6 +25,9 @@
 #include <algorithm>
 
 #include "memory.h"
+#include "display_interface.h"
+#include "keyboard_interface.h"
+#include "control_codes.h"
 
 #if defined(__linux__) || defined(__MACH__)
 #include <unistd.h>
@@ -37,9 +40,9 @@
 
 template<class Address = uint16_t, class Cell = uint8_t>
 class MOS6820 : public MemMappedDevice<Address, Cell> {
-public:	
+public:
 
-	MOS6820() {
+	MOS6820(IDisplay* display, IKeyboard* keyboard) : _display(display), _keyboard(keyboard) {
 		this->_ioPorts = {KEYBOARD, KEYBOARDCR, DISPLAY, DISPLAYCR};
 	}
 
@@ -91,6 +94,8 @@ public:
 	// pass through to the read() call.
     void setTermNonblocking()
     {
+		_keyboard->setNonBlocking();
+#if defined(__linux__) || defined(__MACH__)
         termios term;
         fflush(stdout);
         tcgetattr(STDIN_FILENO, &term);
@@ -103,35 +108,45 @@ public:
 		// Ignore ^C and ^-Backslash
 		signal(SIGINT, SIG_IGN);
 		signal(SIGQUIT, SIG_IGN);
+#endif
     }
 
     void setTermBlocking()
     {
+		_keyboard->setBlocking();
+#if defined(__linux__) || defined(__MACH__)
         termios term;
         tcgetattr(STDIN_FILENO, &term);
         term.c_lflag |= ICANON | ECHO | ISIG;
         tcsetattr(0, TCSANOW, &term);
 
-		// Restore ^C and ^-Backslash 
+		// Restore ^C and ^-Backslash
 		signal(SIGINT, SIG_DFL);
 		signal(SIGQUIT, SIG_DFL);
+#endif
 	}
 
 #elif defined(_WIN64)
 
 	void setTermNonblocking() {
+		_keyboard->setNonBlocking();
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 	}
 
 	void setTermBlocking() {
+		_keyboard->setBlocking();
 		SetConsoleCtrlHandler(ConsoleCtrlHandler, FALSE);
 	}
 
-#else 
-# error "No platform specific terminal functions"
 #endif
 
 private:
+
+	// Display interface for output
+	IDisplay* _display;
+
+	// Keyboard interface for input
+	IKeyboard* _keyboard;
 
 	// Offsets from MemMappedDevice::_baseAddress for these memory-mapped I/O ports.  These are in order
 	// and cannot change as they, when added to _baseAddress, represent hardware addresses of where this
@@ -158,14 +173,6 @@ private:
 	static constexpr char CTRL_BACKSLASH  = 0x1c; // Reset/Jump to Wozmon
 	static constexpr char CTRL_RBRACKET   = 0x1d; // Enter debugger
 
-	// Platform agnostic remapping of control keycodes.  These are encoded in getch() and returned 
-	// as a Cell.  They must be non-printable ASCII characters on the Apple 1 (ie, extended 
-	// ASCII codes).
-	static constexpr Cell CLEAR_SCREEN  = 0xff;
-	static constexpr Cell RESET         = 0xfe;
-	static constexpr Cell DEBUGGER      = 0xfd;
-	static constexpr Cell EXIT          = 0xfc;
-
 	// Display
 	bool _haveDspData = false;
 	unsigned char _dspData = 0;
@@ -174,117 +181,17 @@ private:
 	bool _kbdCRRead = false;
 	std::queue<Cell> _charQueue;
 
-#if defined(__linux__) || defined(__MACH__)
-    
-     bool getch(Cell &kbdCh) const {
-        int byteswaiting;
-        char ch;
-
-        ioctl(STDIN_FILENO, FIONREAD, &byteswaiting);
-        if (byteswaiting == 0)
-            return false;
-
-        read(STDIN_FILENO, &ch, 1);
-		
-		switch (ch) {
-		case CTRL_BACKSPACE:
-			kbdCh = EXIT;
-			break;
-		case CTRL_BACKSLASH:
-			kbdCh = RESET;
-			break;
-		case CTRL_RBRACKET:
-			kbdCh = DEBUGGER;
-			break;
-		case CTRL_LBRACKET:
-			kbdCh = CLEAR_SCREEN;
-			break;
-		default:
-	        kbdCh = ch;
-			break;
-		}
-        return true;
-    }
-
 	void clearScreen() const {
-		const std::string CLS = "\033[2J\033[H"; 
-		fmt::print("{}", CLS);
-	 }
-
-#elif defined(_WIN64) 
-
-	static bool _CtrlC_Pressed;
-	
-	static BOOL WINAPI ConsoleCtrlHandler(DWORD CtrlType) {
-		switch (CtrlType) {
-		case CTRL_C_EVENT:
-			_CtrlC_Pressed = true;
-			return true;
-		}
-
-		return false;
+		_display->clear();
 	}
-
-	void clearScreen() const {
-		system("cls");
-	}
-
-	bool getch(Cell& kbdCh) const {
-		
-		if (_CtrlC_Pressed) {
-			_CtrlC_Pressed = false;
-			kbdCh = CTRL_C;
-			return true;
-		}
-
-		if (!_kbhit()) 
-			return false;
-		
-		auto c = _getch();
-		if (GetAsyncKeyState(VK_CONTROL) < 0) { // Control was held when key was pressed
-			switch (c) {
-			case CTRL_BACKSPACE:
-				kbdCh = EXIT;
-				return true;
-			case CTRL_BACKSLASH:
-				kbdCh = RESET;
-				return true;
-			case CTRL_LBRACKET:
-				kbdCh = CLEAR_SCREEN;
-				return true;
-			case CTRL_RBRACKET:
-				kbdCh = DEBUGGER;
-				return true;
-			}
-		}
-	
-		kbdCh = c;
-		return true;
-    }
-
-#else
-# error "No platform specific clearScreen() or getch() functions defined"
-#endif
 
 	Device::Lines displayHousekeeping() {
-		if (!_haveDspData) 
+		if (!_haveDspData)
 			return Device::None;
 
-		auto c = _dspData & 0x7f;	// clear hi bit
-		switch (c) {
-		case CARRIAGE_RETURN:
-			fmt::print("\n");
-			break;
-		case BACKSPACE:
-			fmt::print("\b");
-			break;
-		case BELL:
-			fmt::print("\a");
-			break;
-		default:
-			if (c >= 0x20 && c <= 0x7e)
-				fmt::print("{:c}", toupper(c));
-		}
+		// Send the character to the display interface
+		// The display implementation will handle the character formatting
+		_display->writeChar(_dspData);
 
 		_haveDspData = false;
 		return Device::None;
@@ -295,7 +202,7 @@ private:
 		bool clobberQueue = false;
         auto retval = Device::None;
 
-        auto charsPending = getch(ch);
+        auto charsPending = _keyboard->getChar(ch);
 		if (!charsPending)
 			return retval;
 		
@@ -303,16 +210,19 @@ private:
 		switch (ch) {
 
 		// Control values; don't queue these.
-		case RESET:
+		case ControlCodes::RESET:
             return Device::Reset;
 
-		case DEBUGGER:
+		case ControlCodes::DEBUGGER:
 			return Device::Debug;
 
-        case EXIT: 
+        case ControlCodes::EXIT:
 			return Device::Exit;
-		
-		case CLEAR_SCREEN:
+
+		case ControlCodes::STATUS:
+			return Device::Status;
+
+		case ControlCodes::CLEAR_SCREEN:
 			clearScreen();
 			return Device::None;
 
@@ -404,7 +314,3 @@ private:
 
 	void keyboardWrite([[maybe_unused]] const uint8_t port, [[maybe_unused]] const Cell c) { }
 };
-
-#ifdef _WIN64
-template <typename Address, typename Cell> bool MOS6820<Address, Cell>::_CtrlC_Pressed = false;
-#endif

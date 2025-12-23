@@ -25,6 +25,13 @@
 #include <memory.h>
 
 #include "mos6820.h"
+#include "display_interface.h"
+#include "terminal_keyboard.h"
+#include "cpu_status.h"
+#ifdef HAVE_SDL2
+#include "sdl2_display.h"
+#include "composite_keyboard.h"
+#endif
 #include "clock.h"
 
 using Address = uint16_t;
@@ -56,11 +63,25 @@ std::vector<Byte> apple1SampleProg =
 constexpr int clockSpeedMHz = 1;
 constexpr Address PIA_BASE_ADDRESS = 0xd010;
 
-// Create the memory, CPU, PIA and bus clock
+// Create the memory, CPU and bus clock
 Memory<Address, Byte> mem(MOS6502::LAST_ADDRESS);
 MOS65C02 cpu(mem);
-auto pia = std::make_shared<MOS6820<Address, Byte>>();
+
+#ifdef HAVE_SDL2
+SDL2Display display;  // Handles graphical display and SDL window keyboard
+TerminalKeyboard termKeyboard;  // Also accept input from terminal for control keys
+CompositeKeyboard keyboard;  // Combines both keyboard sources
+#else
+TerminalDisplay display;
+TerminalKeyboard keyboard;
+#endif
+
+std::shared_ptr<MOS6820<Address, Byte>> pia;
+
 BusClock_t busClock(clockSpeedMHz);
+
+// Status display flag
+bool showStatus = false;
 
 void setupMemoryMap(){
 	// 0x0000-0x5fff - RAM
@@ -89,11 +110,30 @@ void setupMemoryMap(){
 }
 
 int main() {
+	// Initialize keyboard and PIA
+#ifdef HAVE_SDL2
+	keyboard.addKeyboard(&display);  // SDL window input (primary)
+	keyboard.addKeyboard(&termKeyboard);  // Terminal input (for control keys)
+	pia = std::make_shared<MOS6820<Address, Byte>>(&display, &keyboard);
+
+	fmt::print("Apple 1 Emulator (65C02) - SDL2 Graphics Mode\n");
+	fmt::print("Close the window to quit\n");
+	fmt::print("Control keys also work from terminal:\n");
+	fmt::print("  Reset        = Control-\\\n");
+	fmt::print("  Clear screen = Control-[\n");
+	fmt::print("  Debugger     = Control-]\n");
+	fmt::print("  Status       = Control-T\n");
+	fmt::print("  Quit         = Control-Backspace\n");
+#else
+	pia = std::make_shared<MOS6820<Address, Byte>>(&display, &keyboard);
+
 	fmt::print("A Very Simple Apple I (65C02)\n");
 	fmt::print("  Reset        = Control-\\\n");
 	fmt::print("  Clear screen = Control-[\n");
 	fmt::print("  Debugger     = Control-]\n");
+	fmt::print("  Status       = Control-T\n");
 	fmt::print("  Quit         = Control-Backspace\n");
+#endif
 	fmt::print("\n");
 
 	setupMemoryMap();
@@ -109,19 +149,33 @@ int main() {
 
 	cpu.Reset();	    // Exit the CPU from reset
 	while (!cpu.isPCAtHaltAddress()) {
+#ifdef HAVE_SDL2
+		// Handle SDL2 events (window close, etc.)
+		display.handleEvents();
+		if (display.shouldQuit()) {
+			fmt::print("\nWindow closed, exiting emulator\n");
+			break;
+		}
+#endif
+
 		// If we're in debug mode we have to toggle the terminal out of and in to non-blocking mode
-		// so the CPU debugger (implemented in the CPU class) can access the terminal in non-blocking 
+		// so the CPU debugger (implemented in the CPU class) can access the terminal in non-blocking
 		// mode.
 		auto debug = cpu.isInDebugMode();
-		if (debug) 
+		if (debug)
 			pia->setTermBlocking();
-		
+
 		cpu.execute();
-		
-		if (debug) 
+
+		if (debug)
 			pia->setTermNonblocking();
 
 		auto signals = pia->housekeeping();
+
+#ifdef HAVE_SDL2
+		// Refresh SDL2 display after processing I/O
+		display.refresh();
+#endif
 
 		for (const auto& signal : signals) {
 			switch(signal) {
@@ -129,16 +183,30 @@ int main() {
 				break;
 			case Device::Reset:
 				cpu.Reset();
-				if (cpu.inReset()) 
+				if (cpu.inReset())
 					cpu.Reset();
 				break;
 			case Device::Debug:
 				cpu.setDebugMode(true);
 				break;
+			case Device::Status:
+				showStatus = !showStatus;
+				if (showStatus) {
+					fmt::print("\nStatus display enabled (Ctrl+T to toggle off)\n");
+				} else {
+					fmt::print("\r\033[K\n");  // Clear status line
+					fmt::print("Status display disabled\n");
+				}
+				break;
 			case Device::Exit:
 				fmt::print("\nExiting emulator\n");
 				std::exit(0);
 			}
+		}
+
+		// Print CPU status if enabled
+		if (showStatus) {
+			printCPUStatus(cpu);
 		}
 
 		busClock.delay(cpu.usedCycles());

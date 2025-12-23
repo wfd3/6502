@@ -45,3 +45,21 @@ endif()
 add_custom_command(TARGET tester POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
   COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:tester>" "${BINDIR}")
+
+# tester2 (headless version without keyboard/terminal support)
+set (TESTER2_SOURCES "tester2.cc")
+source_group("src" FILE ${TESTER2_SOURCES})
+add_executable(tester2 ${TESTER2_SOURCES})
+target_link_libraries(tester2 65C02 6502)
+
+if(LINUX)
+  target_link_libraries(tester2 readline fmt)
+elseif(APPLE)
+	target_link_libraries(tester2 readline fmt::fmt-header-only)
+elseif(MSVC)
+	target_link_libraries(tester2 fmt::fmt-header-only)
+endif()
+
+add_custom_command(TARGET tester2 POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${BINDIR}"
+  COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:tester2>" "${BINDIR}")

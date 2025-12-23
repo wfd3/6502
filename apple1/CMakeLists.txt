@@ -17,11 +17,17 @@ cmake_minimum_required(VERSION 3.10...3.28)
 project( apple1 )
 
 # source for the 6502 executable
-set (APPLE1_SOURCES "apple1.cc")
+set (APPLE1_SOURCES "apple1.cc" "display_interface.cc" "terminal_keyboard.cc")
+
+# Add SDL2 display source if available
+if(HAVE_SDL2)
+  list(APPEND APPLE1_SOURCES "sdl2_display.cc")
+endif()
+
 source_group("src" FILE ${APPLE1_SOURCES})
 
 add_executable(apple1 ${APPLE1_SOURCES})
-target_link_libraries(apple1 6502) 
+target_link_libraries(apple1 6502)
 if(LINUX)
   target_link_libraries(apple1 readline fmt)
 elseif(APPLE)
@@ -30,18 +36,40 @@ elseif(MSVC)
 	target_link_libraries(apple1 fmt::fmt-header-only)
 endif()
 
-# source for the 65C02 executable
-set (APPLE1_SOURCES "65C02-apple1.cc")
-source_group("src" FILE ${APPLE1_SOURCES})
+# Add SDL2 support if available
+if(HAVE_SDL2)
+  target_link_libraries(apple1 SDL2::SDL2)
+  if(LINUX)
+    target_link_libraries(apple1 SDL2::SDL2main)
+  endif()
+endif()
 
-add_executable(65C02-apple1 ${APPLE1_SOURCES})
-target_link_libraries(65C02-apple1 65C02 6502) 
+# source for the 65C02 executable
+set (APPLE1_65C02_SOURCES "65C02-apple1.cc" "display_interface.cc" "terminal_keyboard.cc")
+
+# Add SDL2 display source if available
+if(HAVE_SDL2)
+  list(APPEND APPLE1_65C02_SOURCES "sdl2_display.cc")
+endif()
+
+source_group("src" FILE ${APPLE1_65C02_SOURCES})
+
+add_executable(65C02-apple1 ${APPLE1_65C02_SOURCES})
+target_link_libraries(65C02-apple1 65C02 6502)
 if(LINUX)
   target_link_libraries(65C02-apple1 readline fmt)
 elseif(APPLE)
 	target_link_libraries(65C02-apple1 readline fmt::fmt-header-only)
 elseif(MSVC)
 	target_link_libraries(65C02-apple1 fmt::fmt-header-only)
+endif()
+
+# Add SDL2 support if available
+if(HAVE_SDL2)
+  target_link_libraries(65C02-apple1 SDL2::SDL2)
+  if(LINUX)
+    target_link_libraries(65C02-apple1 SDL2::SDL2main)
+  endif()
 endif()
 
 # Copy apple1 to {BUILDDIR}/bin

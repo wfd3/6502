@@ -153,11 +153,12 @@ private:
 
 class Device {
 public:
-	// These should be in order of precedence 
+	// These should be in order of precedence
 	enum Lines {
 		Debug,
 		Exit,
 		Reset,
+		Status,
 		None
 	};
 

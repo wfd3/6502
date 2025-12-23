@@ -155,11 +155,14 @@ int main(int argc, char* argv[]) {
 						break;
 				case Device::Reset:
 						cpu.Reset();
-						if (cpu.inReset()) 
+						if (cpu.inReset())
 								cpu.Reset();
 						break;
 				case Device::Debug:
 						cpu.setDebugMode(true);
+						break;
+				case Device::Status:
+						// Status display not supported in tester
 						break;
 				case Device::Exit:
 						fmt::print("\nExiting emulator\n");
