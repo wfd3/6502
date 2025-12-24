@@ -311,38 +311,14 @@ public:
 
 		_mem.clear();
 		_mem.reserve(_size);
-		_watch.reserve(_size);
 
 		_mem.assign(_size, _unmapped);
-		_watch.assign(_size, false);
 	}
 
 	size_t size() {
 		return _mem.size();
 	}
 
-	std::vector<Address> find(std::string sequence, Cell filter = -1 ) {
-		std::vector<Address> positions;
-
-        if(sequence.size() > _mem.size())
-            return positions; 
-        
-       for (size_t i = 0; i <= _mem.size() - sequence.size(); ++i) {
-            bool matches = true;
-            for (size_t j = 0; j < sequence.size(); ++j) {
-				Address a = static_cast<Address>(i + j);
-                if (sequence[j] != (_mem[a]->Read(a) & filter)) {
-                    matches = false;
-                    break;
-                }
-            }
-            if (matches) {
-                positions.push_back(static_cast<Address>(i));
-            }
-        }
-
-        return positions;
-	}
 
 	Cell Read(const Address address) {
 		boundsCheck(address);
@@ -351,10 +327,6 @@ public:
 
 	void Write(const Address address, const Cell l) {
 		boundsCheck(address);
-		if (_watch[address]) {
-			fmt::print("mem[{:0{}x}] {:0{}x} -> {:0{}x}\n", address, AddressWidth, _mem.at(address)->Read(address), CellWidth, l, CellWidth);
-		}
-
 		_mem.at(address)->Write(address, l);
 	}
 
@@ -384,6 +356,9 @@ public:
 
 		return true;
 	}
+
+	// Allow debugger access
+	template<class A, class C> friend class MemoryDebugger;
 
 	bool mapROM(const Address start, const std::vector<Cell> &rom, const bool overwriteExistingElements = true) {
 		
@@ -461,104 +436,7 @@ public:
 		return e == _unmapped;
 	}
 
-	void hexdump(const Address start, Address end, std::string valueExpression = "") {
 
-		if (start > end || end > _endAddress) {
-			fmt::print("Invalid memory range\n");
-			return;
-		}
-
-		fmt::print("Memory {:0{}x}:{:0{}x}", start, AddressWidth, end, AddressWidth, valueExpression); 
-
-		if (!valueExpression.empty()) 
-			fmt::print(" with expression '{}'", valueExpression);
-		fmt::print("\n"); 
-
-		int lineEnd = 16 / sizeof(Cell);
-		while (AddressWidth + 2 + (CellWidth + 1) * lineEnd + lineEnd > 80) {
-			lineEnd /= 2;
-		}
-		int hexwidth = AddressWidth + 2 + (CellWidth + 1) * lineEnd;
-
-		int cnt = 0;
-		std::string hexdump, ascii;
-        
-		auto begin = _mem.begin() + start;
-		auto stop = _mem.begin() + end; 
-		for (auto it = begin; it <= stop; it++) {
-
-			// Start a new line with the memory address
-			if (cnt == 0) {
-				auto addr = std::distance(_mem.begin(), it);
-				hexdump += fmt::format("{:0>{}x}  ", addr, AddressWidth);
-			}
-			Cell c;
-			Address address = static_cast<Address>(std::distance(_mem.begin(), it));
-			c = (*it)->Read(address);
-
-			c = calculateValue(valueExpression, c);
-
-			// Append hex and then ascii representation
-			hexdump += fmt::format("{:0>{}x} ", c, CellWidth);
-
-			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
-				uint8_t byte_value = static_cast<uint8_t>(c >> (byte_idx * 8));
-				if (isascii(byte_value) && isprint(byte_value))
-					ascii += byte_value;
-				else
-					ascii += '.';
-			}
-			
-			// Print the accumulated line if we're at the end of the line or the end of the memory range.
-			cnt++;
-			if (cnt == lineEnd || it == stop) {
-				cnt = 0;
-				hexdump = fmt::format("{:{}}", hexdump, hexwidth);
-				fmt::print("{}{}\n", hexdump, ascii);
-				hexdump = "";
-				ascii = "";
-			}
-		}
-	}
-
-	void printMap() const {
-		auto it = _mem.begin();
-		auto range_start = it;
-		uint64_t mappedBytes = 0;
-		std::map<std::string, uint64_t> sizeByType;
-
-		fmt::print("Memory map:\n");
-
-		while (it != _mem.end()) {
-			if (!addressUnmapped(*it))
-				mappedBytes++;
-
-			auto next_it = std::next(it);
-			bool endOfRange = (next_it == _mem.end()) || ((*next_it)->type() != (*range_start)->type());
-			
-			if (endOfRange) {
-				Address bytes = 1 + static_cast<Address>(std::distance(range_start, it));
-				Address start = static_cast<Address>(std::distance(_mem.begin(), range_start));
-				Address end = static_cast<Address>(std::distance(_mem.begin(), it));
-				auto type = (*it)->type();
-				sizeByType[type] += bytes;
-
-				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n", start, AddressWidth, end, AddressWidth, type, bytes);
-
-				range_start = next_it;
-			}
-
-			it = next_it;
-		}
-		
-		fmt::print("Total bytes mapped:   {} bytes\n", mappedBytes * sizeof(Cell));
-
-		fmt::print("\nBytes by memory type:\n");
-		for (const auto& [type, size] : sizeByType) {
-			fmt::print("Bytes {:<9}:      {:>5} bytes\n", type, size * sizeof(Cell));
-		}
-
-	}
 
 	// Loading data into memory
 
@@ -594,43 +472,6 @@ public:
 		}
 	}
 
-	// watch memory address
-
-	void enableWatch(const Address address) {
-		boundsCheck(address);
-		
-		_watch[address] = true;
-	}
-
-	bool watching(const Address address) const {
-		boundsCheck(address);
-		return _watch[address];
-	}
-
-	void listWatch() {
-		fmt::print("Watch list\n");
-		
-		if (std::none_of(_watch.begin(), _watch.end(), [](bool v) { return v; })) {
-			fmt::print("--none--\n");
-			return;
-		}
-
-		Address addr = 0;
-		for(const auto& watching : _watch) {  
-			if (watching)
-				fmt::print("{:0{}x}\n", addr, AddressWidth);
-			addr++;
-		}
-	}
-
-	void clearWatch(Address address) {
-		boundsCheck(address);
-		_watch[address] = false;
-	}
-
-	void clearAllWatches() {
-		_watch.clear();
-	}
 
 	class Exception : public std::exception {
 	public:
@@ -653,7 +494,6 @@ private:
 	std::shared_ptr<Element<Address,Cell>> _unmapped;	   // Default memory element 
 
 	std::vector<std::shared_ptr<Element<Address,Cell>>> _mem;
-	std::vector<bool> _watch; // Vector of watched addresses.
 
 	void boundsCheck(const Address address) {
 		if (!boundsCheckNoThrow(address)) {
@@ -676,62 +516,6 @@ private:
 		return false;
 	}
 
-	Cell calculateValue(const std::string& expression, Cell initialValue) {
-		std::vector<Cell> values;
-		std::vector<char> ops;
-
-		auto applyOp = [&]() {
-			Cell right = values.back(); values.pop_back();
-			Cell left = values.back(); values.pop_back();
-			char op = ops.back(); ops.pop_back();
-			switch(op) {
-				case '+': values.push_back(left + right); break;
-				case '-': values.push_back(left - right); break;
-				case '*': values.push_back(left * right); break;
-				case '/': values.push_back(left / right); break; // Add zero division check
-				case '%': values.push_back(left % right); break; // Add zero division check
-				case '&': values.push_back(left & right); break;
-				case '|': values.push_back(left | right); break;
-				case '^': values.push_back(left ^ right); break;
-			}
-		};
-
-		auto precedence = [](char op) -> int {
-			switch(op) {
-				case '+': case '-': return 1;
-				case '*': case '/': case '%': return 2;
-				case '&': return 3;
-				case '^': return 4;
-				case '|': return 5;
-				default: return 0;
-			}
-		};
-
-		if (expression.empty())
-			return initialValue;
-
-		std::istringstream stream(expression);
-		char op;
-		Cell num;
-		stream >> op >> std::hex >> num;
-		values.push_back(initialValue);
-		ops.push_back(op);
-		values.push_back(num);
-
-		while (stream >> op >> std::hex >> num) {
-			while (!ops.empty() && precedence(op) <= precedence(ops.back())) {
-				applyOp();
-			}
-			values.push_back(num);
-			ops.push_back(op);
-		}
-
-		while (!ops.empty()) {
-			applyOp();
-		}
-
-		return values.front();
-	}
 
 	std::vector<Cell> _loadDataFromFile(const std::string& filename) {
 		std::ifstream file(filename, std::ios::binary);
@@ -759,4 +543,304 @@ private:
 		std::string error = "Memory Exception: " + message; 
 		throw Exception(error);
 	}
+};
+
+/////////
+// Memory debugger class - separate from core memory for performance
+template<class Address = uint16_t, class Cell = uint8_t>
+class MemoryDebugger {
+public:
+	enum class CalculateError {
+		None,
+		DivisionByZero,
+		ModuloByZero,
+		InvalidExpression
+	};
+
+	struct CalculateResult {
+		Cell value;
+		CalculateError error;
+		
+		CalculateResult(Cell val) : value(val), error(CalculateError::None) {}
+		CalculateResult(CalculateError err, Cell fallback) : value(fallback), error(err) {}
+		
+		bool hasError() const { return error != CalculateError::None; }
+		const char* errorMessage() const {
+			switch(error) {
+				case CalculateError::DivisionByZero: return "Division by zero in expression";
+				case CalculateError::ModuloByZero: return "Modulo by zero in expression";
+				case CalculateError::InvalidExpression: return "Invalid expression";
+				default: return "";
+			}
+		}
+	};
+
+	MemoryDebugger(Memory<Address,Cell>& mem) : _mem(mem) {
+		_watch.assign(_mem.size(), false);
+	}
+
+	// Search functionality
+	std::vector<Address> find(std::string sequence, Cell filter = -1) {
+		std::vector<Address> positions;
+
+		if(sequence.size() > _mem._mem.size())
+			return positions;
+
+		for (size_t i = 0; i <= _mem._mem.size() - sequence.size(); ++i) {
+			bool matches = true;
+			for (size_t j = 0; j < sequence.size(); ++j) {
+				Address a = static_cast<Address>(i + j);
+				if (sequence[j] != (_mem._mem[a]->Read(a) & filter)) {
+					matches = false;
+					break;
+				}
+			}
+			if (matches) {
+				positions.push_back(static_cast<Address>(i));
+			}
+		}
+
+		return positions;
+	}
+
+	// Memory dump with optional expression evaluation
+	void hexdump(const Address start, Address end, std::string valueExpression = "") {
+		if (start > end || end > _mem._endAddress) {
+			fmt::print("Invalid memory range\n");
+			return;
+		}
+
+		// Test the expression first with a dummy value to catch errors early
+		if (!valueExpression.empty()) {
+			auto testResult = calculateValue(valueExpression, 0);
+			if (testResult.hasError()) {
+				fmt::print("Error: {}\n", testResult.errorMessage());
+				return;
+			}
+		}
+
+		fmt::print("Memory {:0{}x}:{:0{}x}", start, AddressWidth, end, AddressWidth);
+
+		if (!valueExpression.empty()) 
+			fmt::print(" with expression '{}'", valueExpression);
+		fmt::print("\n"); 
+
+		int lineEnd = 16 / sizeof(Cell);
+		while (AddressWidth + 2 + (CellWidth + 1) * lineEnd + lineEnd > 80) {
+			lineEnd /= 2;
+		}
+		int hexwidth = AddressWidth + 2 + (CellWidth + 1) * lineEnd;
+
+		int cnt = 0;
+		std::string hexdump, ascii;
+
+		auto begin = _mem._mem.begin() + start;
+		auto stop = _mem._mem.begin() + end;
+		for (auto it = begin; it <= stop; it++) {
+
+			// Start a new line with the memory address
+			if (cnt == 0) {
+				auto addr = std::distance(_mem._mem.begin(), it);
+				hexdump += fmt::format("{:0>{}x}  ", addr, AddressWidth);
+			}
+			Cell c;
+			Address address = static_cast<Address>(std::distance(_mem._mem.begin(), it));
+			c = (*it)->Read(address);
+
+			auto result = calculateValue(valueExpression, c);
+			// Since we tested the expression upfront, this should never error
+			c = result.value;
+
+			// Append hex and then ascii representation
+			hexdump += fmt::format("{:0>{}x} ", c, CellWidth);
+
+			for (size_t byte_idx = 0; byte_idx < sizeof(Cell); ++byte_idx) {
+				uint8_t byte_value = static_cast<uint8_t>(c >> (byte_idx * 8));
+				if (isascii(byte_value) && isprint(byte_value))
+					ascii += byte_value;
+				else
+					ascii += '.';
+			}
+
+			// Print the accumulated line if we're at the end of the line or the end of the memory range.
+			cnt++;
+			if (cnt == lineEnd || it == stop) {
+				cnt = 0;
+				hexdump = fmt::format("{:{}}", hexdump, hexwidth);
+				fmt::print("{}{}\n", hexdump, ascii);
+				hexdump = "";
+				ascii = "";
+			}
+		}
+	}
+
+	// Memory map display
+	void printMap() const {
+		auto it = _mem._mem.begin();
+		auto range_start = it;
+		uint64_t mappedBytes = 0;
+		std::map<std::string, uint64_t> sizeByType;
+
+		fmt::print("Memory map:\n");
+
+		while (it != _mem._mem.end()) {
+			if (!_mem.addressUnmapped(*it))
+				mappedBytes++;
+
+			auto next_it = std::next(it);
+			bool endOfRange = (next_it == _mem._mem.end()) || ((*next_it)->type() != (*range_start)->type());
+
+			if (endOfRange) {
+				Address bytes = 1 + static_cast<Address>(std::distance(range_start, it));
+				Address start = static_cast<Address>(std::distance(_mem._mem.begin(), range_start));
+				Address end = static_cast<Address>(std::distance(_mem._mem.begin(), it));
+				auto type = (*it)->type();
+				sizeByType[type] += bytes;
+
+				fmt::print("{:0{}x} - {:0{}x} {:<9} {:>5} bytes\n", start, AddressWidth, end, AddressWidth, type, bytes);
+
+				range_start = next_it;
+			}
+
+			it = next_it;
+		}
+
+		fmt::print("Total bytes mapped:   {} bytes\n", mappedBytes * sizeof(Cell));
+
+		fmt::print("\nBytes by memory type:\n");
+		for (const auto& [type, size] : sizeByType) {
+			fmt::print("Bytes {:<9}:      {:>5} bytes\n", type, size * sizeof(Cell));
+		}
+	}
+
+	// Watch functionality with write notifications
+	void enableWatch(const Address address) {
+		_mem.boundsCheck(address);
+		_watch[address] = true;
+	}
+
+	bool watching(const Address address) const {
+		_mem.boundsCheck(address);
+		return _watch[address];
+	}
+
+	void listWatch() {
+		fmt::print("Watch list\n");
+
+		if (std::none_of(_watch.begin(), _watch.end(), [](bool v) { return v; })) {
+			fmt::print("--none--\n");
+			return;
+		}
+
+		Address addr = 0;
+		for(const auto& watching : _watch) {
+			if (watching)
+				fmt::print("{:0{}x}\n", addr, AddressWidth);
+			addr++;
+		}
+	}
+
+	void clearWatch(Address address) {
+		_mem.boundsCheck(address);
+		_watch[address] = false;
+	}
+
+	void clearAllWatches() {
+		std::fill(_watch.begin(), _watch.end(), false);
+	}
+
+	// Write wrapper that checks for watches
+	void watchedWrite(const Address address, const Cell value) {
+		if (_watch[address]) {
+			fmt::print("mem[{:0{}x}] {:0{}x} -> {:0{}x}\n", address, AddressWidth, 
+					   _mem.Read(address), CellWidth, value, CellWidth);
+		}
+		_mem.Write(address, value);
+	}
+
+	// Expression evaluator for hexdump
+	CalculateResult calculateValue(const std::string& expression, Cell initialValue) {
+		std::vector<Cell> values;
+		std::vector<char> ops;
+
+		auto applyOp = [&]() -> CalculateError {
+			Cell right = values.back(); values.pop_back();
+			Cell left = values.back(); values.pop_back();
+			char op = ops.back(); ops.pop_back();
+			switch(op) {
+				case '+': values.push_back(left + right); break;
+				case '-': values.push_back(left - right); break;
+				case '*': values.push_back(left * right); break;
+				case '/': 
+					if (right == 0) {
+						return CalculateError::DivisionByZero;
+					}
+					values.push_back(left / right);
+					break;
+				case '%': 
+					if (right == 0) {
+						return CalculateError::ModuloByZero;
+					}
+					values.push_back(left % right);
+					break;
+				case '&': values.push_back(left & right); break;
+				case '|': values.push_back(left | right); break;
+				case '^': values.push_back(left ^ right); break;
+			}
+			return CalculateError::None;
+		};
+
+		auto precedence = [](char op) -> int {
+			switch(op) {
+				case '+': case '-': return 1;
+				case '*': case '/': case '%': return 2;
+				case '&': return 3;
+				case '^': return 4;
+				case '|': return 5;
+				default: return 0;
+			}
+		};
+
+		if (expression.empty())
+			return CalculateResult(initialValue);
+
+		std::istringstream stream(expression);
+		char op;
+		int num;
+		if (!(stream >> op >> num)) {
+			return CalculateResult(CalculateError::InvalidExpression, initialValue);
+		}
+		
+		values.push_back(initialValue);
+		values.push_back(static_cast<Cell>(num));
+		ops.push_back(op);
+
+		while (stream >> op >> num) {
+			while (!ops.empty() && precedence(op) <= precedence(ops.back())) {
+				auto error = applyOp();
+				if (error != CalculateError::None) {
+					return CalculateResult(error, initialValue);
+				}
+			}
+			values.push_back(static_cast<Cell>(num));
+			ops.push_back(op);
+		}
+
+		while (!ops.empty()) {
+			auto error = applyOp();
+			if (error != CalculateError::None) {
+				return CalculateResult(error, initialValue);
+			}
+		}
+
+		return CalculateResult(values.front());
+	}
+
+private:
+	// Field widths for fmt::
+	static constexpr int AddressWidth = sizeof(Address) * 2;
+	static constexpr int CellWidth    = sizeof(Cell) * 2;
+
+	Memory<Address,Cell>& _mem;
+	std::vector<bool> _watch; // Vector of watched addresses
 };

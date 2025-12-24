@@ -277,7 +277,8 @@ TEST_F(MemoryTests, MemoryHexDumpWithMappedDevice) {
 
 	mem[0x12] = 'z';
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDumpWithMappedDeviceExplicitAddressList) {
@@ -292,54 +293,307 @@ TEST_F(MemoryTests, MemoryHexDumpWithMappedDeviceExplicitAddressList) {
 
 	mem[0x18] = 'z';
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDump16Address8Cell) {
 	Memory<uint16_t, uint8_t> mem(0x100);	
 	mem.mapRAM(0, 0x100);
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDump16Address16Cell) {
 	Memory<uint16_t, uint16_t> mem(0x100);	
 	mem.mapRAM(0, 0x100);
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDump16Address32Cell) {
 	Memory<uint16_t, uint32_t> mem(0x100);	
 	mem.mapRAM(0, 0x100);
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDump16Address64Cell) {
 	Memory<uint16_t, uint64_t> mem(0x100);	
 	mem.mapRAM(0, 0x100);
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDump32Address32Cell) {
 	Memory<uint32_t, uint32_t> mem(0x100);	
 	mem.mapRAM(0, 0x100);
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryHexDump32Address64Cell) {
 	Memory<uint32_t, uint64_t> mem(0x100);	
 	mem.mapRAM(0, 0x100);
 
-	mem.hexdump(0, 0x100);
+	MemoryDebugger debug(mem);
+	debug.hexdump(0, 0x100);
 }
 
 TEST_F(MemoryTests, MemoryPrintMap) {
 	Memory<Address, Cell> mem(0x100);	
 	mem.mapRAM(0xf0, 0x100);
 
-	mem.printMap();
+	MemoryDebugger debug(mem);
+	debug.printMap();
+}
+
+//////////
+// MemoryDebugger tests
+
+TEST_F(MemoryTests, MemoryDebuggerWatch) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	mem.mapRAM(0, 0x100);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Test watch functionality
+	debug.enableWatch(0x50);
+	EXPECT_TRUE(debug.watching(0x50));
+	EXPECT_FALSE(debug.watching(0x51));
+
+	// Test clear watch
+	debug.clearWatch(0x50);
+	EXPECT_FALSE(debug.watching(0x50));
+
+	// Test multiple watches
+	debug.enableWatch(0x10);
+	debug.enableWatch(0x20);
+	debug.enableWatch(0x30);
+	
+	EXPECT_TRUE(debug.watching(0x10));
+	EXPECT_TRUE(debug.watching(0x20));
+	EXPECT_TRUE(debug.watching(0x30));
+
+	// Test clear all watches
+	debug.clearAllWatches();
+	EXPECT_FALSE(debug.watching(0x10));
+	EXPECT_FALSE(debug.watching(0x20));
+	EXPECT_FALSE(debug.watching(0x30));
+}
+
+TEST_F(MemoryTests, MemoryDebuggerWatchedWrite) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	mem.mapRAM(0, 0x100);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Set up watch on address
+	debug.enableWatch(0x42);
+	
+	// Write through debugger should work and show watch output
+	debug.watchedWrite(0x42, 0xAB);
+	EXPECT_EQ(mem.Read(0x42), 0xAB);
+	
+	// Write to unwatched address should work normally
+	debug.watchedWrite(0x43, 0xCD);
+	EXPECT_EQ(mem.Read(0x43), 0xCD);
+}
+
+TEST_F(MemoryTests, MemoryDebuggerFind) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	mem.mapRAM(0, 0x100);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Set up test pattern
+	std::string pattern = "HELLO";
+	for (size_t i = 0; i < pattern.length(); i++) {
+		mem.Write(0x20 + i, pattern[i]);
+	}
+	
+	// Another copy at different location
+	for (size_t i = 0; i < pattern.length(); i++) {
+		mem.Write(0x80 + i, pattern[i]);
+	}
+
+	// Find the pattern
+	auto positions = debug.find(pattern);
+	EXPECT_EQ(positions.size(), 2);
+	EXPECT_TRUE(std::find(positions.begin(), positions.end(), 0x20) != positions.end());
+	EXPECT_TRUE(std::find(positions.begin(), positions.end(), 0x80) != positions.end());
+
+	// Test pattern not found
+	auto notFound = debug.find("WORLD");
+	EXPECT_EQ(notFound.size(), 0);
+}
+
+TEST_F(MemoryTests, MemoryDebuggerFindWithFilter) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	mem.mapRAM(0, 0x100);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Set up test data with some bits masked
+	mem.Write(0x10, 0b10101010);  // 0xAA
+	mem.Write(0x11, 0b11101110);  // 0xEE
+	mem.Write(0x12, 0b10101010);  // 0xAA
+
+	// Search for pattern using lower 4 bits only
+	std::string pattern;
+	pattern.push_back(0b00001010);  // Lower 4 bits of 0xAA
+	pattern.push_back(0b00001110);  // Lower 4 bits of 0xEE
+	pattern.push_back(0b00001010);  // Lower 4 bits of 0xAA
+
+	auto positions = debug.find(pattern, 0x0F);  // Mask to lower 4 bits
+	EXPECT_EQ(positions.size(), 1);
+	EXPECT_EQ(positions[0], 0x10);
+}
+
+TEST_F(MemoryTests, MemoryDebuggerHexdumpBasic) {
+	Memory<uint16_t, uint8_t> mem(0x20);
+	mem.mapRAM(0, 0x20);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Fill with test pattern
+	for (uint16_t i = 0; i < 0x20; i++) {
+		mem.Write(i, i);
+	}
+
+	// Test should not crash and produce output
+	debug.hexdump(0x00, 0x1F);
+}
+
+TEST_F(MemoryTests, MemoryDebuggerHexdumpWithExpression) {
+	Memory<uint16_t, uint8_t> mem(0x20);
+	mem.mapRAM(0, 0x20);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Fill with test pattern
+	for (uint16_t i = 0; i < 0x20; i++) {
+		mem.Write(i, 0x10);  // All values are 0x10
+	}
+
+	// Test with expression (should add 5 to each value: 0x10 + 0x05 = 0x15)
+	debug.hexdump(0x00, 0x1F, "+ 05");
+}
+
+TEST_F(MemoryTests, MemoryDebuggerInvalidRange) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	mem.mapRAM(0, 0x100);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Test invalid range (should not crash, just print error message)
+	debug.hexdump(0x50, 0x40);  // start > end
+	debug.hexdump(0x00, 0x200); // end > memory size
+}
+
+TEST_F(MemoryTests, MemoryDebuggerWithMemoryMappedDevice) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	auto device = std::make_shared<testdev<uint16_t, uint8_t>>();
+	
+	mem.mapRAM(0, 0x100);
+	mem.mapDevice(device, 0x10);
+	
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Should show memory map with device
+	debug.printMap();
+	
+	// Should show device data in hexdump
+	debug.hexdump(0x10, 0x20);
+}
+
+TEST_F(MemoryTests, MemoryDebuggerDifferentTemplateTypes) {
+	// Test with 32-bit addresses and 16-bit cells
+	Memory<uint32_t, uint16_t> mem(0x1000);
+	mem.mapRAM(0, 0x1000);
+	MemoryDebugger<uint32_t, uint16_t> debug(mem);
+
+	// Fill with test pattern
+	for (uint32_t i = 0; i < 16; i++) {
+		mem.Write(i, i * 0x1111);
+	}
+
+	// Test operations
+	debug.hexdump(0, 15);
+	debug.printMap();
+
+	// Test watch
+	debug.enableWatch(0x500);
+	EXPECT_TRUE(debug.watching(0x500));
+}
+
+TEST_F(MemoryTests, MemoryDebuggerListWatch) {
+	Memory<uint16_t, uint8_t> mem(0x100);
+	mem.mapRAM(0, 0x100);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Test empty watch list
+	debug.listWatch();  // Should show "--none--"
+
+	// Add some watches
+	debug.enableWatch(0x10);
+	debug.enableWatch(0x20);
+	debug.enableWatch(0x30);
+
+	// Test non-empty watch list
+	debug.listWatch();  // Should show addresses
+}
+
+TEST_F(MemoryTests, MemoryDebuggerHexdumpDivideByZeroProtection) {
+	Memory<uint16_t, uint8_t> mem(0x20);
+	mem.mapRAM(0, 0x20);
+	MemoryDebugger<uint16_t, uint8_t> debug(mem);
+
+	// Fill with test pattern (0x0a = 10)
+	for (uint16_t i = 0; i < 0x20; i++) {
+		mem.Write(i, 0x0a);
+	}
+
+	// Test the calculateValue function directly first
+	auto result = debug.calculateValue("/ 0", 10);
+	EXPECT_TRUE(result.hasError());
+	EXPECT_EQ(result.error, decltype(debug)::CalculateError::DivisionByZero);
+	EXPECT_EQ(result.value, 10); // Should return original value
+	EXPECT_STREQ(result.errorMessage(), "Division by zero in expression");
+
+	result = debug.calculateValue("% 0", 10);
+	EXPECT_TRUE(result.hasError());
+	EXPECT_EQ(result.error, decltype(debug)::CalculateError::ModuloByZero);
+	EXPECT_EQ(result.value, 10); // Should return original value
+	EXPECT_STREQ(result.errorMessage(), "Modulo by zero in expression");
+
+	// Test normal operations work
+	result = debug.calculateValue("/ 2", 10);
+	EXPECT_FALSE(result.hasError());
+	EXPECT_EQ(result.value, 5);
+
+	result = debug.calculateValue("% 3", 10);
+	EXPECT_FALSE(result.hasError());
+	EXPECT_EQ(result.value, 1);
+
+	// Test hexdump with divide by zero (should print error and exit early)
+	testing::internal::CaptureStdout();
+	debug.hexdump(0x00, 0x01, "/ 0");
+	std::string output = testing::internal::GetCapturedStdout();
+	EXPECT_TRUE(output.find("Error: Division by zero") != std::string::npos);
+	EXPECT_FALSE(output.find("Memory") != std::string::npos); // Should NOT show memory dump
+
+	// Test hexdump with mod by zero
+	testing::internal::CaptureStdout();
+	debug.hexdump(0x00, 0x01, "% 0");
+	output = testing::internal::GetCapturedStdout();
+	EXPECT_TRUE(output.find("Error: Modulo by zero") != std::string::npos);
+	EXPECT_FALSE(output.find("Memory") != std::string::npos); // Should NOT show memory dump
+
+	// Test the specific issue: + 2 should add 2, not show 0x32
+	result = debug.calculateValue("+ 2", 10);
+	EXPECT_FALSE(result.hasError());
+	EXPECT_EQ(result.value, 12); // 10 + 2 = 12, not 50
+
+	result = debug.calculateValue("+2", 10);  // Without space
+	EXPECT_FALSE(result.hasError());
+	EXPECT_EQ(result.value, 12); // Should also work
 }

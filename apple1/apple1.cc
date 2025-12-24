@@ -109,25 +109,55 @@ void setupMemoryMap(){
 	mem.loadData(apple1SampleProg, apple1SampleAddress);
 }
 
-int main() {
-	// Initialize keyboard and PIA
+int main(int argc, char* argv[]) {
+	// Parse command line arguments
+	bool useGUI = true;
+	for (int i = 1; i < argc; i++) {
+		if (std::string(argv[i]) == "--no-gui" || std::string(argv[i]) == "--headless") {
+			useGUI = false;
+		} else if (std::string(argv[i]) == "--help" || std::string(argv[i]) == "-h") {
+			fmt::print("Apple 1 Emulator (6502)\n");
+			fmt::print("Usage: {} [options]\n", argv[0]);
+			fmt::print("Options:\n");
+			fmt::print("  --no-gui, --headless  Run without SDL2 graphical window\n");
+			fmt::print("  --help, -h             Show this help message\n");
+			return 0;
+		}
+	}
+	// Initialize keyboard and PIA based on GUI mode
 #ifdef HAVE_SDL2
-	keyboard.addKeyboard(&display);  // SDL window input (primary)
-	keyboard.addKeyboard(&termKeyboard);  // Terminal input (for control keys)
-	pia = std::make_shared<MOS6820<Address, Byte>>(&display, &keyboard);
+	if (useGUI) {
+		keyboard.addKeyboard(&display);  // SDL window input (primary)
+		keyboard.addKeyboard(&termKeyboard);  // Terminal input (for control keys)
+		pia = std::make_shared<MOS6820<Address, Byte>>(&display, &keyboard);
 
-	fmt::print("Apple 1 Emulator (6502) - SDL2 Graphics Mode\n");
-	fmt::print("Close the window to quit\n");
-	fmt::print("Control keys also work from terminal:\n");
-	fmt::print("  Reset        = Control-\\\n");
-	fmt::print("  Clear screen = Control-[\n");
-	fmt::print("  Debugger     = Control-]\n");
-	fmt::print("  Status       = Control-T\n");
-	fmt::print("  Quit         = Control-Backspace\n");
+		fmt::print("Apple 1 Emulator (6502) - SDL2 Graphics Mode\n");
+		fmt::print("Close the window to quit\n");
+		fmt::print("Control keys also work from terminal:\n");
+		fmt::print("  Reset        = Control-\\\n");
+		fmt::print("  Clear screen = Control-[\n");
+		fmt::print("  Debugger     = Control-]\n");
+		fmt::print("  Status       = Control-T\n");
+		fmt::print("  Quit         = Control-Backspace\n");
+		fmt::print("  Paste        = Control-V\n");
+	} else {
+		// Terminal-only mode - create terminal display and keyboard
+		static TerminalDisplay termDisplay;
+		pia = std::make_shared<MOS6820<Address, Byte>>(&termDisplay, &termKeyboard);
+
+		fmt::print("Apple 1 Emulator (6502) - Terminal Mode\n");
+		fmt::print("  Reset        = Control-\\\n");
+		fmt::print("  Clear screen = Control-[\n");
+		fmt::print("  Debugger     = Control-]\n");
+		fmt::print("  Status       = Control-T\n");
+		fmt::print("  Quit         = Control-Backspace\n");
+	}
 #else
-	pia = std::make_shared<MOS6820<Address, Byte>>(&display, &keyboard);
+	// SDL2 not available, always use terminal mode
+	static TerminalDisplay termDisplay;
+	pia = std::make_shared<MOS6820<Address, Byte>>(&termDisplay, &termKeyboard);
 
-	fmt::print("A Very Simple Apple I (6502)\n");
+	fmt::print("Apple 1 Emulator (6502) - Terminal Mode\n");
 	fmt::print("  Reset        = Control-\\\n");
 	fmt::print("  Clear screen = Control-[\n");
 	fmt::print("  Debugger     = Control-]\n");
@@ -150,11 +180,13 @@ int main() {
 	cpu.Reset();	    // Exit the CPU from reset
 	while (!cpu.isPCAtHaltAddress()) {
 #ifdef HAVE_SDL2
-		// Handle SDL2 events (window close, etc.)
-		display.handleEvents();
-		if (display.shouldQuit()) {
-			fmt::print("\nWindow closed, exiting emulator\n");
-			break;
+		if (useGUI) {
+			// Handle SDL2 events (window close, etc.)
+			display.handleEvents();
+			if (display.shouldQuit()) {
+				fmt::print("\nWindow closed, exiting emulator\n");
+				break;
+			}
 		}
 #endif
 
@@ -173,8 +205,10 @@ int main() {
 		auto signals = pia->housekeeping();
 
 #ifdef HAVE_SDL2
-		// Refresh SDL2 display after processing I/O
-		display.refresh();
+		if (useGUI) {
+			// Refresh SDL2 display after processing I/O
+			display.refresh();
+		}
 #endif
 
 		for (const auto& signal : signals) {

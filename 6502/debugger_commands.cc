@@ -470,14 +470,16 @@ bool Debugger::memdumpCmd(std::string& line) {
     } else if (std::regex_match(line, matches, rangeBetweenLabelsR) && matches.size() > 2) {
 		if (calculateAddress(matches, addr1, addr2, true) && 
 			rangeCheckAddr(addr1) && rangeCheckAddr(addr2)) {
-			_cpu.mem.hexdump(addr1, addr2);
+			MemoryDebugger debug(_cpu.mem);
+			debug.hexdump(addr1, addr2);
 			return true;
 		}
     } else if (std::regex_match(line, matches, filterRangeWithValueR) && matches.size() > 4) {
         auto valueExpression = matches[5].str();
 		if (calculateAddress(matches, addr1, addr2, true) && rangeCheckAddr(addr1) && 
 			rangeCheckAddr(addr2)) {
-			_cpu.mem.hexdump(addr1, addr2, valueExpression);
+			MemoryDebugger debug(_cpu.mem);
+			debug.hexdump(addr1, addr2, valueExpression);
 			return true;
 		}
     } else if (std::regex_match(line, matches, assignValueToRangeR) && matches.size() > 4) {
@@ -494,7 +496,8 @@ bool Debugger::memdumpCmd(std::string& line) {
 }
 
 bool Debugger::memmapCmd([[maybe_unused]] std::string& line) {
-	_cpu.mem.printMap();
+	MemoryDebugger debug(_cpu.mem);
+	debug.printMap();
 	return true;
 }
 
@@ -619,7 +622,8 @@ bool Debugger::watchCmd(std::string& line) {
 	bool remove = false;
 
 	if (line.empty()) {
-		_cpu.mem.listWatch();
+		MemoryDebugger debug(_cpu.mem);
+		debug.listWatch();
 		return true;
 	}
 	
@@ -631,11 +635,13 @@ bool Debugger::watchCmd(std::string& line) {
 	try {
 		addr = (Word) std::stoul(line, nullptr, 16);
 		if (remove) {
-			_cpu.mem.clearWatch(addr);
+			MemoryDebugger debug(_cpu.mem);
+			debug.clearWatch(addr);
 			fmt::print("Watchpoint at memory address {:04x} "
 				   "removed\n", addr);
 		} else {
-			_cpu.mem.enableWatch(addr);
+			MemoryDebugger debug(_cpu.mem);
+			debug.enableWatch(addr);
 			fmt::print("Watchpoint at memory address {:04x} "
 				   "added\n", addr);
 		}
@@ -730,7 +736,8 @@ bool Debugger::findCmd(std::string& line) {
 		}
 	} 
 
-	auto locations = _cpu.mem.find(sequence, filter);
+	MemoryDebugger debug(_cpu.mem);
+	auto locations = debug.find(sequence, filter);
 	if (locations.empty()) {
 		fmt::print("Sequence not found\n");
 		return true;
