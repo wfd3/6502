@@ -28,6 +28,7 @@
 #include "display_interface.h"
 #include "terminal_keyboard.h"
 #include "cpu_status.h"
+#include "apple1_font.h"
 #ifdef HAVE_SDL2
 #include "sdl2_display.h"
 #include "composite_keyboard.h"
@@ -48,7 +49,10 @@ static const char* WOZMON_FILE = BINFILE_PATH "/wozmon.bin";
 constexpr Word apple1BasicAddress = 0xe000;
 static const char* APPLESOFT_BASIC_FILE = BINFILE_PATH "/Apple-1_Integer_BASIC.bin";
 
-// bytecode for a modified version of the sample program from the Apple 1 Manual (normally entered 
+// Character ROM (Signetics 2513)
+static const char* CHAR_ROM_FILE = BINFILE_PATH "/2513_512.bin";
+
+// bytecode for a modified version of the sample program from the Apple 1 Manual (normally entered
 // by hand via WozMon).  This ones uses the 65C02 'BRA' instruction rather than JMP.
 constexpr Word apple1SampleAddress = 0x0000;
 std::vector<Byte> apple1SampleProg =
@@ -68,7 +72,7 @@ Memory<Address, Byte> mem(MOS6502::LAST_ADDRESS);
 MOS65C02 cpu(mem);
 
 #ifdef HAVE_SDL2
-SDL2Display display;  // Handles graphical display and SDL window keyboard
+std::unique_ptr<SDL2Display> display;  // Handles graphical display and SDL window keyboard
 TerminalKeyboard termKeyboard;  // Also accept input from terminal for control keys
 CompositeKeyboard keyboard;  // Combines both keyboard sources
 #else
@@ -112,24 +116,47 @@ void setupMemoryMap(){
 int main(int argc, char* argv[]) {
 	// Parse command line arguments
 	bool useGUI = true;
+	bool blinkCursor = false;
 	for (int i = 1; i < argc; i++) {
 		if (std::string(argv[i]) == "--no-gui" || std::string(argv[i]) == "--headless") {
 			useGUI = false;
+		} else if (std::string(argv[i]) == "--blink-cursor") {
+			blinkCursor = true;
+		} else if (std::string(argv[i]) == "--map") {
+			fmt::print("Apple 1 Emulator (65C02) - Memory Map\n\n");
+			fmt::print("Address Range     Size   Type        Description\n");
+			fmt::print("----------------- ------ ----------- ------------------------------------\n");
+			fmt::print("0x0000 - 0x1FFF   8K     RAM         Main RAM\n");
+			fmt::print("0x6000 - 0x8FFF   12K    RAM         Additional RAM\n");
+			fmt::print("0xD010 - 0xD013   4B     I/O         MOS 6820 PIA (keyboard/display)\n");
+			fmt::print("0xE000 - 0xEFFF   4K     RAM/ROM     Apple Integer BASIC (loaded)\n");
+			fmt::print("0xFF00 - 0xFFFF   256B   ROM         WozMon (monitor program)\n");
+			return 0;
 		} else if (std::string(argv[i]) == "--help" || std::string(argv[i]) == "-h") {
 			fmt::print("Apple 1 Emulator (65C02)\n");
 			fmt::print("Usage: {} [options]\n", argv[0]);
 			fmt::print("Options:\n");
 			fmt::print("  --no-gui, --headless  Run without SDL2 graphical window\n");
-			fmt::print("  --help, -h             Show this help message\n");
+			fmt::print("  --blink-cursor        Enable blinking cursor\n");
+			fmt::print("  --map                 Display memory map and exit\n");
+			fmt::print("  --help, -h            Show this help message\n");
 			return 0;
 		}
 	}
+
+	// Load character ROM before initializing display
+	if (!loadCharROM(CHAR_ROM_FILE)) {
+		fmt::print(stderr, "Fatal error: Could not load character ROM\n");
+		return 1;
+	}
+
 	// Initialize keyboard and PIA based on GUI mode
 #ifdef HAVE_SDL2
 	if (useGUI) {
-		keyboard.addKeyboard(&display);  // SDL window input (primary)
+		display = std::make_unique<SDL2Display>(blinkCursor);
+		keyboard.addKeyboard(display.get());  // SDL window input (primary)
 		keyboard.addKeyboard(&termKeyboard);  // Terminal input (for control keys)
-		pia = std::make_shared<MOS6820<Address, Byte>>(&display, &keyboard);
+		pia = std::make_shared<MOS6820<Address, Byte>>(display.get(), &keyboard);
 
 		fmt::print("Apple 1 Emulator (65C02) - SDL2 Graphics Mode\n");
 		fmt::print("Close the window to quit\n");
@@ -182,8 +209,8 @@ int main(int argc, char* argv[]) {
 #ifdef HAVE_SDL2
 		if (useGUI) {
 			// Handle SDL2 events (window close, etc.)
-			display.handleEvents();
-			if (display.shouldQuit()) {
+			display->handleEvents();
+			if (display->shouldQuit()) {
 				fmt::print("\nWindow closed, exiting emulator\n");
 				break;
 			}
@@ -207,7 +234,7 @@ int main(int argc, char* argv[]) {
 #ifdef HAVE_SDL2
 		if (useGUI) {
 			// Refresh SDL2 display after processing I/O
-			display.refresh();
+			display->refresh();
 		}
 #endif
 

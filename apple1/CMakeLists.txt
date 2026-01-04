@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.10...3.28)
 project( apple1 )
 
 # source for the 6502 executable
-set (APPLE1_SOURCES "apple1.cc" "display_interface.cc" "terminal_keyboard.cc")
+set (APPLE1_SOURCES "apple1.cc" "display_interface.cc" "terminal_keyboard.cc" "apple1_font.cc")
 
 # Add SDL2 display source if available
 if(HAVE_SDL2)
@@ -45,7 +45,7 @@ if(HAVE_SDL2)
 endif()
 
 # source for the 65C02 executable
-set (APPLE1_65C02_SOURCES "65C02-apple1.cc" "display_interface.cc" "terminal_keyboard.cc")
+set (APPLE1_65C02_SOURCES "65C02-apple1.cc" "display_interface.cc" "terminal_keyboard.cc" "apple1_font.cc")
 
 # Add SDL2 display source if available
 if(HAVE_SDL2)
